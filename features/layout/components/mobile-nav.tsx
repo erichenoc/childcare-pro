@@ -103,22 +103,15 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-blue-200/50">
-          <Link href="/dashboard" className="flex items-center gap-3">
+          <Link href="/dashboard" className="block">
             <Image
               src={LOGO_URL}
               alt="ChildCare Pro"
-              width={40}
-              height={40}
-              className="rounded-xl shadow-md"
+              width={80}
+              height={80}
+              className="rounded-2xl shadow-lg"
+              priority
             />
-            <div>
-              <h1 className="font-bold text-gray-800">
-                {t.app.name}
-              </h1>
-              <p className="text-xs text-gray-500">
-                {t.app.tagline}
-              </p>
-            </div>
           </Link>
 
           <button
