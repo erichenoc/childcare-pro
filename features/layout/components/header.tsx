@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
 import {
   Bell,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useI18n, useTranslations, LOCALE_NAMES, SUPPORTED_LOCALES, type Locale } from '@/shared/lib/i18n'
 import { GlassAvatar } from '@/shared/components/ui'
+import { authService } from '@/features/auth/services/auth.service'
 
 interface HeaderProps {
   onMenuClick?: () => void
@@ -26,8 +28,21 @@ export function Header({ onMenuClick, className }: HeaderProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [isLanguageOpen, setIsLanguageOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { locale, setLocale } = useI18n()
   const t = useTranslations()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      await authService.signOut()
+      router.push('/login')
+    } catch (error) {
+      console.error('Error signing out:', error)
+      setIsLoggingOut(false)
+    }
+  }
 
   // Mock user data - will come from auth context later
   const user = {
@@ -226,7 +241,7 @@ export function Header({ onMenuClick, className }: HeaderProps) {
                     {t.nav.settings}
                   </Link>
                   <Link
-                    href="/help"
+                    href="/dashboard/help"
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
                   >
                     <HelpCircle className="w-4 h-4" />
@@ -236,14 +251,12 @@ export function Header({ onMenuClick, className }: HeaderProps) {
 
                 <div className="border-t border-blue-100 py-1">
                   <button
-                    onClick={() => {
-                      // Handle logout
-                      setIsProfileOpen(false)
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <LogOut className="w-4 h-4" />
-                    {t.nav.logout}
+                    {isLoggingOut ? 'Cerrando sesión...' : t.nav.logout}
                   </button>
                 </div>
               </div>
