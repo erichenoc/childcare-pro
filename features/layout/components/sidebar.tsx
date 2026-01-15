@@ -73,38 +73,16 @@ export function Sidebar({ className }: SidebarProps) {
       )}
     >
       {/* Logo Section */}
-      <div className="flex items-center justify-between p-4 border-b border-blue-200/50">
-        {!isCollapsed && (
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <Image
-              src={LOGO_URL}
-              alt="ChildCare Pro"
-              width={40}
-              height={40}
-              className="rounded-xl shadow-md"
-            />
-            <div>
-              <h1 className="font-bold text-gray-800">
-                {t.app.name}
-              </h1>
-              <p className="text-xs text-gray-500">
-                {t.app.tagline}
-              </p>
-            </div>
-          </Link>
-        )}
-
-        {isCollapsed && (
-          <Link href="/dashboard" className="mx-auto">
-            <Image
-              src={LOGO_URL}
-              alt="ChildCare Pro"
-              width={40}
-              height={40}
-              className="rounded-xl shadow-md"
-            />
-          </Link>
-        )}
+      <div className="flex items-center justify-center p-4 border-b border-blue-200/50">
+        <Link href="/dashboard">
+          <Image
+            src={LOGO_URL}
+            alt="ChildCare Pro"
+            width={isCollapsed ? 40 : 56}
+            height={isCollapsed ? 40 : 56}
+            className="rounded-xl shadow-md transition-all duration-300"
+          />
+        </Link>
       </div>
 
       {/* Main Navigation */}
