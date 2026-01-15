@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { useTranslations } from '@/shared/lib/i18n'
 import { authService } from '@/features/auth/services/auth.service'
 
@@ -71,10 +72,17 @@ export default function LoginPage() {
     <div className="w-full max-w-md animate-fade-in-up">
       {/* Card con fondo sólido blanco para máxima legibilidad */}
       <div className="bg-white rounded-3xl shadow-2xl shadow-blue-500/20 border border-blue-100 overflow-hidden">
-        {/* Header con gradiente */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-8 py-6 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl mb-4">
-            <Sparkles className="w-8 h-8 text-white" />
+        {/* Header con gradiente y logo */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-8 py-8 text-center">
+          <div className="inline-flex items-center justify-center mb-4">
+            <Image
+              src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
+              alt="ChildCare Pro Logo"
+              width={120}
+              height={120}
+              className="drop-shadow-lg"
+              priority
+            />
           </div>
           <h1 className="text-2xl font-bold text-white">
             {t.auth.welcomeMessage}
