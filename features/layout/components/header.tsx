@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
@@ -18,10 +18,20 @@ import {
 import { useI18n, useTranslations, LOCALE_NAMES, SUPPORTED_LOCALES, type Locale } from '@/shared/lib/i18n'
 import { GlassAvatar } from '@/shared/components/ui'
 import { authService } from '@/features/auth/services/auth.service'
+import type { Profile } from '@/shared/types/database.types'
 
 interface HeaderProps {
   onMenuClick?: () => void
   className?: string
+}
+
+const ROLE_NAMES: Record<string, string> = {
+  owner: 'Propietario',
+  director: 'Director',
+  lead_teacher: 'Maestro Líder',
+  teacher: 'Maestro',
+  assistant: 'Asistente',
+  parent: 'Padre/Tutor',
 }
 
 export function Header({ onMenuClick, className }: HeaderProps) {
@@ -29,9 +39,21 @@ export function Header({ onMenuClick, className }: HeaderProps) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [isLanguageOpen, setIsLanguageOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const { locale, setLocale } = useI18n()
   const t = useTranslations()
   const router = useRouter()
+
+  // Cargar perfil del usuario actual
+  useEffect(() => {
+    const loadProfile = async () => {
+      const userProfile = await authService.getCurrentProfile()
+      if (userProfile) {
+        setProfile(userProfile)
+      }
+    }
+    loadProfile()
+  }, [])
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -44,12 +66,12 @@ export function Header({ onMenuClick, className }: HeaderProps) {
     }
   }
 
-  // Mock user data - will come from auth context later
+  // Datos del usuario desde el perfil real
   const user = {
-    name: 'María García',
-    email: 'maria@example.com',
-    role: 'Administrador',
-    avatar: null,
+    name: profile ? `${profile.first_name} ${profile.last_name}` : 'Cargando...',
+    email: profile?.email || '',
+    role: profile ? (ROLE_NAMES[profile.role] || profile.role) : '',
+    avatar: profile?.avatar_url || null,
   }
 
   // Mock notifications
