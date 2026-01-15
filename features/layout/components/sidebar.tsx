@@ -73,14 +73,15 @@ export function Sidebar({ className }: SidebarProps) {
       )}
     >
       {/* Logo Section */}
-      <div className="flex items-center justify-center p-4 border-b border-blue-200/50">
-        <Link href="/dashboard">
+      <div className="flex items-center justify-center p-6 border-b border-blue-200/50">
+        <Link href="/dashboard" className="block">
           <Image
             src={LOGO_URL}
             alt="ChildCare Pro"
-            width={isCollapsed ? 40 : 56}
-            height={isCollapsed ? 40 : 56}
-            className="rounded-xl shadow-md transition-all duration-300"
+            width={isCollapsed ? 48 : 120}
+            height={isCollapsed ? 48 : 120}
+            className="rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
+            priority
           />
         </Link>
       </div>
