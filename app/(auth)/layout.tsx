@@ -1,7 +1,5 @@
 'use client'
 
-import { Baby } from 'lucide-react'
-import Link from 'next/link'
 import { I18nProvider, useTranslations } from '@/shared/lib/i18n'
 
 function AuthLayoutContent({ children }: { children: React.ReactNode }) {
@@ -16,18 +14,6 @@ function AuthLayoutContent({ children }: { children: React.ReactNode }) {
         <div className="absolute -bottom-40 right-1/3 w-72 h-72 bg-primary-400/15 rounded-full blur-3xl" />
       </div>
 
-      {/* Header */}
-      <header className="relative z-10 p-6">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-3 text-primary-600 dark:text-primary-400 hover:opacity-80 transition-opacity"
-        >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg">
-            <Baby className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-xl font-bold">{t.app.name}</span>
-        </Link>
-      </header>
 
       {/* Main content */}
       <main className="relative z-10 flex-1 flex items-center justify-center p-6">

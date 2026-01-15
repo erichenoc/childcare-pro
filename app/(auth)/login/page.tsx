@@ -72,22 +72,22 @@ export default function LoginPage() {
     <div className="w-full max-w-md animate-fade-in-up">
       {/* Card con fondo sólido blanco para máxima legibilidad */}
       <div className="bg-white rounded-3xl shadow-2xl shadow-blue-500/20 border border-blue-100 overflow-hidden">
-        {/* Header con gradiente y logo */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-8 py-8 text-center">
+        {/* Header con fondo blanco para que el logo destaque */}
+        <div className="bg-white px-8 pt-8 pb-6 text-center border-b border-blue-100">
           <div className="inline-flex items-center justify-center mb-4">
             <Image
               src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
               alt="ChildCare Pro Logo"
-              width={120}
-              height={120}
-              className="drop-shadow-lg"
+              width={180}
+              height={180}
+              className="drop-shadow-md"
               priority
             />
           </div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-gray-800">
             {t.auth.welcomeMessage}
           </h1>
-          <p className="text-blue-100 mt-1 text-sm">
+          <p className="text-blue-600 mt-1 text-sm font-medium">
             {t.auth.login}
           </p>
         </div>
