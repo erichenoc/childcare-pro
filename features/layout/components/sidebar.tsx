@@ -190,7 +190,7 @@ export function Sidebar({ className }: SidebarProps) {
           ) : (
             <>
               <ChevronLeft className="w-5 h-5" />
-              <span className="text-sm">Colapsar</span>
+              <span className="text-sm">{t.common.collapse}</span>
             </>
           )}
         </button>

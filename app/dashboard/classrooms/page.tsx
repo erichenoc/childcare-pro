@@ -26,13 +26,17 @@ import {
   GlassRatioIndicator,
 } from '@/shared/components/ui'
 
-const ageGroupLabels: Record<string, string> = {
-  infant: 'Bebés (0-12 meses)',
-  toddler: 'Toddlers (1-2 años)',
-  twos: '2 años',
-  threes: '3 años',
-  fours: '4 años',
-  school_age: 'Edad Escolar',
+// Age group labels will be retrieved from translations dynamically
+function getAgeGroupLabel(ageGroup: string, t: ReturnType<typeof useTranslations>): string {
+  const labels: Record<string, string> = {
+    infant: t.classrooms.infant,
+    toddler: t.classrooms.toddler,
+    twos: t.classrooms.twos,
+    threes: t.classrooms.threes,
+    fours: t.classrooms.prek,
+    school_age: t.classrooms.schoolAge,
+  }
+  return labels[ageGroup] || ageGroup
 }
 
 const dcfRatios: Record<string, number> = {
@@ -121,7 +125,7 @@ export default function ClassroomsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{activeClassrooms}</p>
-              <p className="text-sm text-gray-500">Salones Activos</p>
+              <p className="text-sm text-gray-500">{t.classrooms.activeClassrooms}</p>
             </div>
           </div>
         </GlassCard>
@@ -133,7 +137,7 @@ export default function ClassroomsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{totalChildren}</p>
-              <p className="text-sm text-gray-500">Niños Presentes</p>
+              <p className="text-sm text-gray-500">{t.classrooms.childrenPresent}</p>
             </div>
           </div>
         </GlassCard>
@@ -145,7 +149,7 @@ export default function ClassroomsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{totalStaff}</p>
-              <p className="text-sm text-gray-500">Personal Asignado</p>
+              <p className="text-sm text-gray-500">{t.classrooms.assignedStaffLabel}</p>
             </div>
           </div>
         </GlassCard>
@@ -157,7 +161,7 @@ export default function ClassroomsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{totalCapacity}</p>
-              <p className="text-sm text-gray-500">Capacidad Total</p>
+              <p className="text-sm text-gray-500">{t.classrooms.totalCapacity}</p>
             </div>
           </div>
         </GlassCard>
@@ -225,11 +229,11 @@ export default function ClassroomsPage() {
                   <div className="flex items-center justify-between">
                     <GlassCardTitle className="text-lg">{classroom.name}</GlassCardTitle>
                     <GlassBadge variant={classroom.status === 'active' ? 'success' : 'default'} size="sm">
-                      {classroom.status === 'active' ? 'Activo' : 'Inactivo'}
+                      {classroom.status === 'active' ? t.common.active : t.common.inactive}
                     </GlassBadge>
                   </div>
                   <p className="text-sm text-gray-500">
-                    {ageGroupLabels[classroom.age_group || 'threes'] || classroom.age_group}
+                    {getAgeGroupLabel(classroom.age_group || 'threes', t)}
                   </p>
                 </GlassCardHeader>
 
@@ -237,7 +241,7 @@ export default function ClassroomsPage() {
                   {/* Ratio Indicator */}
                   <div className="p-3 rounded-xl bg-gray-50">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-500">Ratio DCF</span>
+                      <span className="text-sm text-gray-500">{t.classrooms.dcfRatio}</span>
                       <GlassBadge
                         variant={ratioStatus === 'compliant' ? 'success' : ratioStatus === 'warning' ? 'warning' : 'error'}
                         size="sm"
@@ -247,10 +251,10 @@ export default function ClassroomsPage() {
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">
-                        Actual: <strong>{classroom.current_ratio}:1</strong>
+                        {t.classrooms.actual}: <strong>{classroom.current_ratio}:1</strong>
                       </span>
                       <span className="text-gray-600">
-                        Requerido: <strong>{requiredRatio}:1</strong>
+                        {t.classrooms.required}: <strong>{requiredRatio}:1</strong>
                       </span>
                     </div>
                   </div>
@@ -259,15 +263,15 @@ export default function ClassroomsPage() {
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div className="p-2 rounded-lg bg-blue-50">
                       <p className="text-lg font-bold text-blue-600">{classroom.children_count}</p>
-                      <p className="text-xs text-gray-500">Niños</p>
+                      <p className="text-xs text-gray-500">{t.classrooms.children}</p>
                     </div>
                     <div className="p-2 rounded-lg bg-purple-50">
                       <p className="text-lg font-bold text-purple-600">{classroom.staff_count}</p>
-                      <p className="text-xs text-gray-500">Staff</p>
+                      <p className="text-xs text-gray-500">{t.classrooms.staff}</p>
                     </div>
                     <div className="p-2 rounded-lg bg-gray-50">
                       <p className="text-lg font-bold text-gray-600">{classroom.capacity || '-'}</p>
-                      <p className="text-xs text-gray-500">Capacidad</p>
+                      <p className="text-xs text-gray-500">{t.classrooms.capacity}</p>
                     </div>
                   </div>
 
@@ -276,13 +280,13 @@ export default function ClassroomsPage() {
                     <Link href={`/dashboard/classrooms/${classroom.id}`}>
                       <GlassButton variant="ghost" size="sm">
                         <Eye className="w-4 h-4 mr-1" />
-                        Ver
+                        {t.common.view}
                       </GlassButton>
                     </Link>
                     <Link href={`/dashboard/classrooms/${classroom.id}/edit`}>
                       <GlassButton variant="ghost" size="sm">
                         <Edit className="w-4 h-4 mr-1" />
-                        Editar
+                        {t.common.edit}
                       </GlassButton>
                     </Link>
                   </div>

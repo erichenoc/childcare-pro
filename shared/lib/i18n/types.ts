@@ -40,6 +40,14 @@ export interface Translations {
     showMore: string
     showLess: string
     allRightsReserved: string
+    collapse: string
+    expand: string
+    attendanceRate: string
+    unassigned: string
+    allStatuses: string
+    allClassrooms: string
+    deleteChildConfirm: string
+    deleteChildError: string
   }
   nav: {
     dashboard: string
@@ -217,6 +225,15 @@ export interface Translations {
     billingHistory: string
     searchFamilies: string
     noFamiliesFound: string
+    totalFamilies: string
+    activeFamilies: string
+    withBalance: string
+    noBalance: string
+    allBalances: string
+    totalBalance: string
+    familiesList: string
+    viewChildren: string
+    deleteFamilyConfirm: string
   }
   staff: {
     title: string
@@ -304,6 +321,15 @@ export interface Translations {
     noClassroomsFound: string
     ratioMonitor: string
     realTimeRatios: string
+    activeClassrooms: string
+    childrenPresent: string
+    assignedStaffLabel: string
+    totalCapacity: string
+    dcfRatio: string
+    actual: string
+    required: string
+    children: string
+    staff: string
   }
   attendance: {
     title: string
@@ -351,6 +377,14 @@ export interface Translations {
     attendanceHistory: string
     searchAttendance: string
     noAttendanceRecords: string
+    notRecorded: string
+    entryTime: string
+    exitTime: string
+    note: string
+    noClassroomAssigned: string
+    checkInError: string
+    checkOutError: string
+    markAbsentError: string
   }
   billing: {
     title: string
@@ -418,6 +452,25 @@ export interface Translations {
     outstandingBalance: string
     searchInvoices: string
     noInvoicesFound: string
+    // Additional billing translations
+    collected: string
+    paidInvoices: string
+    overdueInvoices: string
+    allPeriods: string
+    period: string
+    invoice: string
+    notes: string
+    notesPlaceholder: string
+    amountToPay: string
+    payWithCard: string
+    stripeRedirectMessage: string
+    paymentCanceled: string
+    paymentRecorded: string
+    paymentError: string
+    invalidAmount: string
+    amountExceedsBalance: string
+    invoicePayment: string
+    stripeNotConfigured: string
   }
   communication: {
     title: string
@@ -476,6 +529,13 @@ export interface Translations {
     read: string
     searchMessages: string
     noMessagesFound: string
+    noAnnouncementsFound: string
+    system: string
+    noSubject: string
+    announcement: string
+    received: string
+    audienceAll: string
+    audienceParents: string
   }
   reports: {
     title: string
@@ -487,6 +547,7 @@ export interface Translations {
     complianceReport: string
     dcfReport: string
     ratioReport: string
+    incidentsReport: string
     generateReport: string
     dateRange: string
     startDate: string
@@ -497,6 +558,8 @@ export interface Translations {
     thisMonth: string
     lastMonth: string
     thisYear: string
+    thisQuarter: string
+    today: string
     custom: string
     exportPdf: string
     exportExcel: string
@@ -508,6 +571,29 @@ export interface Translations {
     comparison: string
     charts: string
     tables: string
+    // Report descriptions
+    attendanceReportDesc: string
+    financialReportDesc: string
+    enrollmentReportDesc: string
+    ratioReportDesc: string
+    incidentsReportDesc: string
+    staffReportDesc: string
+    // Stats labels
+    activeChildren: string
+    avgAttendance: string
+    activeStaff: string
+    dcfCompliance: string
+    activeClassrooms: string
+    openIncidents: string
+    totalEnrolled: string
+    // Summary cards
+    attendanceSummary: string
+    avgAttendanceRate: string
+    activeOfTotal: string
+    dcfComplianceSummary: string
+    ratiosCompliant: string
+    classroomsWithStaff: string
+    generatingReport: string
   }
   incidents: {
     title: string
@@ -575,26 +661,39 @@ export interface Translations {
     locationDetails: string
     locationName: string
     address: string
+    addressNotConfigured: string
     phone: string
     email: string
     operatingHours: string
+    schedule: string
     openingTime: string
     closingTime: string
     daysOfOperation: string
+    capacity: string
+    capacityChildren: string
     licenseNumber: string
     licenseExpiry: string
     dcfProviderId: string
+    dcfCertifications: string
+    dcfLicense: string
+    licenseNumberLabel: string
+    notRegistered: string
     goldSeal: string
     hasGoldSeal: string
+    qualityCertificationActive: string
+    mainCenter: string
     users: string
     addUser: string
     editUser: string
     userManagement: string
+    userManagementDescription: string
     permissions: string
     roles: string
     billing: string
     billingSettings: string
     subscription: string
+    subscriptionActive: string
+    subscriptionStatus: string
     currentPlan: string
     upgradePlan: string
     downgradePlan: string
@@ -606,8 +705,11 @@ export interface Translations {
     notifications: string
     notificationSettings: string
     emailNotifications: string
+    emailNotificationsDesc: string
     smsNotifications: string
+    smsNotificationsDesc: string
     pushNotifications: string
+    pushNotificationsDesc: string
     language: string
     selectLanguage: string
     timezone: string
@@ -621,10 +723,13 @@ export interface Translations {
     systemDefault: string
     security: string
     changePassword: string
+    changePasswordDesc: string
     twoFactorAuth: string
+    twoFactorAuthDesc: string
     enable2FA: string
     disable2FA: string
     sessions: string
+    sessionsDesc: string
     logoutAllSessions: string
   }
   auth: {
@@ -861,6 +966,59 @@ export interface Translations {
     weeklyMenu: string
     dietaryRestrictions: string
     allergies: string
+  }
+  profile: {
+    title: string
+    subtitle: string
+    personalInfo: string
+    memberSince: string
+    saveChanges: string
+    saving: string
+    updateSuccess: string
+    updateError: string
+    firstName: string
+    lastName: string
+    phone: string
+    email: string
+    organization: string
+    changePhoto: string
+  }
+  help: {
+    title: string
+    subtitle: string
+    quickLinks: string
+    faq: string
+    faqTitle: string
+    needMoreHelp: string
+    contactEmail: string
+    contactPhone: string
+    documentation: string
+    completeGuides: string
+    viewAllNotifications: string
+    // FAQ categories
+    allCategories: string
+    childrenAndFamilies: string
+    attendanceCategory: string
+    billingCategory: string
+    staffCategory: string
+    settingsCategory: string
+    // FAQ questions and answers
+    faqRegisterChild: string
+    faqRegisterChildAnswer: string
+    faqAddFamily: string
+    faqAddFamilyAnswer: string
+    faqAttendanceHow: string
+    faqAttendanceHowAnswer: string
+    faqDcfRatios: string
+    faqDcfRatiosAnswer: string
+    faqGenerateInvoice: string
+    faqGenerateInvoiceAnswer: string
+    faqPaymentMethods: string
+    faqPaymentMethodsAnswer: string
+    faqStaffSchedules: string
+    faqStaffSchedulesAnswer: string
+    faqChangeLanguage: string
+    faqChangeLanguageAnswer: string
   }
   dcfRatios: {
     title: string

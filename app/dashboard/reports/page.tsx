@@ -27,63 +27,64 @@ import { incidentsService } from '@/features/incidents/services/incidents.servic
 import { classroomsService } from '@/features/classrooms/services/classrooms.service'
 import { staffService } from '@/features/staff/services/staff.service'
 
-const reportTypes = [
+interface ReportType {
+  id: string
+  icon: typeof ClipboardCheck
+  color: string
+  titleKey: 'attendanceReport' | 'financialReport' | 'enrollmentReport' | 'ratioReport' | 'staffReport' | 'incidentsReport'
+  descriptionKey: 'attendanceReportDesc' | 'financialReportDesc' | 'enrollmentReportDesc' | 'ratioReportDesc' | 'incidentsReportDesc' | 'staffReportDesc'
+  formats: string[]
+}
+
+const reportTypes: ReportType[] = [
   {
     id: 'attendance',
     icon: ClipboardCheck,
     color: 'blue',
-    title: 'Reporte de Asistencia',
-    description: 'Resumen detallado de asistencia diaria, semanal o mensual',
+    titleKey: 'attendanceReport',
+    descriptionKey: 'attendanceReportDesc',
     formats: ['PDF', 'Excel'],
   },
   {
     id: 'financial',
     icon: DollarSign,
     color: 'green',
-    title: 'Reporte Financiero',
-    description: 'Ingresos, pagos pendientes y estado de facturacion',
+    titleKey: 'financialReport',
+    descriptionKey: 'financialReportDesc',
     formats: ['PDF', 'Excel'],
   },
   {
     id: 'enrollment',
     icon: Users,
     color: 'purple',
-    title: 'Reporte de Inscripciones',
-    description: 'Estado de inscripciones y capacidad por salon',
+    titleKey: 'enrollmentReport',
+    descriptionKey: 'enrollmentReportDesc',
     formats: ['PDF', 'Excel'],
   },
   {
     id: 'ratios',
     icon: BarChart3,
     color: 'orange',
-    title: 'Reporte de Ratios DCF',
-    description: 'Cumplimiento de ratios segun regulaciones de Florida',
+    titleKey: 'ratioReport',
+    descriptionKey: 'ratioReportDesc',
     formats: ['PDF'],
   },
   {
     id: 'incidents',
     icon: AlertTriangle,
     color: 'red',
-    title: 'Reporte de Incidentes',
-    description: 'Historial de incidentes y seguimiento',
+    titleKey: 'incidentsReport',
+    descriptionKey: 'incidentsReportDesc',
     formats: ['PDF', 'Excel'],
   },
   {
     id: 'staff',
     icon: Users,
     color: 'teal',
-    title: 'Reporte de Personal',
-    description: 'Horas trabajadas, certificaciones y cumplimiento',
+    titleKey: 'staffReport',
+    descriptionKey: 'staffReportDesc',
     formats: ['PDF', 'Excel'],
   },
-]
-
-const periodOptions = [
-  { value: 'today', label: 'Hoy' },
-  { value: 'week', label: 'Esta Semana' },
-  { value: 'month', label: 'Este Mes' },
-  { value: 'quarter', label: 'Este Trimestre' },
-  { value: 'year', label: 'Este Ano' },
 ]
 
 interface ReportStats {
@@ -98,6 +99,15 @@ interface ReportStats {
 
 export default function ReportsPage() {
   const t = useTranslations()
+
+  // Period options using translations
+  const periodOptions = [
+    { value: 'today', label: t.reports.today },
+    { value: 'week', label: t.reports.thisWeek },
+    { value: 'month', label: t.reports.thisMonth },
+    { value: 'quarter', label: t.reports.thisQuarter },
+    { value: 'year', label: t.reports.thisYear },
+  ]
 
   const [selectedPeriod, setSelectedPeriod] = useState('month')
   const [isLoading, setIsLoading] = useState(true)
@@ -187,7 +197,7 @@ export default function ReportsPage() {
 
   function handleDownload(reportId: string, format: string) {
     // TODO: Implement actual report generation
-    alert(`Generando reporte ${reportId} en formato ${format}...`)
+    alert(t.reports.generatingReport.replace('{reportId}', reportId).replace('{format}', format))
   }
 
   if (isLoading) {
@@ -230,7 +240,7 @@ export default function ReportsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.activeChildren}</p>
-              <p className="text-sm text-gray-500">Ninos Activos</p>
+              <p className="text-sm text-gray-500">{t.reports.activeChildren}</p>
             </div>
           </div>
         </GlassCard>
@@ -242,7 +252,7 @@ export default function ReportsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.attendanceRate}%</p>
-              <p className="text-sm text-gray-500">Asistencia Prom.</p>
+              <p className="text-sm text-gray-500">{t.reports.avgAttendance}</p>
             </div>
           </div>
         </GlassCard>
@@ -254,7 +264,7 @@ export default function ReportsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.totalStaff}</p>
-              <p className="text-sm text-gray-500">Personal Activo</p>
+              <p className="text-sm text-gray-500">{t.reports.activeStaff}</p>
             </div>
           </div>
         </GlassCard>
@@ -266,7 +276,7 @@ export default function ReportsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.dcfCompliance}%</p>
-              <p className="text-sm text-gray-500">Cumplimiento DCF</p>
+              <p className="text-sm text-gray-500">{t.reports.dcfCompliance}</p>
             </div>
           </div>
         </GlassCard>
@@ -281,7 +291,7 @@ export default function ReportsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.activeClassrooms}</p>
-              <p className="text-sm text-gray-500">Salones Activos</p>
+              <p className="text-sm text-gray-500">{t.reports.activeClassrooms}</p>
             </div>
           </div>
         </GlassCard>
@@ -293,7 +303,7 @@ export default function ReportsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.openIncidents}</p>
-              <p className="text-sm text-gray-500">Incidentes Abiertos</p>
+              <p className="text-sm text-gray-500">{t.reports.openIncidents}</p>
             </div>
           </div>
         </GlassCard>
@@ -305,7 +315,7 @@ export default function ReportsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.totalChildren}</p>
-              <p className="text-sm text-gray-500">Total Inscritos</p>
+              <p className="text-sm text-gray-500">{t.reports.totalEnrolled}</p>
             </div>
           </div>
         </GlassCard>
@@ -326,8 +336,8 @@ export default function ReportsPage() {
                     <Icon className={`w-6 h-6 ${colors.text}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 mb-1">{report.title}</h3>
-                    <p className="text-sm text-gray-500 mb-3">{report.description}</p>
+                    <h3 className="font-semibold text-gray-900 mb-1">{t.reports[report.titleKey]}</h3>
+                    <p className="text-sm text-gray-500 mb-3">{t.reports[report.descriptionKey]}</p>
                     <div className="flex flex-wrap gap-2">
                       {report.formats.map((format) => (
                         <GlassButton
@@ -353,12 +363,12 @@ export default function ReportsPage() {
       <div className="grid md:grid-cols-2 gap-6">
         <GlassCard>
           <GlassCardHeader>
-            <GlassCardTitle>Resumen de Asistencia</GlassCardTitle>
+            <GlassCardTitle>{t.reports.attendanceSummary}</GlassCardTitle>
           </GlassCardHeader>
           <GlassCardContent>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-gray-500">Promedio de asistencia</span>
+                <span className="text-gray-500">{t.reports.avgAttendanceRate}</span>
                 <span className="font-semibold text-gray-900">{stats.attendanceRate}%</span>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-2">
@@ -368,7 +378,7 @@ export default function ReportsPage() {
                 />
               </div>
               <p className="text-sm text-gray-500">
-                {stats.activeChildren} ninos activos de {stats.totalChildren} inscritos
+                {t.reports.activeOfTotal.replace('{active}', String(stats.activeChildren)).replace('{total}', String(stats.totalChildren))}
               </p>
             </div>
           </GlassCardContent>
@@ -376,12 +386,12 @@ export default function ReportsPage() {
 
         <GlassCard>
           <GlassCardHeader>
-            <GlassCardTitle>Cumplimiento DCF</GlassCardTitle>
+            <GlassCardTitle>{t.reports.dcfComplianceSummary}</GlassCardTitle>
           </GlassCardHeader>
           <GlassCardContent>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-gray-500">Ratios en cumplimiento</span>
+                <span className="text-gray-500">{t.reports.ratiosCompliant}</span>
                 <span className="font-semibold text-gray-900">{stats.dcfCompliance}%</span>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-2">
@@ -391,7 +401,7 @@ export default function ReportsPage() {
                 />
               </div>
               <p className="text-sm text-gray-500">
-                {stats.activeClassrooms} salones activos con {stats.totalStaff} personal asignado
+                {t.reports.classroomsWithStaff.replace('{classrooms}', String(stats.activeClassrooms)).replace('{staff}', String(stats.totalStaff))}
               </p>
             </div>
           </GlassCardContent>

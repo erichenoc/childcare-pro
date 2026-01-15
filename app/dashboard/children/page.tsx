@@ -55,18 +55,18 @@ interface ChildDisplayData {
   enrollmentDate: string
 }
 
-function calculateAge(dateOfBirth: string): string {
+function calculateAge(dateOfBirth: string, t: ReturnType<typeof useTranslations>): string {
   const today = new Date()
   const birthDate = new Date(dateOfBirth)
   const months = (today.getFullYear() - birthDate.getFullYear()) * 12 +
                  (today.getMonth() - birthDate.getMonth())
 
   if (months < 12) {
-    return `${months} ${months === 1 ? 'mes' : 'meses'}`
+    return `${months} ${t.children.months}`
   }
 
   const years = Math.floor(months / 12)
-  return `${years} ${years === 1 ? 'año' : 'años'}`
+  return `${years} ${t.children.years}`
 }
 
 export default function ChildrenPage() {
@@ -81,14 +81,15 @@ export default function ChildrenPage() {
   const [selectedStatus, setSelectedStatus] = useState('')
 
   const statusOptions = [
-    { value: '', label: 'Todos los Estados' },
-    { value: 'present', label: 'Presentes' },
-    { value: 'absent', label: 'Ausentes' },
+    { value: '', label: t.common.allStatuses },
+    { value: 'present', label: t.children.present },
+    { value: 'absent', label: t.children.absent },
   ]
 
   useEffect(() => {
     loadData()
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t])
 
   async function loadData() {
     try {
@@ -125,8 +126,8 @@ export default function ChildrenPage() {
           firstName: child.first_name,
           lastName: child.last_name,
           dateOfBirth: child.date_of_birth,
-          age: calculateAge(child.date_of_birth),
-          classroom: child.classroom?.name || 'Sin asignar',
+          age: calculateAge(child.date_of_birth, t),
+          classroom: child.classroom?.name || t.common.unassigned,
           classroomId: child.classroom_id,
           status: attendanceMap.get(child.id) === 'present' ? 'present' : 'absent',
           parentName: child.family?.primary_contact_name || 'N/A',
@@ -140,7 +141,7 @@ export default function ChildrenPage() {
 
       // Transform classrooms for select
       setClassrooms([
-        { value: '', label: 'Todos los Salones' },
+        { value: '', label: t.common.allClassrooms },
         ...classroomsData.map(c => ({ value: c.id, label: c.name }))
       ])
 
@@ -152,14 +153,14 @@ export default function ChildrenPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('¿Estás seguro de que deseas eliminar este niño?')) return
+    if (!confirm(t.common.deleteChildConfirm)) return
 
     try {
       await childrenService.delete(id)
       setChildren(prev => prev.filter(c => c.id !== id))
     } catch (error) {
       console.error('Error deleting child:', error)
-      alert('Error al eliminar el niño')
+      alert(t.common.deleteChildError)
     }
   }
 

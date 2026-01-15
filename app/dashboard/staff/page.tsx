@@ -38,30 +38,31 @@ import {
   GlassTableEmpty,
 } from '@/shared/components/ui'
 
-const roleOptions = [
-  { value: '', label: 'Todos los Roles' },
-  { value: 'director', label: 'Director' },
-  { value: 'admin', label: 'Administrador' },
-  { value: 'teacher', label: 'Maestro' },
-  { value: 'assistant', label: 'Asistente' },
-]
-
-const statusOptions = [
-  { value: '', label: 'Todos los Estados' },
-  { value: 'active', label: 'Activo' },
-  { value: 'inactive', label: 'Inactivo' },
-]
-
-const roleLabels: Record<string, string> = {
-  director: 'Director',
-  teacher: 'Maestro',
-  assistant: 'Asistente',
-  admin: 'Administrador',
-}
-
 export default function StaffPage() {
   const t = useTranslations()
   const { formatDate } = useI18n()
+
+  // Translation-based options
+  const roleOptions = [
+    { value: '', label: t.common.all + ' ' + t.settings.roles },
+    { value: 'director', label: t.staff.director },
+    { value: 'admin', label: t.staff.admin },
+    { value: 'teacher', label: t.staff.teacher },
+    { value: 'assistant', label: t.staff.assistant },
+  ]
+
+  const statusOptions = [
+    { value: '', label: t.common.allStatuses },
+    { value: 'active', label: t.common.active },
+    { value: 'inactive', label: t.common.inactive },
+  ]
+
+  const roleLabels: Record<string, string> = {
+    director: t.staff.director,
+    teacher: t.staff.teacher,
+    assistant: t.staff.assistant,
+    admin: t.staff.admin,
+  }
 
   const [staff, setStaff] = useState<Profile[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -147,7 +148,7 @@ export default function StaffPage() {
               <p className="text-2xl font-bold text-gray-900">
                 {stats.total}
               </p>
-              <p className="text-sm text-gray-500">Total Personal</p>
+              <p className="text-sm text-gray-500">{t.dashboard.staffOnDuty}</p>
             </div>
           </div>
         </GlassCard>
@@ -161,7 +162,7 @@ export default function StaffPage() {
               <p className="text-2xl font-bold text-gray-900">
                 {stats.active}
               </p>
-              <p className="text-sm text-gray-500">Activos</p>
+              <p className="text-sm text-gray-500">{t.common.active}</p>
             </div>
           </div>
         </GlassCard>
@@ -175,7 +176,7 @@ export default function StaffPage() {
               <p className="text-2xl font-bold text-gray-900">
                 {stats.teachers}
               </p>
-              <p className="text-sm text-gray-500">Maestros</p>
+              <p className="text-sm text-gray-500">{t.staff.teacher}</p>
             </div>
           </div>
         </GlassCard>
@@ -189,7 +190,7 @@ export default function StaffPage() {
               <p className="text-2xl font-bold text-gray-900">
                 {stats.assistants}
               </p>
-              <p className="text-sm text-gray-500">Asistentes</p>
+              <p className="text-sm text-gray-500">{t.staff.assistant}</p>
             </div>
           </div>
         </GlassCard>
@@ -249,7 +250,7 @@ export default function StaffPage() {
                   dot
                   size="sm"
                 >
-                  {member.status === 'active' ? 'Activo' : 'Inactivo'}
+                  {member.status === 'active' ? t.common.active : t.common.inactive}
                 </GlassBadge>
               </div>
 
@@ -289,16 +290,16 @@ export default function StaffPage() {
       <div className="hidden md:block">
         <GlassCard>
           <GlassCardHeader>
-            <GlassCardTitle>Lista de Personal</GlassCardTitle>
+            <GlassCardTitle>{t.staff.title}</GlassCardTitle>
           </GlassCardHeader>
           <GlassCardContent className="p-0">
             <GlassTable>
               <GlassTableHeader>
                 <GlassTableRow>
-                  <GlassTableHead>Empleado</GlassTableHead>
-                  <GlassTableHead>Rol</GlassTableHead>
-                  <GlassTableHead>Teléfono</GlassTableHead>
-                  <GlassTableHead>Estado</GlassTableHead>
+                  <GlassTableHead>{t.nav.staff}</GlassTableHead>
+                  <GlassTableHead>{t.staff.role}</GlassTableHead>
+                  <GlassTableHead>{t.children.phone}</GlassTableHead>
+                  <GlassTableHead>{t.common.status}</GlassTableHead>
                   <GlassTableHead className="text-right">{t.common.actions}</GlassTableHead>
                 </GlassTableRow>
               </GlassTableHeader>
@@ -332,7 +333,7 @@ export default function StaffPage() {
                           variant={member.status === 'active' ? 'success' : 'default'}
                           dot
                         >
-                          {member.status === 'active' ? 'Activo' : 'Inactivo'}
+                          {member.status === 'active' ? t.common.active : t.common.inactive}
                         </GlassBadge>
                       </GlassTableCell>
                       <GlassTableCell className="text-right">

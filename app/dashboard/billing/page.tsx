@@ -41,13 +41,7 @@ import {
   GlassTableEmpty,
 } from '@/shared/components/ui'
 
-const statusOptions = [
-  { value: '', label: 'Todos los Estados' },
-  { value: 'paid', label: 'Pagado' },
-  { value: 'pending', label: 'Pendiente' },
-  { value: 'partial', label: 'Pago Parcial' },
-  { value: 'overdue', label: 'Vencido' },
-]
+// Status options will be created inside component to use translations
 
 type PaymentModalData = {
   invoiceId: string
@@ -62,6 +56,15 @@ export default function BillingPage() {
   const t = useTranslations()
   const { formatCurrency, formatDate } = useI18n()
   const searchParams = useSearchParams()
+
+  // Status options with translations
+  const statusOptions = [
+    { value: '', label: t.common.allStatuses },
+    { value: 'paid', label: t.billing.paid },
+    { value: 'pending', label: t.billing.pending },
+    { value: 'partial', label: t.billing.partiallyPaid },
+    { value: 'overdue', label: t.billing.overdue },
+  ]
 
   const [invoices, setInvoices] = useState<InvoiceWithFamily[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -86,11 +89,11 @@ export default function BillingPage() {
     const canceled = searchParams.get('canceled')
 
     if (success === 'true') {
-      setSuccessMessage('¡Pago procesado exitosamente!')
+      setSuccessMessage(t.success.paymentProcessed)
       // Clear URL params
       window.history.replaceState({}, '', '/dashboard/billing')
     } else if (canceled === 'true') {
-      setErrorMessage('El pago fue cancelado')
+      setErrorMessage(t.billing.paymentCanceled || 'Payment was canceled')
       window.history.replaceState({}, '', '/dashboard/billing')
     }
 
@@ -116,14 +119,18 @@ export default function BillingPage() {
   // Helper to format period from period_start date
   function formatPeriod(periodStart: string): string {
     const date = new Date(periodStart)
-    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    const monthsEs = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    const monthsEn = ['January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December']
+    // Use Spanish months as default (can be expanded with locale detection)
+    const months = monthsEs
     return `${months[date.getMonth()]} ${date.getFullYear()}`
   }
 
   // Get unique periods from invoices
   const periodOptions = [
-    { value: '', label: 'Todos los Períodos' },
+    { value: '', label: t.billing.allPeriods || 'All Periods' },
     ...Array.from(new Set(invoices.map(inv => formatPeriod(inv.period_start)))).map(period => ({
       value: period,
       label: period,
@@ -164,7 +171,7 @@ export default function BillingPage() {
   function openPaymentModal(invoice: InvoiceWithFamily) {
     const familyName = invoice.family
       ? invoice.family.primary_contact_name
-      : 'Familia'
+      : t.nav.families
 
     setPaymentModal({
       invoiceId: invoice.id,
@@ -191,12 +198,12 @@ export default function BillingPage() {
 
     const amount = parseFloat(paymentAmount)
     if (isNaN(amount) || amount <= 0) {
-      setErrorMessage('Por favor ingrese un monto válido')
+      setErrorMessage(t.billing.invalidAmount || 'Please enter a valid amount')
       return
     }
 
     if (amount > paymentModal.balance) {
-      setErrorMessage('El monto no puede exceder el saldo pendiente')
+      setErrorMessage(t.billing.amountExceedsBalance || 'Amount cannot exceed the pending balance')
       return
     }
 
@@ -211,13 +218,13 @@ export default function BillingPage() {
           amount,
           familyName: paymentModal.familyName,
           invoiceNumber: paymentModal.invoiceNumber,
-          description: `Pago de factura ${paymentModal.invoiceNumber}`,
+          description: `${t.billing.invoicePayment || 'Invoice payment'} ${paymentModal.invoiceNumber}`,
         })
 
         if ('error' in result) {
           // If Stripe is not configured, show demo message
           if (result.error.includes('not configured')) {
-            setErrorMessage('Stripe no está configurado. Configure STRIPE_SECRET_KEY para procesar pagos con tarjeta.')
+            setErrorMessage(t.billing.stripeNotConfigured || 'Stripe is not configured. Configure STRIPE_SECRET_KEY to process card payments.')
           } else {
             setErrorMessage(result.error)
           }
@@ -234,13 +241,13 @@ export default function BillingPage() {
           notes: paymentNotes || undefined,
         })
 
-        setSuccessMessage('¡Pago registrado exitosamente!')
+        setSuccessMessage(t.billing.paymentRecorded || 'Payment recorded successfully!')
         closePaymentModal()
         await loadData()
       }
     } catch (error) {
       console.error('Error processing payment:', error)
-      setErrorMessage('Error al procesar el pago')
+      setErrorMessage(t.billing.paymentError || 'Error processing payment')
     } finally {
       setIsProcessing(false)
     }
@@ -315,7 +322,7 @@ export default function BillingPage() {
               <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
                 {formatCurrency(stats.totalCollected)}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Recaudado</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.billing.collected || 'Collected'}</p>
             </div>
           </div>
         </GlassCard>
@@ -329,7 +336,7 @@ export default function BillingPage() {
               <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
                 {formatCurrency(stats.totalPending)}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Pendiente</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.billing.pending}</p>
             </div>
           </div>
         </GlassCard>
@@ -341,7 +348,7 @@ export default function BillingPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.paidCount}</p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Pagadas</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.billing.paidInvoices || 'Paid'}</p>
             </div>
           </div>
         </GlassCard>
@@ -353,7 +360,7 @@ export default function BillingPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.overdueCount}</p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Vencidas</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.billing.overdueInvoices || 'Overdue'}</p>
             </div>
           </div>
         </GlassCard>
@@ -399,7 +406,7 @@ export default function BillingPage() {
           filteredInvoices.map((invoice) => {
             const familyName = invoice.family
               ? invoice.family.primary_contact_name
-              : 'Familia'
+              : t.nav.families
             const balance = invoice.total - (invoice.amount_paid || 0)
 
             return (
@@ -417,27 +424,27 @@ export default function BillingPage() {
 
                 <div className="space-y-2 mb-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Período:</span>
+                    <span className="text-gray-500">{t.billing.period || 'Period'}:</span>
                     <span className="text-gray-900">{formatPeriod(invoice.period_start)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Total:</span>
+                    <span className="text-gray-500">{t.billing.total}:</span>
                     <span className="font-semibold text-gray-900">{formatCurrency(invoice.total)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Pagado:</span>
+                    <span className="text-gray-500">{t.billing.amountPaid}:</span>
                     <span className="text-gray-900">{formatCurrency(invoice.amount_paid || 0)}</span>
                   </div>
                   {balance > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Saldo:</span>
+                      <span className="text-gray-500">{t.billing.balance}:</span>
                       <span className="text-orange-600 font-semibold">
                         {formatCurrency(balance)}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Vence:</span>
+                    <span className="text-gray-500">{t.billing.dueDate}:</span>
                     <span className="text-gray-900">{formatDate(invoice.due_date)}</span>
                   </div>
                 </div>
@@ -476,13 +483,13 @@ export default function BillingPage() {
             <GlassTable>
               <GlassTableHeader>
                 <GlassTableRow>
-                  <GlassTableHead>Factura</GlassTableHead>
-                  <GlassTableHead>Familia</GlassTableHead>
-                  <GlassTableHead>Período</GlassTableHead>
-                  <GlassTableHead>Total</GlassTableHead>
-                  <GlassTableHead>Saldo</GlassTableHead>
-                  <GlassTableHead>Vencimiento</GlassTableHead>
-                  <GlassTableHead>Estado</GlassTableHead>
+                  <GlassTableHead>{t.billing.invoice || 'Invoice'}</GlassTableHead>
+                  <GlassTableHead>{t.families.familyName || 'Family'}</GlassTableHead>
+                  <GlassTableHead>{t.billing.period || 'Period'}</GlassTableHead>
+                  <GlassTableHead>{t.billing.total}</GlassTableHead>
+                  <GlassTableHead>{t.billing.balance}</GlassTableHead>
+                  <GlassTableHead>{t.billing.dueDate}</GlassTableHead>
+                  <GlassTableHead>{t.common.status}</GlassTableHead>
                   <GlassTableHead className="text-right">{t.common.actions}</GlassTableHead>
                 </GlassTableRow>
               </GlassTableHeader>
@@ -493,7 +500,7 @@ export default function BillingPage() {
                   filteredInvoices.map((invoice) => {
                     const familyName = invoice.family
                       ? invoice.family.primary_contact_name
-                      : 'Familia'
+                      : t.nav.families
                     const balance = invoice.total - (invoice.amount_paid || 0)
 
                     return (
@@ -558,7 +565,7 @@ export default function BillingPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <GlassCard className="w-full max-w-md animate-scale-in">
             <GlassCardHeader className="flex flex-row items-center justify-between">
-              <GlassCardTitle>Registrar Pago</GlassCardTitle>
+              <GlassCardTitle>{t.billing.recordPayment}</GlassCardTitle>
               <button
                 onClick={closePaymentModal}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -570,19 +577,19 @@ export default function BillingPage() {
               {/* Invoice Info */}
               <div className="p-4 rounded-xl bg-blue-50">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-600">Factura:</span>
+                  <span className="text-sm text-gray-600">{t.billing.invoice || 'Invoice'}:</span>
                   <span className="font-semibold text-gray-900">{paymentModal.invoiceNumber}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-600">Familia:</span>
+                  <span className="text-sm text-gray-600">{t.families.familyName || 'Family'}:</span>
                   <span className="text-gray-900">{paymentModal.familyName}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-600">Total:</span>
+                  <span className="text-sm text-gray-600">{t.billing.total}:</span>
                   <span className="text-gray-900">{formatCurrency(paymentModal.total)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Saldo Pendiente:</span>
+                  <span className="text-sm text-gray-600">{t.billing.outstandingBalance}:</span>
                   <span className="font-bold text-orange-600">{formatCurrency(paymentModal.balance)}</span>
                 </div>
               </div>
@@ -590,7 +597,7 @@ export default function BillingPage() {
               {/* Payment Method */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Método de Pago
+                  {t.billing.paymentMethod}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -602,7 +609,7 @@ export default function BillingPage() {
                     }`}
                   >
                     <CreditCard className="w-5 h-5" />
-                    <span className="font-medium">Tarjeta</span>
+                    <span className="font-medium">{t.billing.creditCard}</span>
                   </button>
                   <button
                     onClick={() => setPaymentMethod('cash')}
@@ -613,7 +620,7 @@ export default function BillingPage() {
                     }`}
                   >
                     <Banknote className="w-5 h-5" />
-                    <span className="font-medium">Efectivo</span>
+                    <span className="font-medium">{t.billing.cash}</span>
                   </button>
                   <button
                     onClick={() => setPaymentMethod('check')}
@@ -624,7 +631,7 @@ export default function BillingPage() {
                     }`}
                   >
                     <DollarSign className="w-5 h-5" />
-                    <span className="font-medium">Cheque</span>
+                    <span className="font-medium">{t.billing.check}</span>
                   </button>
                   <button
                     onClick={() => setPaymentMethod('bank_transfer')}
@@ -635,7 +642,7 @@ export default function BillingPage() {
                     }`}
                   >
                     <DollarSign className="w-5 h-5" />
-                    <span className="font-medium">Transfer.</span>
+                    <span className="font-medium">{t.billing.bankTransfer}</span>
                   </button>
                 </div>
               </div>
@@ -643,7 +650,7 @@ export default function BillingPage() {
               {/* Amount */}
               <GlassInput
                 type="number"
-                label="Monto a Pagar"
+                label={t.billing.amountToPay || 'Amount to Pay'}
                 placeholder="0.00"
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(e.target.value)}
@@ -653,8 +660,8 @@ export default function BillingPage() {
               {/* Notes (for manual payments) */}
               {paymentMethod !== 'card' && (
                 <GlassInput
-                  label="Notas (opcional)"
-                  placeholder="Número de cheque, referencia, etc."
+                  label={`${t.billing.notes || 'Notes'} (${t.common.optional.toLowerCase()})`}
+                  placeholder={t.billing.notesPlaceholder || 'Check number, reference, etc.'}
                   value={paymentNotes}
                   onChange={(e) => setPaymentNotes(e.target.value)}
                 />
@@ -668,7 +675,7 @@ export default function BillingPage() {
                   onClick={closePaymentModal}
                   disabled={isProcessing}
                 >
-                  Cancelar
+                  {t.common.cancel}
                 </GlassButton>
                 <GlassButton
                   variant="primary"
@@ -677,13 +684,13 @@ export default function BillingPage() {
                   isLoading={isProcessing}
                   leftIcon={paymentMethod === 'card' ? <CreditCard className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
                 >
-                  {paymentMethod === 'card' ? 'Pagar con Tarjeta' : 'Registrar Pago'}
+                  {paymentMethod === 'card' ? (t.billing.payWithCard || 'Pay with Card') : t.billing.recordPayment}
                 </GlassButton>
               </div>
 
               {paymentMethod === 'card' && (
                 <p className="text-xs text-gray-500 text-center">
-                  Serás redirigido a Stripe para completar el pago de forma segura.
+                  {t.billing.stripeRedirectMessage || 'You will be redirected to Stripe to complete the payment securely.'}
                 </p>
               )}
             </GlassCardContent>

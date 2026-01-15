@@ -98,7 +98,7 @@ export default function AttendancePage() {
             childId: child.id,
             childName: `${child.first_name} ${child.last_name}`,
             classroomId: child.classroom_id || '',
-            classroomName: classroom?.name || 'Sin asignar',
+            classroomName: classroom?.name || t.common.unassigned,
             status,
             checkInTime: attendance?.check_in_time || null,
             checkOutTime: attendance?.check_out_time || null,
@@ -116,7 +116,7 @@ export default function AttendancePage() {
 
   async function handleCheckIn(childId: string, classroomId: string) {
     if (!classroomId) {
-      alert('El niño no tiene un salón asignado')
+      alert(t.attendance.noClassroomAssigned)
       return
     }
 
@@ -126,7 +126,7 @@ export default function AttendancePage() {
       await loadData()
     } catch (error) {
       console.error('Error checking in:', error)
-      alert('Error al registrar entrada')
+      alert(t.attendance.checkInError)
     } finally {
       setLoadingAction(null)
     }
@@ -139,7 +139,7 @@ export default function AttendancePage() {
       await loadData()
     } catch (error) {
       console.error('Error checking out:', error)
-      alert('Error al registrar salida')
+      alert(t.attendance.checkOutError)
     } finally {
       setLoadingAction(null)
     }
@@ -152,7 +152,7 @@ export default function AttendancePage() {
       await loadData()
     } catch (error) {
       console.error('Error marking absent:', error)
-      alert('Error al marcar ausente')
+      alert(t.attendance.markAbsentError)
     } finally {
       setLoadingAction(null)
     }
@@ -173,16 +173,16 @@ export default function AttendancePage() {
   const totalCount = attendanceRecords.length
 
   const classroomOptions = [
-    { value: '', label: 'Todos los Salones' },
+    { value: '', label: t.common.allClassrooms },
     ...classrooms.map(c => ({ value: c.id, label: c.name })),
   ]
 
   const statusOptions = [
-    { value: '', label: 'Todos los Estados' },
-    { value: 'present', label: 'Presente' },
-    { value: 'absent', label: 'Ausente' },
-    { value: 'checked_out', label: 'Retirado' },
-    { value: 'not_recorded', label: 'Sin Registrar' },
+    { value: '', label: t.common.allStatuses },
+    { value: 'present', label: t.attendance.present },
+    { value: 'absent', label: t.attendance.absent },
+    { value: 'checked_out', label: t.attendance.checkedOut },
+    { value: 'not_recorded', label: t.attendance.notRecorded },
   ]
 
   function formatTime(isoString: string | null) {
@@ -202,7 +202,7 @@ export default function AttendancePage() {
       case 'checked_out':
         return <GlassBadge variant="default" dot>{t.attendance.checkedOut}</GlassBadge>
       case 'not_recorded':
-        return <GlassBadge variant="warning" dot>Sin Registrar</GlassBadge>
+        return <GlassBadge variant="warning" dot>{t.attendance.notRecorded}</GlassBadge>
       default:
         return null
     }
@@ -293,7 +293,7 @@ export default function AttendancePage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{notRecordedCount}</p>
-              <p className="text-sm text-gray-500">Sin Registrar</p>
+              <p className="text-sm text-gray-500">{t.attendance.notRecorded}</p>
             </div>
           </div>
         </GlassCard>
@@ -352,7 +352,7 @@ export default function AttendancePage() {
                     <div className="flex items-center gap-4 text-sm">
                       {record.checkInTime && (
                         <div>
-                          <span className="text-gray-500">Entrada:</span>
+                          <span className="text-gray-500">{t.attendance.entryTime}:</span>
                           <span className="ml-1 font-medium text-gray-900">
                             {formatTime(record.checkInTime)}
                           </span>
@@ -360,7 +360,7 @@ export default function AttendancePage() {
                       )}
                       {record.checkOutTime && (
                         <div>
-                          <span className="text-gray-500">Salida:</span>
+                          <span className="text-gray-500">{t.attendance.exitTime}:</span>
                           <span className="ml-1 font-medium text-gray-900">
                             {formatTime(record.checkOutTime)}
                           </span>
@@ -371,7 +371,7 @@ export default function AttendancePage() {
 
                   {record.notes && (
                     <div className="text-sm">
-                      <span className="text-gray-500">Nota:</span>
+                      <span className="text-gray-500">{t.attendance.note}:</span>
                       <span className="ml-1 font-medium text-gray-900">{record.notes}</span>
                     </div>
                   )}
@@ -406,7 +406,7 @@ export default function AttendancePage() {
                             leftIcon={<XCircle className="w-4 h-4" />}
                             onClick={() => handleMarkAbsent(record.childId)}
                           >
-                            Marcar Ausente
+                            {t.attendance.markAbsent}
                           </GlassButton>
                         )}
                       </>

@@ -28,42 +28,7 @@ import {
 } from '@/shared/components/ui'
 import { incidentsService, type IncidentWithRelations } from '@/features/incidents/services/incidents.service'
 
-const typeOptions = [
-  { value: '', label: 'Todos los Tipos' },
-  { value: 'injury', label: 'Lesion' },
-  { value: 'illness', label: 'Enfermedad' },
-  { value: 'behavioral', label: 'Comportamiento' },
-  { value: 'accident', label: 'Accidente' },
-  { value: 'other', label: 'Otro' },
-]
-
-const severityOptions = [
-  { value: '', label: 'Todas las Severidades' },
-  { value: 'low', label: 'Menor' },
-  { value: 'medium', label: 'Moderado' },
-  { value: 'high', label: 'Severo' },
-]
-
-const statusOptions = [
-  { value: '', label: 'Todos los Estados' },
-  { value: 'pending', label: 'Abierto' },
-  { value: 'active', label: 'Pendiente Revision' },
-  { value: 'inactive', label: 'Resuelto' },
-]
-
-const typeLabels: Record<string, string> = {
-  injury: 'Lesion',
-  illness: 'Enfermedad',
-  behavioral: 'Comportamiento',
-  accident: 'Accidente',
-  other: 'Otro',
-}
-
-const severityLabels: Record<string, string> = {
-  low: 'Menor',
-  medium: 'Moderado',
-  high: 'Severo',
-}
+// Note: Options are now built dynamically inside the component to use translations
 
 interface IncidentDisplay {
   id: string
@@ -91,6 +56,44 @@ export default function IncidentsPage() {
   const [incidents, setIncidents] = useState<IncidentDisplay[]>([])
   const [stats, setStats] = useState({ total: 0, open: 0, resolved: 0, severe: 0 })
 
+  // Build options with translations
+  const typeOptions = [
+    { value: '', label: t.common.all },
+    { value: 'injury', label: t.incidents.injury },
+    { value: 'illness', label: t.incidents.illness },
+    { value: 'behavioral', label: t.incidents.behavior },
+    { value: 'accident', label: t.incidents.accident },
+    { value: 'other', label: t.incidents.other },
+  ]
+
+  const severityOptions = [
+    { value: '', label: t.common.all },
+    { value: 'low', label: t.incidents.minor },
+    { value: 'medium', label: t.incidents.moderate },
+    { value: 'high', label: t.incidents.severe },
+  ]
+
+  const statusOptions = [
+    { value: '', label: t.common.allStatuses },
+    { value: 'pending', label: t.incidents.open },
+    { value: 'active', label: t.incidents.pendingReview },
+    { value: 'inactive', label: t.incidents.resolved },
+  ]
+
+  const typeLabels: Record<string, string> = {
+    injury: t.incidents.injury,
+    illness: t.incidents.illness,
+    behavioral: t.incidents.behavior,
+    accident: t.incidents.accident,
+    other: t.incidents.other,
+  }
+
+  const severityLabels: Record<string, string> = {
+    low: t.incidents.minor,
+    medium: t.incidents.moderate,
+    high: t.incidents.severe,
+  }
+
   useEffect(() => {
     loadData()
   }, [])
@@ -109,15 +112,15 @@ export default function IncidentsPage() {
         id: i.id,
         child: {
           id: i.child?.id || '',
-          name: i.child ? `${i.child.first_name} ${i.child.last_name}` : 'Desconocido',
+          name: i.child ? `${i.child.first_name} ${i.child.last_name}` : t.common.noResults,
         },
         type: i.incident_type,
         severity: i.severity || 'low',
         description: i.description,
-        location: i.location || 'No especificada',
+        location: i.location || t.common.unassigned,
         date: i.occurred_at,
         reportedBy: {
-          name: i.reporter ? `${i.reporter.first_name} ${i.reporter.last_name}` : 'Sistema',
+          name: i.reporter ? `${i.reporter.first_name} ${i.reporter.last_name}` : t.communication.system,
         },
         status: i.status || 'pending',
         parentNotified: i.parent_notified || false,
@@ -149,11 +152,11 @@ export default function IncidentsPage() {
   const getSeverityBadge = (severity: string) => {
     switch (severity) {
       case 'low':
-        return <GlassBadge variant="success" size="sm">{severityLabels[severity] || 'Menor'}</GlassBadge>
+        return <GlassBadge variant="success" size="sm">{severityLabels[severity] || t.incidents.minor}</GlassBadge>
       case 'medium':
-        return <GlassBadge variant="warning" size="sm">{severityLabels[severity] || 'Moderado'}</GlassBadge>
+        return <GlassBadge variant="warning" size="sm">{severityLabels[severity] || t.incidents.moderate}</GlassBadge>
       case 'high':
-        return <GlassBadge variant="error" size="sm">{severityLabels[severity] || 'Severo'}</GlassBadge>
+        return <GlassBadge variant="error" size="sm">{severityLabels[severity] || t.incidents.severe}</GlassBadge>
       default:
         return <GlassBadge variant="default" size="sm">{severity}</GlassBadge>
     }
@@ -214,7 +217,7 @@ export default function IncidentsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              <p className="text-sm text-gray-500">Total</p>
+              <p className="text-sm text-gray-500">{t.billing.total}</p>
             </div>
           </div>
         </GlassCard>
@@ -226,7 +229,7 @@ export default function IncidentsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.open}</p>
-              <p className="text-sm text-gray-500">Pendientes</p>
+              <p className="text-sm text-gray-500">{t.billing.pending}</p>
             </div>
           </div>
         </GlassCard>
@@ -238,7 +241,7 @@ export default function IncidentsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.resolved}</p>
-              <p className="text-sm text-gray-500">Resueltos</p>
+              <p className="text-sm text-gray-500">{t.incidents.resolved}</p>
             </div>
           </div>
         </GlassCard>
@@ -250,7 +253,7 @@ export default function IncidentsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.severe}</p>
-              <p className="text-sm text-gray-500">Severos</p>
+              <p className="text-sm text-gray-500">{t.incidents.severe}</p>
             </div>
           </div>
         </GlassCard>
@@ -327,7 +330,7 @@ export default function IncidentsPage() {
                   {incident.parentNotified && (
                     <span className="text-xs text-green-600 flex items-center gap-1">
                       <CheckCircle className="w-3 h-3" />
-                      Padre notificado
+                      {t.incidents.parentNotified}
                     </span>
                   )}
                 </div>
@@ -336,7 +339,7 @@ export default function IncidentsPage() {
               {incident.firstAid && (
                 <div className="mt-3 pt-3 border-t border-blue-100">
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium">Primeros auxilios:</span> {incident.firstAid}
+                    <span className="font-medium">{t.incidents.firstAid}:</span> {incident.firstAid}
                   </p>
                 </div>
               )}

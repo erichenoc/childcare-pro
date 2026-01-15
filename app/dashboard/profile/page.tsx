@@ -65,13 +65,13 @@ export default function ProfilePage() {
 
       if (updated) {
         setProfile(updated)
-        setMessage({ type: 'success', text: 'Perfil actualizado correctamente' })
+        setMessage({ type: 'success', text: t.profile.updateSuccess })
       } else {
-        setMessage({ type: 'error', text: 'Error al actualizar el perfil' })
+        setMessage({ type: 'error', text: t.profile.updateError })
       }
     } catch (error) {
       console.error('Error updating profile:', error)
-      setMessage({ type: 'error', text: 'Error al actualizar el perfil' })
+      setMessage({ type: 'error', text: t.profile.updateError })
     } finally {
       setIsSaving(false)
     }
@@ -79,12 +79,12 @@ export default function ProfilePage() {
 
   const getRoleName = (role: string) => {
     const roles: Record<string, string> = {
-      owner: 'Propietario',
-      director: 'Director',
-      lead_teacher: 'Maestro Líder',
-      teacher: 'Maestro',
-      assistant: 'Asistente',
-      parent: 'Padre/Tutor',
+      owner: t.staff.owner,
+      director: t.staff.director,
+      lead_teacher: t.staff.leadTeacher,
+      teacher: t.staff.teacher,
+      assistant: t.staff.assistant,
+      parent: t.families.guardian,
     }
     return roles[role] || role
   }
@@ -101,8 +101,8 @@ export default function ProfilePage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">{t.nav.profile}</h1>
-        <p className="text-gray-500">Administra tu información personal</p>
+        <h1 className="text-2xl font-bold text-gray-800">{t.profile.title}</h1>
+        <p className="text-gray-500">{t.profile.subtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -130,7 +130,7 @@ export default function ProfilePage() {
 
           <div className="mt-6 pt-6 border-t border-gray-200">
             <div className="text-sm text-gray-500">
-              <p>Miembro desde</p>
+              <p>{t.profile.memberSince}</p>
               <p className="font-medium text-gray-700">
                 {profile?.created_at
                   ? new Date(profile.created_at).toLocaleDateString('es-ES', {
@@ -147,7 +147,7 @@ export default function ProfilePage() {
         {/* Edit Form */}
         <GlassCard className="lg:col-span-2 p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-6">
-            Información Personal
+            {t.profile.personalInfo}
           </h3>
 
           {message && (
@@ -163,25 +163,25 @@ export default function ProfilePage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <GlassInput
-                label="Nombre"
+                label={t.profile.firstName}
                 icon={User}
                 value={formData.first_name}
                 onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                placeholder="Tu nombre"
+                placeholder={t.profile.firstName}
                 required
               />
               <GlassInput
-                label="Apellido"
+                label={t.profile.lastName}
                 icon={User}
                 value={formData.last_name}
                 onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                placeholder="Tu apellido"
+                placeholder={t.profile.lastName}
                 required
               />
             </div>
 
             <GlassInput
-              label="Correo Electrónico"
+              label={t.profile.email}
               icon={Mail}
               type="email"
               value={profile?.email || ''}
@@ -190,7 +190,7 @@ export default function ProfilePage() {
             />
 
             <GlassInput
-              label="Teléfono"
+              label={t.profile.phone}
               icon={Phone}
               type="tel"
               value={formData.phone}
@@ -199,7 +199,7 @@ export default function ProfilePage() {
             />
 
             <GlassInput
-              label="Organización"
+              label={t.profile.organization}
               icon={Building}
               value="ChildCare Pro"
               disabled
@@ -215,12 +215,12 @@ export default function ProfilePage() {
                 {isSaving ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Guardando...
+                    {t.profile.saving}
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    Guardar Cambios
+                    {t.profile.saveChanges}
                   </>
                 )}
               </GlassButton>

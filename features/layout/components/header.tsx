@@ -201,7 +201,7 @@ export function Header({ onMenuClick, className }: HeaderProps) {
                     href="/dashboard/notifications"
                     className="text-sm text-blue-600 hover:underline"
                   >
-                    Ver todas las notificaciones
+                    {t.help.viewAllNotifications}
                   </Link>
                 </div>
               </div>
@@ -278,7 +278,7 @@ export function Header({ onMenuClick, className }: HeaderProps) {
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <LogOut className="w-4 h-4" />
-                    {isLoggingOut ? 'Cerrando sesión...' : t.nav.logout}
+                    {isLoggingOut ? t.common.loading : t.nav.logout}
                   </button>
                 </div>
               </div>

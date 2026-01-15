@@ -39,21 +39,21 @@ import {
   GlassTableEmpty,
 } from '@/shared/components/ui'
 
-const statusOptions = [
-  { value: '', label: 'Todos los Estados' },
-  { value: 'active', label: 'Activas' },
-  { value: 'inactive', label: 'Inactivas' },
-]
-
-const balanceOptions = [
-  { value: '', label: 'Todos los Saldos' },
-  { value: 'pending', label: 'Con Saldo Pendiente' },
-  { value: 'clear', label: 'Sin Saldo' },
-]
-
 export default function FamiliesPage() {
   const t = useTranslations()
   const { formatCurrency } = useI18n()
+
+  const statusOptions = [
+    { value: '', label: t.common.allStatuses },
+    { value: 'active', label: t.common.active },
+    { value: 'inactive', label: t.common.inactive },
+  ]
+
+  const balanceOptions = [
+    { value: '', label: t.families.allBalances },
+    { value: 'pending', label: t.families.withBalance },
+    { value: 'clear', label: t.families.noBalance },
+  ]
 
   const [families, setFamilies] = useState<Family[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -83,7 +83,7 @@ export default function FamiliesPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('¿Estás seguro de que deseas eliminar esta familia?')) return
+    if (!confirm(t.families.deleteFamilyConfirm)) return
 
     try {
       await familiesService.delete(id)
@@ -152,7 +152,7 @@ export default function FamiliesPage() {
               <p className="text-xl sm:text-2xl font-bold text-gray-900">
                 {stats.total}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Total Familias</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.families.totalFamilies}</p>
             </div>
           </div>
         </GlassCard>
@@ -166,7 +166,7 @@ export default function FamiliesPage() {
               <p className="text-xl sm:text-2xl font-bold text-gray-900">
                 {stats.active}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.common.active}s</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.families.activeFamilies}</p>
             </div>
           </div>
         </GlassCard>
@@ -180,7 +180,7 @@ export default function FamiliesPage() {
               <p className="text-xl sm:text-2xl font-bold text-gray-900">
                 {stats.withBalance}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Con Saldo</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.families.withBalance}</p>
             </div>
           </div>
         </GlassCard>
@@ -194,7 +194,7 @@ export default function FamiliesPage() {
               <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
                 {formatCurrency(stats.totalBalance)}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Saldo Total</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.families.totalBalance}</p>
             </div>
           </div>
         </GlassCard>
@@ -249,7 +249,7 @@ export default function FamiliesPage() {
                         {familyName}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Familia
+                        {t.nav.families}
                       </p>
                     </div>
                   </div>
@@ -301,17 +301,17 @@ export default function FamiliesPage() {
       <div className="hidden md:block">
         <GlassCard>
           <GlassCardHeader>
-            <GlassCardTitle>Lista de Familias</GlassCardTitle>
+            <GlassCardTitle>{t.families.familiesList}</GlassCardTitle>
           </GlassCardHeader>
           <GlassCardContent className="p-0">
             <GlassTable>
               <GlassTableHeader>
                 <GlassTableRow>
-                  <GlassTableHead>Familia</GlassTableHead>
-                  <GlassTableHead>Contacto Principal</GlassTableHead>
-                  <GlassTableHead>Niños</GlassTableHead>
-                  <GlassTableHead>Saldo</GlassTableHead>
-                  <GlassTableHead>Portal</GlassTableHead>
+                  <GlassTableHead>{t.nav.families}</GlassTableHead>
+                  <GlassTableHead>{t.families.primaryContact}</GlassTableHead>
+                  <GlassTableHead>{t.nav.children}</GlassTableHead>
+                  <GlassTableHead>{t.billing.balance}</GlassTableHead>
+                  <GlassTableHead>{t.families.portalAccess}</GlassTableHead>
                   <GlassTableHead className="text-right">{t.common.actions}</GlassTableHead>
                 </GlassTableRow>
               </GlassTableHeader>
@@ -344,7 +344,7 @@ export default function FamiliesPage() {
                         </GlassTableCell>
                         <GlassTableCell>
                           <GlassBadge variant="default" size="sm">
-                            Ver hijos
+                            {t.families.viewChildren}
                           </GlassBadge>
                         </GlassTableCell>
                         <GlassTableCell>

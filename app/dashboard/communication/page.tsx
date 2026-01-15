@@ -81,10 +81,10 @@ export default function CommunicationPage() {
           id: m.id,
           from: {
             name: m.family?.primary_contact_name ||
-                  (m.sender ? `${m.sender.first_name} ${m.sender.last_name}` : 'Sistema'),
+                  (m.sender ? `${m.sender.first_name} ${m.sender.last_name}` : t.communication.system),
             role: m.sender?.role || 'system',
           },
-          subject: m.subject || 'Sin asunto',
+          subject: m.subject || t.communication.noSubject,
           preview: m.content.substring(0, 100) + (m.content.length > 100 ? '...' : ''),
           date: m.created_at || new Date().toISOString(),
           read: m.is_read || false,
@@ -95,7 +95,7 @@ export default function CommunicationPage() {
       // Transform announcements
       const transformedAnnouncements: AnnouncementDisplay[] = announcementData.map(a => ({
         id: a.id,
-        title: a.subject || 'Anuncio',
+        title: a.subject || t.communication.announcement,
         content: a.content,
         date: a.created_at || new Date().toISOString(),
         audience: a.recipient_id ? 'parents' : 'all',
@@ -187,7 +187,7 @@ export default function CommunicationPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{inboxMessages.length}</p>
-              <p className="text-sm text-gray-500">Recibidos</p>
+              <p className="text-sm text-gray-500">{t.communication.received}</p>
             </div>
           </div>
         </GlassCard>
@@ -199,7 +199,7 @@ export default function CommunicationPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{sentMessages.length}</p>
-              <p className="text-sm text-gray-500">Enviados</p>
+              <p className="text-sm text-gray-500">{t.communication.sent}</p>
             </div>
           </div>
         </GlassCard>
@@ -211,7 +211,7 @@ export default function CommunicationPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{announcements.length}</p>
-              <p className="text-sm text-gray-500">Anuncios</p>
+              <p className="text-sm text-gray-500">{t.communication.announcements}</p>
             </div>
           </div>
         </GlassCard>
@@ -322,7 +322,7 @@ export default function CommunicationPage() {
           {announcements.length === 0 ? (
             <GlassCard className="p-8 text-center">
               <Bell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-500">No hay anuncios disponibles</p>
+              <p className="text-gray-500">{t.communication.noAnnouncementsFound}</p>
             </GlassCard>
           ) : (
             announcements.map((announcement) => (
@@ -330,7 +330,7 @@ export default function CommunicationPage() {
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <h3 className="font-semibold text-gray-900">{announcement.title}</h3>
                   <GlassBadge variant="default" size="sm">
-                    {announcement.audience === 'all' ? 'Todos' : 'Padres'}
+                    {announcement.audience === 'all' ? t.communication.audienceAll : t.communication.audienceParents}
                   </GlassBadge>
                 </div>
                 <p className="text-gray-600 mb-3">{announcement.content}</p>

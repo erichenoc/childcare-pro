@@ -22,87 +22,75 @@ import { GlassCard } from '@/shared/components/ui'
 import { useTranslations } from '@/shared/lib/i18n'
 
 interface FAQItem {
-  question: string
-  answer: string
-  category: string
+  questionKey: string
+  answerKey: string
+  categoryKey: string
 }
 
-const faqs: FAQItem[] = [
-  {
-    category: 'Niños y Familias',
-    question: '¿Cómo registro un nuevo niño?',
-    answer: 'Ve a la sección "Niños" en el menú lateral, haz clic en "Agregar Niño" y completa el formulario con la información requerida incluyendo datos de contacto de emergencia y autorizaciones.'
-  },
-  {
-    category: 'Niños y Familias',
-    question: '¿Cómo agrego una nueva familia?',
-    answer: 'En la sección "Familias", haz clic en "Nueva Familia". Puedes agregar múltiples tutores y vincularlos con los niños registrados.'
-  },
-  {
-    category: 'Asistencia',
-    question: '¿Cómo funciona el registro de asistencia?',
-    answer: 'En la sección "Asistencia" puedes registrar entradas y salidas de los niños. El sistema calcula automáticamente las horas de cuidado y verifica los ratios DCF en tiempo real.'
-  },
-  {
-    category: 'Asistencia',
-    question: '¿Qué son los ratios DCF?',
-    answer: 'Los ratios DCF son las proporciones de personal por niños requeridas por el Departamento de Niños y Familias de Florida. El sistema monitorea estos ratios automáticamente y te alerta si hay incumplimiento.'
-  },
-  {
-    category: 'Facturación',
-    question: '¿Cómo genero una factura?',
-    answer: 'Ve a "Facturación", selecciona la familia, el período de facturación y los servicios. Puedes enviar la factura por email o permitir el pago en línea con tarjeta.'
-  },
-  {
-    category: 'Facturación',
-    question: '¿Qué métodos de pago acepta el sistema?',
-    answer: 'El sistema acepta pagos con tarjeta de crédito/débito a través de Stripe, y también puedes registrar pagos manuales (efectivo, cheque, transferencia).'
-  },
-  {
-    category: 'Personal',
-    question: '¿Cómo gestiono los horarios del personal?',
-    answer: 'En la sección "Personal" puedes ver y editar los horarios de cada empleado, asignarlos a salones específicos y gestionar sus permisos de acceso.'
-  },
-  {
-    category: 'Configuración',
-    question: '¿Cómo cambio el idioma del sistema?',
-    answer: 'Haz clic en el icono de idioma (globo) en la barra superior y selecciona entre Español e Inglés. Tu preferencia se guardará automáticamente.'
-  },
+const faqKeys: FAQItem[] = [
+  { categoryKey: 'childrenAndFamilies', questionKey: 'faqRegisterChild', answerKey: 'faqRegisterChildAnswer' },
+  { categoryKey: 'childrenAndFamilies', questionKey: 'faqAddFamily', answerKey: 'faqAddFamilyAnswer' },
+  { categoryKey: 'attendanceCategory', questionKey: 'faqAttendanceHow', answerKey: 'faqAttendanceHowAnswer' },
+  { categoryKey: 'attendanceCategory', questionKey: 'faqDcfRatios', answerKey: 'faqDcfRatiosAnswer' },
+  { categoryKey: 'billingCategory', questionKey: 'faqGenerateInvoice', answerKey: 'faqGenerateInvoiceAnswer' },
+  { categoryKey: 'billingCategory', questionKey: 'faqPaymentMethods', answerKey: 'faqPaymentMethodsAnswer' },
+  { categoryKey: 'staffCategory', questionKey: 'faqStaffSchedules', answerKey: 'faqStaffSchedulesAnswer' },
+  { categoryKey: 'settingsCategory', questionKey: 'faqChangeLanguage', answerKey: 'faqChangeLanguageAnswer' },
 ]
 
-const quickLinks = [
-  { icon: Users, label: 'Gestión de Niños', href: '/dashboard/children', description: 'Registrar y administrar niños' },
-  { icon: Calendar, label: 'Asistencia', href: '/dashboard/attendance', description: 'Control de entradas y salidas' },
-  { icon: DollarSign, label: 'Facturación', href: '/dashboard/billing', description: 'Facturas y pagos' },
-  { icon: ClipboardList, label: 'Reportes', href: '/dashboard/reports', description: 'Informes y estadísticas' },
-  { icon: Shield, label: 'Ratios DCF', href: '/dashboard', description: 'Monitoreo de cumplimiento' },
-  { icon: Settings, label: 'Configuración', href: '/dashboard/settings', description: 'Ajustes del sistema' },
-]
+interface QuickLinkItem {
+  icon: React.ElementType
+  labelKey: string
+  href: string
+  descKey: string
+}
 
 export default function HelpPage() {
   const t = useTranslations()
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
-  const categories = ['all', ...new Set(faqs.map(faq => faq.category))]
+  // Build FAQs with translations
+  const faqs = faqKeys.map(item => ({
+    category: t.help[item.categoryKey as keyof typeof t.help] as string,
+    question: t.help[item.questionKey as keyof typeof t.help] as string,
+    answer: t.help[item.answerKey as keyof typeof t.help] as string,
+    categoryKey: item.categoryKey,
+  }))
+
+  // Quick links with translations
+  const quickLinks = [
+    { icon: Users, label: t.nav.children, href: '/dashboard/children', description: t.children.subtitle },
+    { icon: Calendar, label: t.nav.attendance, href: '/dashboard/attendance', description: t.attendance.subtitle },
+    { icon: DollarSign, label: t.nav.billing, href: '/dashboard/billing', description: t.billing.subtitle },
+    { icon: ClipboardList, label: t.nav.reports, href: '/dashboard/reports', description: t.reports.subtitle },
+    { icon: Shield, label: t.dcfRatios.title, href: '/dashboard', description: t.dcfRatios.complianceStatus },
+    { icon: Settings, label: t.nav.settings, href: '/dashboard/settings', description: t.settings.subtitle },
+  ]
+
+  const categoryKeys = ['all', ...new Set(faqKeys.map(faq => faq.categoryKey))]
+  const getCategoryLabel = (key: string) => {
+    if (key === 'all') return t.help.allCategories
+    return t.help[key as keyof typeof t.help] as string
+  }
 
   const filteredFAQs = selectedCategory === 'all'
     ? faqs
-    : faqs.filter(faq => faq.category === selectedCategory)
+    : faqs.filter(faq => faq.categoryKey === selectedCategory)
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">{t.nav.help}</h1>
-        <p className="text-gray-500">Encuentra respuestas y recursos para usar ChildCare Pro</p>
+        <h1 className="text-2xl font-bold text-gray-800">{t.help.title}</h1>
+        <p className="text-gray-500">{t.help.subtitle}</p>
       </div>
 
       {/* Quick Links */}
       <GlassCard className="p-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <Book className="w-5 h-5 text-blue-500" />
-          Accesos Rápidos
+          {t.help.quickLinks}
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {quickLinks.map((link) => (
@@ -125,22 +113,22 @@ export default function HelpPage() {
       <GlassCard className="p-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <HelpCircle className="w-5 h-5 text-blue-500" />
-          Preguntas Frecuentes
+          {t.help.faqTitle}
         </h2>
 
         {/* Category Filter */}
         <div className="flex flex-wrap gap-2 mb-6">
-          {categories.map((category) => (
+          {categoryKeys.map((categoryKey) => (
             <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
+              key={categoryKey}
+              onClick={() => setSelectedCategory(categoryKey)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                selectedCategory === category
+                selectedCategory === categoryKey
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {category === 'all' ? 'Todas' : category}
+              {getCategoryLabel(categoryKey)}
             </button>
           ))}
         </div>
@@ -180,7 +168,7 @@ export default function HelpPage() {
       <GlassCard className="p-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <MessageCircle className="w-5 h-5 text-blue-500" />
-          ¿Necesitas más ayuda?
+          {t.help.needMoreHelp}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <a
@@ -191,7 +179,7 @@ export default function HelpPage() {
               <Mail className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="font-medium text-gray-800">Email</p>
+              <p className="font-medium text-gray-800">{t.help.contactEmail}</p>
               <p className="text-sm text-gray-500">soporte@childcarepro.com</p>
             </div>
           </a>
@@ -203,7 +191,7 @@ export default function HelpPage() {
               <Phone className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="font-medium text-gray-800">Teléfono</p>
+              <p className="font-medium text-gray-800">{t.help.contactPhone}</p>
               <p className="text-sm text-gray-500">1-800-555-1234</p>
             </div>
           </a>
@@ -217,8 +205,8 @@ export default function HelpPage() {
               <ExternalLink className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="font-medium text-gray-800">Documentación</p>
-              <p className="text-sm text-gray-500">Guías completas</p>
+              <p className="font-medium text-gray-800">{t.help.documentation}</p>
+              <p className="text-sm text-gray-500">{t.help.completeGuides}</p>
             </div>
           </a>
         </div>

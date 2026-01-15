@@ -40,13 +40,16 @@ const dcfRatios: Record<string, number> = {
   'school_age': 25,
 }
 
-const ageGroupLabels: Record<string, string> = {
-  'infants': 'Bebés (0-12 meses)',
-  'ones': '1 año',
-  'twos': '2 años',
-  'threes': '3 años',
-  'fours': '4 años',
-  'school_age': 'Edad Escolar',
+// Age group labels will be loaded from translations
+function getAgeGroupLabels(t: ReturnType<typeof useTranslations>) {
+  return {
+    'infants': t.dcfRatios.infant,
+    'ones': t.dcfRatios.oneYear,
+    'twos': t.dcfRatios.twoYears,
+    'threes': t.dcfRatios.threeYears,
+    'fours': t.dcfRatios.fourFiveYears,
+    'school_age': t.dcfRatios.schoolAge,
+  }
 }
 
 interface DashboardStats {
@@ -111,6 +114,7 @@ export default function DashboardPage() {
       })
 
       // Calculate ratio data from classrooms
+      const ageLabels = getAgeGroupLabels(t)
       const ratioData = classrooms
         .filter(c => c.children_count > 0 || c.staff_count > 0)
         .map(classroom => {
@@ -129,7 +133,7 @@ export default function DashboardPage() {
           }
 
           return {
-            ageGroup: ageGroupLabels[classroom.age_group || 'threes'] || classroom.name,
+            ageGroup: ageLabels[classroom.age_group || 'threes'] || classroom.name,
             currentRatio: `${Math.round(currentRatioNum)}:1`,
             requiredRatio: `${requiredRatio}:1`,
             status,
@@ -158,10 +162,10 @@ export default function DashboardPage() {
 
   function getDefaultRatios(): RatioData[] {
     return [
-      { ageGroup: 'Bebés (0-12 meses)', currentRatio: '0:1', requiredRatio: '4:1', status: 'compliant', children: 0, staff: 0 },
-      { ageGroup: '1 año', currentRatio: '0:1', requiredRatio: '6:1', status: 'compliant', children: 0, staff: 0 },
-      { ageGroup: '2 años', currentRatio: '0:1', requiredRatio: '11:1', status: 'compliant', children: 0, staff: 0 },
-      { ageGroup: '3 años', currentRatio: '0:1', requiredRatio: '15:1', status: 'compliant', children: 0, staff: 0 },
+      { ageGroup: t.dcfRatios.infant, currentRatio: '0:1', requiredRatio: '4:1', status: 'compliant', children: 0, staff: 0 },
+      { ageGroup: t.dcfRatios.oneYear, currentRatio: '0:1', requiredRatio: '6:1', status: 'compliant', children: 0, staff: 0 },
+      { ageGroup: t.dcfRatios.twoYears, currentRatio: '0:1', requiredRatio: '11:1', status: 'compliant', children: 0, staff: 0 },
+      { ageGroup: t.dcfRatios.threeYears, currentRatio: '0:1', requiredRatio: '15:1', status: 'compliant', children: 0, staff: 0 },
     ]
   }
 
@@ -249,7 +253,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <p className="text-gray-500 text-center py-4">
-                  No hay datos de ratios disponibles
+                  {t.common.noResults}
                 </p>
               )}
             </GlassCardContent>
@@ -296,24 +300,24 @@ export default function DashboardPage() {
           {/* Summary Stats */}
           <GlassCard>
             <GlassCardHeader>
-              <GlassCardTitle>Resumen del Día</GlassCardTitle>
+              <GlassCardTitle>{t.dashboard.todaysSummary}</GlassCardTitle>
             </GlassCardHeader>
             <GlassCardContent>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Total Niños</span>
+                  <span className="text-gray-600">{t.dashboard.totalChildren}</span>
                   <span className="font-semibold text-gray-900">{stats.totalChildren}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Presentes</span>
+                  <span className="text-gray-600">{t.dashboard.presentToday}</span>
                   <span className="font-semibold text-green-600">{stats.presentToday}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Ausentes</span>
+                  <span className="text-gray-600">{t.dashboard.absentToday}</span>
                   <span className="font-semibold text-amber-600">{stats.absentToday}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Tasa de Asistencia</span>
+                  <span className="text-gray-600">{t.common.attendanceRate}</span>
                   <span className="font-semibold text-primary-600">
                     {stats.totalChildren > 0
                       ? `${Math.round((stats.presentToday / stats.totalChildren) * 100)}%`
@@ -352,7 +356,7 @@ export default function DashboardPage() {
                   )}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">No hay personal en servicio</p>
+                <p className="text-gray-500 text-sm">{t.staff.noStaffFound}</p>
               )}
             </GlassCardContent>
           </GlassCard>

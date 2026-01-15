@@ -30,14 +30,14 @@ import { organizationService, type Organization, type OrganizationSettings } fro
 
 type SettingsTab = 'organization' | 'locations' | 'users' | 'billing' | 'notifications' | 'appearance' | 'security'
 
-const settingsSections = [
-  { id: 'organization' as SettingsTab, icon: Building2, label: 'Organizacion', color: 'blue' },
-  { id: 'locations' as SettingsTab, icon: MapPin, label: 'Ubicaciones', color: 'green' },
-  { id: 'users' as SettingsTab, icon: Users, label: 'Usuarios', color: 'purple' },
-  { id: 'billing' as SettingsTab, icon: CreditCard, label: 'Facturacion', color: 'orange' },
-  { id: 'notifications' as SettingsTab, icon: Bell, label: 'Notificaciones', color: 'pink' },
-  { id: 'appearance' as SettingsTab, icon: Palette, label: 'Apariencia', color: 'teal' },
-  { id: 'security' as SettingsTab, icon: Shield, label: 'Seguridad', color: 'red' },
+const getSettingsSections = (t: ReturnType<typeof useTranslations>) => [
+  { id: 'organization' as SettingsTab, icon: Building2, label: t.settings.organization, color: 'blue' },
+  { id: 'locations' as SettingsTab, icon: MapPin, label: t.settings.locations, color: 'green' },
+  { id: 'users' as SettingsTab, icon: Users, label: t.settings.users, color: 'purple' },
+  { id: 'billing' as SettingsTab, icon: CreditCard, label: t.settings.billing, color: 'orange' },
+  { id: 'notifications' as SettingsTab, icon: Bell, label: t.settings.notifications, color: 'pink' },
+  { id: 'appearance' as SettingsTab, icon: Palette, label: t.settings.appearance, color: 'teal' },
+  { id: 'security' as SettingsTab, icon: Shield, label: t.settings.security, color: 'red' },
 ]
 
 export default function SettingsPage() {
@@ -155,7 +155,7 @@ export default function SettingsPage() {
         <div className="lg:col-span-1">
           <GlassCard className="p-2">
             <div className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
-              {settingsSections.map((section) => {
+              {getSettingsSections(t).map((section) => {
                 const Icon = section.icon
                 const colors = getColorClasses(section.color)
                 const isActive = activeTab === section.id
@@ -236,26 +236,26 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="pt-4 border-t border-blue-100">
-                  <h4 className="font-medium text-gray-900 mb-4">Certificaciones DCF</h4>
+                  <h4 className="font-medium text-gray-900 mb-4">{t.settings.dcfCertifications}</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-4 bg-green-50 rounded-xl">
                       <div className="flex items-center gap-2 mb-2">
                         <FileText className="w-5 h-5 text-green-600" />
-                        <span className="font-medium text-gray-900">Licencia DCF</span>
+                        <span className="font-medium text-gray-900">{t.settings.dcfLicense}</span>
                       </div>
                       <p className="text-sm text-gray-600">
                         {organization?.license_number
-                          ? `Numero: ${organization.license_number}`
-                          : 'No registrada'}
+                          ? `${t.settings.licenseNumberLabel}: ${organization.license_number}`
+                          : t.settings.notRegistered}
                       </p>
                     </div>
                     {settings.has_gold_seal && (
                       <div className="p-4 bg-yellow-50 rounded-xl">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-2xl">🏆</span>
-                          <span className="font-medium text-gray-900">Gold Seal</span>
+                          <span className="font-medium text-gray-900">{t.settings.goldSeal}</span>
                         </div>
-                        <p className="text-sm text-gray-600">Certificacion de calidad activa</p>
+                        <p className="text-sm text-gray-600">{t.settings.qualityCertificationActive}</p>
                       </div>
                     )}
                   </div>
@@ -290,11 +290,11 @@ export default function SettingsPage() {
                         <MapPin className="w-6 h-6 text-blue-600" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-gray-900">{organization?.name || 'Centro Principal'}</h4>
+                        <h4 className="font-semibold text-gray-900">{organization?.name || t.settings.mainCenter}</h4>
                         <p className="text-sm text-gray-500">
                           {organization?.address
                             ? `${organization.address}, ${organization.city || ''}, ${organization.state || ''} ${organization.zip_code || ''}`
-                            : 'Direccion no configurada'}
+                            : t.settings.addressNotConfigured}
                         </p>
                       </div>
                     </div>
@@ -304,19 +304,19 @@ export default function SettingsPage() {
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-500">Telefono:</span>
+                      <span className="text-gray-500">{t.settings.phone}:</span>
                       <p className="text-gray-900">{organization?.phone || '-'}</p>
                     </div>
                     <div>
-                      <span className="text-gray-500">Horario:</span>
+                      <span className="text-gray-500">{t.settings.schedule}:</span>
                       <p className="text-gray-900">{settings.opening_time || '6:30 AM'} - {settings.closing_time || '6:30 PM'}</p>
                     </div>
                     <div>
-                      <span className="text-gray-500">Capacidad:</span>
-                      <p className="text-gray-900">{settings.capacity || 150} ninos</p>
+                      <span className="text-gray-500">{t.settings.capacity}:</span>
+                      <p className="text-gray-900">{settings.capacity || 150} {t.settings.capacityChildren}</p>
                     </div>
                     <div>
-                      <span className="text-gray-500">Email:</span>
+                      <span className="text-gray-500">{t.settings.email}:</span>
                       <p className="text-gray-900">{organization?.email || '-'}</p>
                     </div>
                   </div>
@@ -333,9 +333,9 @@ export default function SettingsPage() {
               </GlassCardHeader>
               <GlassCardContent className="space-y-4">
                 {[
-                  { key: 'notification_email' as const, label: t.settings.emailNotifications, description: 'Recibir notificaciones por email', enabled: settings.notification_email !== false },
-                  { key: 'notification_sms' as const, label: t.settings.smsNotifications, description: 'Recibir notificaciones por SMS', enabled: settings.notification_sms === true },
-                  { key: 'notification_push' as const, label: t.settings.pushNotifications, description: 'Recibir notificaciones push en el navegador', enabled: settings.notification_push !== false },
+                  { key: 'notification_email' as const, label: t.settings.emailNotifications, description: t.settings.emailNotificationsDesc, enabled: settings.notification_email !== false },
+                  { key: 'notification_sms' as const, label: t.settings.smsNotifications, description: t.settings.smsNotificationsDesc, enabled: settings.notification_sms === true },
+                  { key: 'notification_push' as const, label: t.settings.pushNotifications, description: t.settings.pushNotificationsDesc, enabled: settings.notification_push !== false },
                 ].map((notification) => (
                   <div key={notification.key} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                     <div>
@@ -406,7 +406,7 @@ export default function SettingsPage() {
               <GlassCardContent className="space-y-6">
                 <div className="p-4 border border-blue-100 rounded-xl">
                   <h4 className="font-medium text-gray-900 mb-2">{t.settings.changePassword}</h4>
-                  <p className="text-sm text-gray-500 mb-4">Actualiza tu contrasena regularmente para mayor seguridad</p>
+                  <p className="text-sm text-gray-500 mb-4">{t.settings.changePasswordDesc}</p>
                   <GlassButton variant="secondary">
                     {t.settings.changePassword}
                   </GlassButton>
@@ -414,7 +414,7 @@ export default function SettingsPage() {
 
                 <div className="p-4 border border-blue-100 rounded-xl">
                   <h4 className="font-medium text-gray-900 mb-2">{t.settings.twoFactorAuth}</h4>
-                  <p className="text-sm text-gray-500 mb-4">Anade una capa extra de seguridad a tu cuenta</p>
+                  <p className="text-sm text-gray-500 mb-4">{t.settings.twoFactorAuthDesc}</p>
                   <GlassButton variant="secondary">
                     {t.settings.enable2FA}
                   </GlassButton>
@@ -422,7 +422,7 @@ export default function SettingsPage() {
 
                 <div className="p-4 border border-blue-100 rounded-xl">
                   <h4 className="font-medium text-gray-900 mb-2">{t.settings.sessions}</h4>
-                  <p className="text-sm text-gray-500 mb-4">Gestiona las sesiones activas de tu cuenta</p>
+                  <p className="text-sm text-gray-500 mb-4">{t.settings.sessionsDesc}</p>
                   <GlassButton variant="secondary" className="text-red-500">
                     {t.settings.logoutAllSessions}
                   </GlassButton>
@@ -444,7 +444,7 @@ export default function SettingsPage() {
               </GlassCardHeader>
               <GlassCardContent>
                 <p className="text-gray-500 text-center py-8">
-                  Gestiona los usuarios y permisos de tu organizacion
+                  {t.settings.userManagementDescription}
                 </p>
               </GlassCardContent>
             </GlassCard>
@@ -465,7 +465,7 @@ export default function SettingsPage() {
                     </span>
                   </div>
                   <p className="text-sm text-gray-500">
-                    {organization?.subscription_status === 'active' ? 'Suscripcion activa' : 'Estado: ' + (organization?.subscription_status || 'activo')}
+                    {organization?.subscription_status === 'active' ? t.settings.subscriptionActive : `${t.settings.subscriptionStatus}: ${organization?.subscription_status || t.common.active.toLowerCase()}`}
                   </p>
                 </div>
 
