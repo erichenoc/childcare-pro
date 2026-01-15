@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-// Initialize Stripe with secret key
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2025-12-15.clover',
-    })
-  : null
+function getStripeClient() {
+  if (!process.env.STRIPE_SECRET_KEY) return null
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2025-12-15.clover',
+  })
+}
 
 export async function POST(request: NextRequest) {
   try {
     // Check if Stripe is configured
+    const stripe = getStripeClient()
     if (!stripe) {
       return NextResponse.json(
         {

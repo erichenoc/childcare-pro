@@ -2,26 +2,29 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2025-12-15.clover',
-    })
-  : null
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
-
-// Create admin client for webhook processing
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 
+function getStripeClient() {
+  if (!process.env.STRIPE_SECRET_KEY) return null
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2025-12-15.clover',
+  })
+}
+
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
+
 export async function POST(request: NextRequest) {
+  const stripe = getStripeClient()
   if (!stripe) {
     return NextResponse.json({ error: 'Stripe not configured' }, { status: 503 })
   }
+
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')
@@ -55,6 +58,8 @@ export async function POST(request: NextRequest) {
 
         if (invoiceId) {
           try {
+            const supabaseAdmin = getSupabaseAdmin()
+
             // Get current invoice with family_id
             const { data: invoice, error: invoiceError } = await supabaseAdmin
               .from('invoices')
