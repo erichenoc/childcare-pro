@@ -59,9 +59,9 @@ export function UserMenu({ userEmail }: UserMenuProps) {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute bottom-full left-0 mb-2 w-64 bg-[var(--bg-primary)] border border-[var(--glass-border)] rounded-lg shadow-xl overflow-hidden z-50">
+        <div className="absolute bottom-full left-0 mb-2 w-64 bg-neu-bg dark:bg-neu-bg-dark shadow-neu dark:shadow-neu-dark rounded-xl overflow-hidden z-50">
           {/* User Info */}
-          <div className="px-4 py-3 border-b border-white/5">
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] flex items-center justify-center text-white font-semibold text-sm">
                 {initial}

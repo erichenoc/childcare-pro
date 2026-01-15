@@ -4,7 +4,7 @@ import { type ReactNode } from 'react'
 import { clsx } from 'clsx'
 import { AlertCircle, CheckCircle, AlertTriangle, Users } from 'lucide-react'
 
-// Ratio status
+// Ratio status - Neumorphism style
 type RatioStatus = 'compliant' | 'warning' | 'non-compliant'
 
 interface GlassRatioIndicatorProps {
@@ -18,9 +18,9 @@ interface GlassRatioIndicatorProps {
 }
 
 const statusClasses: Record<RatioStatus, string> = {
-  compliant: 'ratio-indicator compliant',
-  warning: 'ratio-indicator warning',
-  'non-compliant': 'ratio-indicator non-compliant',
+  compliant: 'ratio-neu-indicator compliant',
+  warning: 'ratio-neu-indicator warning',
+  'non-compliant': 'ratio-neu-indicator non-compliant',
 }
 
 const statusIcons: Record<RatioStatus, ReactNode> = {
@@ -103,7 +103,7 @@ export function GlassRatioIndicatorMini({
   return (
     <div
       className={clsx(
-        'inline-flex items-center gap-1.5 px-2 py-1 rounded-lg',
+        'inline-flex items-center gap-1.5 px-2 py-1 rounded-neu-sm shadow-neu-xs dark:shadow-neu-dark-sm',
         status === 'compliant' && 'bg-success/10 text-success',
         status === 'warning' && 'bg-warning/10 text-warning',
         status === 'non-compliant' && 'bg-error/10 text-error',

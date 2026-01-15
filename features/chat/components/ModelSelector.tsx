@@ -74,7 +74,7 @@ export function ModelSelector({ onModelChange, className = '' }: ModelSelectorPr
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="glass-hover px-4 py-2.5 flex items-center gap-3 min-w-[200px]"
+        className="neu-sm px-4 py-2.5 rounded-xl flex items-center gap-3 min-w-[200px] hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-shadow"
         aria-label="Select AI Model"
         aria-expanded={isOpen}
       >
@@ -117,7 +117,7 @@ export function ModelSelector({ onModelChange, className = '' }: ModelSelectorPr
               onClick={() => setIsOpen(false)}
             >
               <div
-                className="glass-strong w-full max-h-[70vh] overflow-y-auto rounded-t-3xl animate-slide-up"
+                className="neu-lg w-full max-h-[70vh] overflow-y-auto rounded-t-3xl animate-slide-up bg-neu-bg dark:bg-neu-bg-dark"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Handle bar */}
@@ -148,7 +148,7 @@ export function ModelSelector({ onModelChange, className = '' }: ModelSelectorPr
             </div>
           ) : (
             /* Desktop: Popover - Opens upward to prevent overflow */
-            <div className="absolute bottom-full mb-2 left-0 w-[320px] glass-strong rounded-xl overflow-hidden z-[9999] shadow-2xl animate-fade-in">
+            <div className="absolute bottom-full mb-2 left-0 w-[320px] neu-lg rounded-xl overflow-hidden z-[9999] bg-neu-bg dark:bg-neu-bg-dark animate-fade-in">
               <div className="p-2 max-h-[400px] overflow-y-auto space-y-1">
                 {AVAILABLE_MODELS.map((model) => (
                   <ModelOption

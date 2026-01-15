@@ -11,7 +11,7 @@ import { clsx } from 'clsx'
 import { X } from 'lucide-react'
 import { GlassButton, GlassIconButton } from './glass-button'
 
-// Modal sizes
+// Modal sizes - Neumorphism style
 type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full'
 
 interface GlassModalProps {
@@ -76,7 +76,7 @@ export function GlassModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Overlay */}
       <div
-        className="modal-overlay absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
+        className="modal-neu-overlay absolute inset-0 bg-black/40 animate-fade-in"
         onClick={closeOnOverlay ? onClose : undefined}
         aria-hidden="true"
       />
@@ -88,8 +88,8 @@ export function GlassModal({
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-describedby={description ? 'modal-description' : undefined}
         className={clsx(
-          'modal-glass relative w-full glass-frosted',
-          'p-6 rounded-glass-lg shadow-glass-xl',
+          'modal-neu relative w-full neu-lg',
+          'p-6 rounded-neu-lg',
           'animate-scale-in',
           sizeClasses[size],
           className
@@ -147,7 +147,7 @@ export function GlassModalFooter({ children, className, ...props }: GlassModalFo
   return (
     <div
       className={clsx(
-        'flex items-center justify-end gap-3 mt-6 pt-4 border-t border-white/10',
+        'flex items-center justify-end gap-3 mt-6 pt-4 border-t border-neu-dark/20 dark:border-neu-light-dark/20',
         className
       )}
       {...props}

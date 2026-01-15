@@ -6,7 +6,7 @@ function AuthLayoutContent({ children }: { children: React.ReactNode }) {
   const t = useTranslations()
 
   return (
-    <div className="min-h-screen bg-gradient-childcare flex flex-col">
+    <div className="min-h-screen bg-neu-bg dark:bg-neu-bg-dark flex flex-col">
       {/* Background decorative elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary-500/20 rounded-full blur-3xl" />

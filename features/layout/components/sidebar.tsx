@@ -67,20 +67,20 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <aside
       className={clsx(
-        'sidebar-glass h-screen flex flex-col transition-all duration-300 ease-glass',
+        'sidebar-neu h-screen flex flex-col transition-all duration-300',
         isCollapsed ? 'w-20' : 'w-64',
         className
       )}
     >
       {/* Logo Section */}
-      <div className="flex items-center justify-center p-6 border-b border-blue-200/50">
+      <div className="flex items-center justify-center p-6 border-b border-neu-dark/10 dark:border-neu-light-dark/10">
         <Link href="/dashboard" className="block">
           <Image
             src={LOGO_URL}
             alt="ChildCare Pro"
             width={isCollapsed ? 48 : 120}
             height={isCollapsed ? 48 : 120}
-            className="rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
+            className="rounded-2xl shadow-neu-sm dark:shadow-neu-dark-sm transition-all duration-300 hover:shadow-neu dark:hover:shadow-neu-dark hover:scale-105"
             priority
           />
         </Link>
@@ -101,8 +101,8 @@ export function Sidebar({ className }: SidebarProps) {
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl',
                 'transition-all duration-200',
                 active
-                  ? 'bg-blue-100 text-blue-600 font-medium'
-                  : 'text-gray-600 hover:bg-blue-50',
+                  ? 'shadow-neu-inset dark:shadow-neu-dark-inset bg-primary-500/10 text-primary-600 dark:text-primary-400 font-medium'
+                  : 'text-gray-600 dark:text-gray-300 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset hover:bg-neu-dark/5 dark:hover:bg-neu-light-dark/5',
                 isCollapsed && 'justify-center px-2'
               )}
               title={isCollapsed ? label : undefined}
@@ -110,7 +110,7 @@ export function Sidebar({ className }: SidebarProps) {
               <Icon
                 className={clsx(
                   'w-5 h-5 flex-shrink-0',
-                  active ? 'text-blue-500' : 'text-gray-400'
+                  active ? 'text-primary-500' : 'text-gray-400 dark:text-gray-500'
                 )}
               />
               {!isCollapsed && (
@@ -122,7 +122,7 @@ export function Sidebar({ className }: SidebarProps) {
       </nav>
 
       {/* Bottom Navigation */}
-      <div className="p-3 border-t border-blue-200/50 space-y-1">
+      <div className="p-3 border-t border-neu-dark/10 dark:border-neu-light-dark/10 space-y-1">
         {bottomNavItems.map((item) => {
           const Icon = item.icon
           const active = isActive(item.href)
@@ -136,8 +136,8 @@ export function Sidebar({ className }: SidebarProps) {
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl',
                 'transition-all duration-200',
                 active
-                  ? 'bg-blue-100 text-blue-600 font-medium'
-                  : 'text-gray-600 hover:bg-blue-50',
+                  ? 'shadow-neu-inset dark:shadow-neu-dark-inset bg-primary-500/10 text-primary-600 dark:text-primary-400 font-medium'
+                  : 'text-gray-600 dark:text-gray-300 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset hover:bg-neu-dark/5 dark:hover:bg-neu-light-dark/5',
                 isCollapsed && 'justify-center px-2'
               )}
               title={isCollapsed ? label : undefined}
@@ -145,7 +145,7 @@ export function Sidebar({ className }: SidebarProps) {
               <Icon
                 className={clsx(
                   'w-5 h-5 flex-shrink-0',
-                  active ? 'text-blue-500' : 'text-gray-400'
+                  active ? 'text-primary-500' : 'text-gray-400 dark:text-gray-500'
                 )}
               />
               {!isCollapsed && (
@@ -160,7 +160,7 @@ export function Sidebar({ className }: SidebarProps) {
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={clsx(
             'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl',
-            'text-gray-500 hover:bg-blue-50 transition-all duration-200',
+            'text-gray-500 dark:text-gray-400 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset hover:bg-neu-dark/5 dark:hover:bg-neu-light-dark/5 transition-all duration-200',
             isCollapsed && 'justify-center px-2'
           )}
         >

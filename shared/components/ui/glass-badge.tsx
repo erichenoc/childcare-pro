@@ -3,7 +3,7 @@
 import { type HTMLAttributes, type ReactNode } from 'react'
 import { clsx } from 'clsx'
 
-// Badge variants
+// Badge variants - Neumorphism style
 type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'info' | 'primary' | 'secondary'
 type BadgeSize = 'sm' | 'md' | 'lg'
 
@@ -17,13 +17,13 @@ interface GlassBadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: 'glass bg-white/30 dark:bg-black/30 text-gray-700 dark:text-gray-200',
-  success: 'badge-glass-success',
-  warning: 'badge-glass-warning',
-  error: 'badge-glass-error',
-  info: 'badge-glass-info',
-  primary: 'glass bg-primary-500/20 text-primary-700 dark:text-primary-300 border-primary-500/30',
-  secondary: 'glass bg-secondary-500/20 text-secondary-700 dark:text-secondary-300 border-secondary-500/30',
+  default: 'badge-neu',
+  success: 'badge-neu-success',
+  warning: 'badge-neu-warning',
+  error: 'badge-neu-error',
+  info: 'badge-neu-info',
+  primary: 'badge-neu bg-primary-500/20 text-primary-700 dark:text-primary-300',
+  secondary: 'badge-neu bg-secondary-500/20 text-secondary-700 dark:text-secondary-300',
 }
 
 const sizeClasses: Record<BadgeSize, string> = {

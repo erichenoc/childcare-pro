@@ -358,7 +358,7 @@ export default function ChildDetailPage({ params }: { params: Promise<{ id: stri
                 <div
                   key={index}
                   className={`p-3 rounded-xl ${
-                    contact.isPrimary ? 'bg-primary-500/10 border border-primary-500/20' : 'bg-white/5'
+                    contact.isPrimary ? 'bg-primary-500/10 border border-primary-500/20' : 'bg-gray-100 dark:bg-gray-800/50'
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -427,7 +427,7 @@ export default function ChildDetailPage({ params }: { params: Promise<{ id: stri
                   authorizedPickups.map((person, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5"
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 dark:bg-gray-800/50"
                     >
                       <div className="flex items-center gap-3">
                         <GlassAvatar name={person.name} size="sm" />

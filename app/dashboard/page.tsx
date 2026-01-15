@@ -376,10 +376,10 @@ interface QuickActionButtonProps {
 
 function QuickActionButton({ icon, label, variant = 'default', href }: QuickActionButtonProps) {
   const variantClasses = {
-    default: 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-300',
-    primary: 'bg-primary-500/10 hover:bg-primary-500/20 text-primary-600 dark:text-primary-400',
-    secondary: 'bg-secondary-500/10 hover:bg-secondary-500/20 text-secondary-600 dark:text-secondary-400',
-    success: 'bg-success/10 hover:bg-success/20 text-success',
+    default: 'bg-neu-bg dark:bg-neu-bg-dark shadow-neu-sm dark:shadow-neu-dark-sm hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset text-gray-700 dark:text-gray-300',
+    primary: 'bg-primary-500/10 shadow-neu-sm dark:shadow-neu-dark-sm hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset text-primary-600 dark:text-primary-400',
+    secondary: 'bg-secondary-500/10 shadow-neu-sm dark:shadow-neu-dark-sm hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset text-secondary-600 dark:text-secondary-400',
+    success: 'bg-success/10 shadow-neu-sm dark:shadow-neu-dark-sm hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset text-success',
   }
 
   const Component = href ? Link : 'button'
@@ -389,7 +389,7 @@ function QuickActionButton({ icon, label, variant = 'default', href }: QuickActi
       href={href || ''}
       className={`
         flex flex-col items-center justify-center gap-2 p-4 rounded-xl
-        transition-all duration-200 border border-white/10
+        transition-all duration-200 border border-gray-200 dark:border-gray-700
         ${variantClasses[variant]}
       `}
     >

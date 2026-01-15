@@ -4,7 +4,7 @@ import { type ReactNode } from 'react'
 import { clsx } from 'clsx'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 
-// Stat card variants
+// Stat card variants - Neumorphism style
 type StatVariant = 'default' | 'primary' | 'success' | 'warning' | 'error'
 
 interface GlassStatCardProps {
@@ -20,19 +20,19 @@ interface GlassStatCardProps {
 }
 
 const variantClasses: Record<StatVariant, string> = {
-  default: 'stat-card-glass',
-  primary: 'stat-card-glass bg-primary-500/10 border-primary-500/30',
-  success: 'stat-card-glass bg-success/10 border-success/30',
-  warning: 'stat-card-glass bg-warning/10 border-warning/30',
-  error: 'stat-card-glass bg-error/10 border-error/30',
+  default: 'stat-card-neu',
+  primary: 'stat-card-neu bg-primary-500/10',
+  success: 'stat-card-neu bg-success/10',
+  warning: 'stat-card-neu bg-warning/10',
+  error: 'stat-card-neu bg-error/10',
 }
 
 const iconBgClasses: Record<StatVariant, string> = {
-  default: 'bg-gray-500/20 text-gray-600 dark:text-gray-300',
-  primary: 'bg-primary-500/20 text-primary-600 dark:text-primary-400',
-  success: 'bg-success/20 text-success',
-  warning: 'bg-warning/20 text-warning',
-  error: 'bg-error/20 text-error',
+  default: 'neu-inset bg-gray-500/10 text-gray-600 dark:text-gray-300',
+  primary: 'neu-inset bg-primary-500/10 text-primary-600 dark:text-primary-400',
+  success: 'neu-inset bg-success/10 text-success',
+  warning: 'neu-inset bg-warning/10 text-warning',
+  error: 'neu-inset bg-error/10 text-error',
 }
 
 export function GlassStatCard({
@@ -92,7 +92,7 @@ export function GlassStatCard({
         {icon && (
           <div
             className={clsx(
-              'p-3 rounded-xl',
+              'p-3 rounded-neu-sm',
               iconBgClasses[variant]
             )}
           >
@@ -123,7 +123,7 @@ export function GlassStatCardCompact({
   return (
     <div
       className={clsx(
-        'glass p-3 rounded-glass-sm flex items-center gap-3',
+        'neu p-3 rounded-neu-sm flex items-center gap-3',
         className
       )}
     >

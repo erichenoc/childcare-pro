@@ -28,7 +28,7 @@ export function LoginButton() {
     <button
       onClick={handleLogin}
       disabled={loading}
-      className="glass-hover px-8 py-4 text-[var(--text-primary)] font-medium text-lg flex items-center justify-center gap-3 min-w-[280px] group"
+      className="neu px-8 py-4 rounded-xl text-[var(--text-primary)] font-medium text-lg flex items-center justify-center gap-3 min-w-[280px] group hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-shadow"
     >
       {loading ? (
         <>

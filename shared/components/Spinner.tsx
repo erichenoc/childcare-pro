@@ -6,6 +6,6 @@ export function Spinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   }
 
   return (
-    <div className={`${sizeClasses[size]} border-white/20 border-t-white rounded-full animate-spin`} />
+    <div className={`${sizeClasses[size]} border-gray-300 dark:border-gray-600 border-t-primary-500 rounded-full animate-spin`} />
   )
 }

@@ -198,7 +198,7 @@ export function ConversationList({ activeConversationId, userEmail }: Conversati
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-6 border-b border-white/10 space-y-3">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700 space-y-3">
         {/* New Conversation Button */}
         <button
           onClick={handleNewConversation}
@@ -223,7 +223,7 @@ export function ConversationList({ activeConversationId, userEmail }: Conversati
         {/* Toggle Conversations Button */}
         <button
           onClick={() => setShowConversations(!showConversations)}
-          className="w-full flex items-center justify-between p-3 text-left text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)] rounded-lg transition-colors"
+          className="w-full flex items-center justify-between p-3 text-left text-[var(--text-muted)] hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset hover:text-[var(--text-primary)] rounded-lg transition-all"
         >
           <div className="flex items-center gap-3">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -250,7 +250,7 @@ export function ConversationList({ activeConversationId, userEmail }: Conversati
 
       {/* Batch Actions Bar - Responsive Layout */}
       {selectedIds.size > 0 && (
-        <div className="px-4 py-3 border-b border-white/10 glass-strong space-y-2">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 neu space-y-2">
           {/* Row 1: Count + Quick Actions */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -286,7 +286,7 @@ export function ConversationList({ activeConversationId, userEmail }: Conversati
           <button
             onClick={handleBatchDelete}
             disabled={isBatchDeleting}
-            className="w-full glass-hover px-3 py-2 rounded-lg flex items-center justify-center gap-2 border border-red-500/30 hover:border-red-500/50 transition-colors"
+            className="w-full neu-sm px-3 py-2 rounded-lg flex items-center justify-center gap-2 border border-red-500/30 hover:border-red-500/50 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all"
             title="Eliminar conversaciones seleccionadas"
           >
             {isBatchDeleting ? (
@@ -358,13 +358,13 @@ export function ConversationList({ activeConversationId, userEmail }: Conversati
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        className="flex-1 px-2 py-1 text-sm bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
+                        className="flex-1 px-2 py-1 text-sm input-neu rounded text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
                         disabled={isSavingTitle}
                       />
                       <button
                         onClick={handleSaveTitle}
                         disabled={isSavingTitle}
-                        className="p-1 glass-hover rounded"
+                        className="p-1 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset rounded transition-shadow"
                         title="Save (Enter)"
                       >
                         {isSavingTitle ? (
@@ -376,7 +376,7 @@ export function ConversationList({ activeConversationId, userEmail }: Conversati
                       <button
                         onClick={handleCancelEdit}
                         disabled={isSavingTitle}
-                        className="p-1 glass-hover rounded"
+                        className="p-1 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset rounded transition-shadow"
                         title="Cancel (Esc)"
                       >
                         <X className="w-3.5 h-3.5 text-[var(--text-muted)]" />
@@ -415,7 +415,7 @@ export function ConversationList({ activeConversationId, userEmail }: Conversati
                           e.stopPropagation()
                           setOpenMenuId(openMenuId === conversation.id ? null : conversation.id)
                         }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity glass-hover p-1.5 w-7 h-7"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset p-1.5 w-7 h-7 rounded"
                         title="More options"
                       >
                         <MoreVertical className="w-4 h-4 text-[var(--text-muted)]" />
@@ -434,14 +434,14 @@ export function ConversationList({ activeConversationId, userEmail }: Conversati
                           />
 
                           {/* Menu Items */}
-                          <div className="absolute right-0 top-full mt-1 w-48 bg-[var(--bg-primary)] border border-[var(--glass-border)] rounded-lg shadow-xl z-20 overflow-hidden">
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-neu-bg dark:bg-neu-bg-dark shadow-neu dark:shadow-neu-dark rounded-xl z-20 overflow-hidden">
                             {/* Favorite */}
                             <button
                               onClick={(e) => {
                                 handleToggleFavorite(conversation, e)
                                 setOpenMenuId(null)
                               }}
-                              className="w-full px-4 py-2.5 text-left hover:bg-white/5 transition-colors flex items-center gap-3 text-sm"
+                              className="w-full px-4 py-2.5 text-left hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all flex items-center gap-3 text-sm"
                             >
                               <Star
                                 className={`w-4 h-4 ${
@@ -461,7 +461,7 @@ export function ConversationList({ activeConversationId, userEmail }: Conversati
                                 handleStartEdit(conversation, e)
                                 setOpenMenuId(null)
                               }}
-                              className="w-full px-4 py-2.5 text-left hover:bg-white/5 transition-colors flex items-center gap-3 text-sm"
+                              className="w-full px-4 py-2.5 text-left hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all flex items-center gap-3 text-sm"
                             >
                               <Edit2 className="w-4 h-4 text-[var(--text-muted)]" />
                               <span className="text-[var(--text-primary)]">Edit title</span>
@@ -474,7 +474,7 @@ export function ConversationList({ activeConversationId, userEmail }: Conversati
                                 setOpenMenuId(null)
                               }}
                               disabled={deletingId === conversation.id}
-                              className="w-full px-4 py-2.5 text-left hover:bg-red-500/10 transition-colors flex items-center gap-3 text-sm border-t border-white/5"
+                              className="w-full px-4 py-2.5 text-left hover:bg-red-500/10 transition-colors flex items-center gap-3 text-sm border-t border-gray-200 dark:border-gray-700"
                             >
                               {deletingId === conversation.id ? (
                                 <>
@@ -502,7 +502,7 @@ export function ConversationList({ activeConversationId, userEmail }: Conversati
               {sortedConversations.length > CONVERSATION_LIMIT && (
                 <button
                   onClick={() => router.push('/chat/history')}
-                  className="w-full text-center p-3 text-sm text-[var(--accent-primary)] hover:bg-white/5 rounded-lg transition-colors border border-white/10"
+                  className="w-full text-center p-3 text-sm text-[var(--accent-primary)] hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset rounded-lg transition-all border border-gray-200 dark:border-gray-700"
                 >
                   View all conversations ({conversations.length})
                 </button>
@@ -516,7 +516,7 @@ export function ConversationList({ activeConversationId, userEmail }: Conversati
           🎯 SPACING: flex items-center justify-between + gap-3
           Previene que botones se corten en viewports medianos
           Ref: arbrain/LeftSidebarMenu.tsx:420-423 */}
-      <div className="border-t border-white/10 px-5 py-4 flex items-center justify-between flex-shrink-0 gap-3">
+      <div className="border-t border-gray-200 dark:border-gray-700 px-5 py-4 flex items-center justify-between flex-shrink-0 gap-3">
         {/* User Menu - Bottom Left */}
         <UserMenu userEmail={userEmail} />
 

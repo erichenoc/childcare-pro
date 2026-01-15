@@ -54,12 +54,12 @@ export function DropdownMenu({ items, trigger, align = 'right' }: DropdownMenuPr
       {/* Trigger Button */}
       <button
         onClick={handleToggle}
-        className="glass-hover p-1.5 w-7 h-7 flex items-center justify-center transition-all hover:bg-white/10"
+        className="p-1.5 w-7 h-7 flex items-center justify-center rounded-lg hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all duration-200"
         title="Options"
         aria-label="Open menu"
         aria-expanded={isOpen}
       >
-        {trigger || <MoreVertical className="w-4 h-4 text-[var(--text-muted)]" />}
+        {trigger || <MoreVertical className="w-4 h-4 text-gray-400 dark:text-gray-500" />}
       </button>
 
       {/* Dropdown Menu */}
@@ -67,18 +67,17 @@ export function DropdownMenu({ items, trigger, align = 'right' }: DropdownMenuPr
         <div
           className={`absolute top-full mt-1 ${
             align === 'right' ? 'right-0' : 'left-0'
-          } min-w-[160px] glass-strong border border-white/10 rounded-lg shadow-xl z-[100] py-1 animate-fade-in`}
+          } min-w-[160px] bg-neu-bg dark:bg-neu-bg-dark shadow-neu dark:shadow-neu-dark rounded-xl z-[100] py-1 animate-fade-in`}
           role="menu"
-          style={{ backdropFilter: 'blur(16px)' }}
         >
           {visibleItems.map((item, index) => (
             <button
               key={index}
               onClick={(e) => handleItemClick(item, e)}
-              className={`w-full px-3 py-2 flex items-center gap-3 transition-colors text-left ${
+              className={`w-full px-3 py-2 flex items-center gap-3 transition-all duration-200 text-left ${
                 item.variant === 'danger'
-                  ? 'hover:bg-red-500/10 text-red-400'
-                  : 'hover:bg-white/5 text-[var(--text-primary)]'
+                  ? 'hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset hover:bg-red-500/5 text-red-500'
+                  : 'hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset text-gray-700 dark:text-gray-300'
               }`}
               role="menuitem"
             >

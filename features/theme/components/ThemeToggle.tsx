@@ -9,7 +9,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="w-10 h-10 rounded-full glass-hover flex items-center justify-center"
+      className="w-10 h-10 rounded-full neu-sm hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset flex items-center justify-center transition-shadow"
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       aria-label="Toggle theme"
     >

@@ -3,7 +3,7 @@
 import { type ReactNode, type ThHTMLAttributes, type TdHTMLAttributes, type HTMLAttributes } from 'react'
 import { clsx } from 'clsx'
 
-// Table wrapper
+// Table wrapper - Neumorphism style
 interface GlassTableProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode
   className?: string
@@ -11,7 +11,7 @@ interface GlassTableProps extends HTMLAttributes<HTMLDivElement> {
 
 export function GlassTable({ children, className, ...props }: GlassTableProps) {
   return (
-    <div className={clsx('table-glass overflow-hidden', className)} {...props}>
+    <div className={clsx('table-neu overflow-hidden', className)} {...props}>
       <div className="overflow-x-auto">
         <table className="w-full">
           {children}
@@ -31,7 +31,7 @@ export function GlassTableHeader({ children, className, ...props }: GlassTableHe
   return (
     <thead
       className={clsx(
-        'bg-white/5 dark:bg-black/5 border-b border-white/10',
+        'bg-neu-dark/5 dark:bg-neu-light-dark/5 border-b border-neu-dark/10 dark:border-neu-light-dark/10',
         className
       )}
       {...props}
@@ -49,7 +49,7 @@ interface GlassTableBodyProps extends HTMLAttributes<HTMLTableSectionElement> {
 
 export function GlassTableBody({ children, className, ...props }: GlassTableBodyProps) {
   return (
-    <tbody className={clsx('divide-y divide-white/5', className)} {...props}>
+    <tbody className={clsx('divide-y divide-neu-dark/5 dark:divide-neu-light-dark/5', className)} {...props}>
       {children}
     </tbody>
   )
@@ -76,7 +76,7 @@ export function GlassTableRow({
     <tr
       className={clsx(
         'transition-colors duration-150',
-        isHoverable && 'hover:bg-white/5 dark:hover:bg-white/5',
+        isHoverable && 'hover:bg-neu-dark/5 dark:hover:bg-neu-light-dark/5',
         isClickable && 'cursor-pointer',
         isSelected && 'bg-primary-500/10',
         className

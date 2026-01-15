@@ -10,7 +10,7 @@ export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
       className={cn(
-        'animate-pulse rounded-lg bg-white/5',
+        'animate-pulse rounded-lg bg-neu-dark/10 dark:bg-neu-light-dark/10 shadow-neu-inset dark:shadow-neu-dark-inset',
         className
       )}
     />
@@ -32,7 +32,7 @@ export function MessageSkeleton() {
 
 export function ConversationCardSkeleton() {
   return (
-    <div className="glass p-4 mb-2">
+    <div className="neu p-4 mb-2 rounded-xl">
       <Skeleton className="h-5 w-3/4 mb-2" />
       <Skeleton className="h-3 w-1/2" />
     </div>

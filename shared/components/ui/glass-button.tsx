@@ -3,7 +3,7 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { clsx } from 'clsx'
 
-// Button variants
+// Button variants - Neumorphism style
 type ButtonVariant = 'default' | 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline'
 type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'icon'
 
@@ -19,21 +19,21 @@ interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  default: 'btn-glass',
-  primary: 'btn-glass-primary',
-  secondary: 'btn-glass-secondary',
-  danger: 'btn-glass-danger',
-  ghost: 'btn-glass bg-transparent hover:bg-white/10',
-  outline: 'btn-glass bg-transparent border-2 border-white/30 hover:bg-white/10',
+  default: 'btn-neu',
+  primary: 'btn-neu-primary',
+  secondary: 'btn-neu-secondary',
+  danger: 'btn-neu-danger',
+  ghost: 'btn-neu-ghost',
+  outline: 'btn-neu bg-transparent border-2 border-neu-dark/30 dark:border-neu-light-dark/30',
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
-  xs: 'px-2 py-1 text-xs rounded-lg min-h-[28px]',
-  sm: 'px-3 py-1.5 text-sm rounded-lg min-h-[32px]',
-  md: 'px-4 py-2 text-sm rounded-xl min-h-[40px]',
-  lg: 'px-6 py-3 text-base rounded-xl min-h-[48px]',
-  xl: 'px-8 py-4 text-lg rounded-2xl min-h-[56px]',
-  icon: 'p-2 rounded-xl aspect-square min-h-[40px] min-w-[40px]',
+  xs: 'px-2 py-1 text-xs rounded-neu-sm min-h-[28px]',
+  sm: 'px-3 py-1.5 text-sm rounded-neu-sm min-h-[32px]',
+  md: 'px-4 py-2 text-sm rounded-neu-sm min-h-[40px]',
+  lg: 'px-6 py-3 text-base rounded-neu min-h-[48px]',
+  xl: 'px-8 py-4 text-lg rounded-neu min-h-[56px]',
+  icon: 'p-2 rounded-neu-sm aspect-square min-h-[40px] min-w-[40px]',
 }
 
 export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
@@ -64,8 +64,8 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
           fullWidth && 'w-full',
           isDisabled && 'opacity-50 cursor-not-allowed',
           'inline-flex items-center justify-center gap-2 font-medium',
-          'transition-all duration-200 ease-glass',
-          'focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-transparent',
+          'transition-shadow duration-200',
+          'focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-neu-bg dark:focus:ring-offset-neu-bg-dark',
           className
         )}
         {...props}
@@ -146,7 +146,7 @@ export const GlassIconButton = forwardRef<HTMLButtonElement, GlassIconButtonProp
       <GlassButton
         ref={ref}
         size={sizeMap[size]}
-        className={clsx('btn-glass-icon', className)}
+        className={clsx('btn-neu-icon', className)}
         {...props}
       >
         {icon}

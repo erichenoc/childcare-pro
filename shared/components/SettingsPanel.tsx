@@ -19,27 +19,27 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in"
+        className="fixed inset-0 bg-black/40 z-40 animate-fade-in"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className="fixed right-0 top-0 h-screen w-full md:w-[400px] glass-panel-strong z-50 animate-slide-in-left overflow-y-auto">
+      <div className="fixed right-0 top-0 h-screen w-full md:w-[400px] bg-neu-bg dark:bg-neu-bg-dark shadow-neu-lg dark:shadow-neu-dark-lg z-50 animate-slide-in-left overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-black/40 backdrop-blur-xl border-b border-white/10 p-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-neu-bg/95 dark:bg-neu-bg-dark/95 border-b border-neu-dark/10 dark:border-neu-light-dark/10 p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-neu-sm dark:shadow-neu-dark-sm">
               <Settings className="w-5 h-5 text-white" strokeWidth={2.5} />
             </div>
-            <h2 className="text-xl font-bold text-[var(--text-primary)]">Configuración</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Configuracion</h2>
           </div>
 
           <button
             onClick={onClose}
-            className="glass-hover p-2 rounded-lg"
+            className="p-2 rounded-xl hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all duration-200"
             aria-label="Cerrar panel"
           >
-            <X className="w-5 h-5 text-[var(--text-muted)]" />
+            <X className="w-5 h-5 text-gray-400 dark:text-gray-500" />
           </button>
         </div>
 
@@ -47,11 +47,11 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         <div className="p-6 space-y-6">
           {/* Appearance Section */}
           <section>
-            <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
               Apariencia
             </h3>
 
-            <div className="glass p-4 rounded-xl">
+            <div className="neu p-4 rounded-xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {theme === 'dark' ? (
@@ -60,8 +60,8 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     <Sun className="w-5 h-5 text-yellow-400" strokeWidth={2} />
                   )}
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium">Tema</p>
-                    <p className="text-sm text-[var(--text-muted)]">
+                    <p className="text-gray-900 dark:text-white font-medium">Tema</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       {theme === 'dark' ? 'Modo Oscuro' : 'Modo Claro'}
                     </p>
                   </div>
@@ -69,7 +69,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
                 <button
                   onClick={toggleTheme}
-                  className="glass-hover px-4 py-2 text-sm"
+                  className="btn-neu px-4 py-2 text-sm"
                 >
                   Cambiar
                 </button>
@@ -79,17 +79,17 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
           {/* Notifications Section */}
           <section>
-            <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
               Notificaciones
             </h3>
 
-            <div className="glass p-4 rounded-xl">
+            <div className="neu p-4 rounded-xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Bell className="w-5 h-5 text-blue-400" strokeWidth={2} />
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium">Notificaciones Push</p>
-                    <p className="text-sm text-[var(--text-muted)]">
+                    <p className="text-gray-900 dark:text-white font-medium">Notificaciones Push</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Recibir notificaciones de nuevas respuestas
                     </p>
                   </div>
@@ -102,7 +102,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     checked={notifications}
                     onChange={() => setNotifications(!notifications)}
                   />
-                  <div className="w-11 h-6 bg-white/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                  <div className="w-11 h-6 bg-neu-dark/20 dark:bg-neu-light-dark/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500 shadow-neu-inset dark:shadow-neu-dark-inset"></div>
                 </label>
               </div>
             </div>
@@ -110,28 +110,28 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
           {/* Data & Privacy Section */}
           <section>
-            <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
               Datos & Privacidad
             </h3>
 
             <div className="space-y-3">
-              <button className="glass-hover p-4 rounded-xl w-full text-left flex items-center justify-between group">
+              <button className="neu p-4 rounded-xl w-full text-left flex items-center justify-between group hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all duration-200">
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-400" strokeWidth={2} />
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium">Borrar todas las conversaciones</p>
-                    <p className="text-sm text-[var(--text-muted)]">
-                      Esta acción no se puede deshacer
+                    <p className="text-gray-900 dark:text-white font-medium">Borrar todas las conversaciones</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Esta accion no se puede deshacer
                     </p>
                   </div>
                 </div>
               </button>
 
-              <button className="glass-hover p-4 rounded-xl w-full text-left">
+              <button className="neu p-4 rounded-xl w-full text-left hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all duration-200">
                 <div className="flex items-center gap-3">
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium">Exportar datos</p>
-                    <p className="text-sm text-[var(--text-muted)]">
+                    <p className="text-gray-900 dark:text-white font-medium">Exportar datos</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Descargar todas tus conversaciones
                     </p>
                   </div>
@@ -142,30 +142,30 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
           {/* About Section */}
           <section>
-            <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
               Acerca de
             </h3>
 
-            <div className="glass p-4 rounded-xl space-y-2">
+            <div className="neu p-4 rounded-xl space-y-2">
               <div className="flex justify-between">
-                <p className="text-[var(--text-muted)] text-sm">Versión</p>
-                <p className="text-[var(--text-primary)] text-sm font-medium">1.0.0</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Version</p>
+                <p className="text-gray-900 dark:text-white text-sm font-medium">1.0.0</p>
               </div>
 
               <div className="flex justify-between">
-                <p className="text-[var(--text-muted)] text-sm">Template</p>
-                <p className="text-[var(--text-primary)] text-sm font-medium">Agent Base</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Template</p>
+                <p className="text-gray-900 dark:text-white text-sm font-medium">Agent Base</p>
               </div>
 
-              <div className="divider my-3" />
+              <div className="border-t border-neu-dark/10 dark:border-neu-light-dark/10 my-3" />
 
               <a
                 href="https://github.com/yourusername/agent-base-template"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                className="text-primary-500 hover:text-primary-400 text-sm transition-colors"
               >
-                Ver en GitHub →
+                Ver en GitHub
               </a>
             </div>
           </section>

@@ -84,8 +84,8 @@ export function Header({ onMenuClick, className }: HeaderProps) {
   return (
     <header
       className={clsx(
-        'glass-frosted h-16 px-4 flex items-center justify-between',
-        'border-b border-blue-200/50',
+        'neu-lg h-16 px-4 flex items-center justify-between',
+        'border-b border-neu-dark/10 dark:border-neu-light-dark/10',
         className
       )}
     >
@@ -94,7 +94,7 @@ export function Header({ onMenuClick, className }: HeaderProps) {
         {/* Mobile Menu Button */}
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-2 rounded-xl text-gray-500 hover:bg-blue-50 transition-colors"
+          className="lg:hidden p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all duration-200"
         >
           <Menu className="w-6 h-6" />
         </button>
@@ -106,7 +106,7 @@ export function Header({ onMenuClick, className }: HeaderProps) {
             <input
               type="text"
               placeholder={t.common.search}
-              className="input-glass pl-10 pr-4 py-2 w-64 lg:w-80 text-sm"
+              className="input-neu pl-10 pr-4 py-2 w-64 lg:w-80 text-sm"
             />
           </div>
         </div>
@@ -118,7 +118,7 @@ export function Header({ onMenuClick, className }: HeaderProps) {
         <div className="relative">
           <button
             onClick={() => setIsLanguageOpen(!isLanguageOpen)}
-            className="p-2 rounded-xl text-gray-500 hover:bg-blue-50 transition-colors flex items-center gap-1"
+            className="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all duration-200 flex items-center gap-1"
           >
             <Globe className="w-5 h-5" />
             <span className="hidden sm:inline text-sm">{LOCALE_NAMES[locale]}</span>
@@ -130,7 +130,7 @@ export function Header({ onMenuClick, className }: HeaderProps) {
                 className="fixed inset-0 z-40"
                 onClick={() => setIsLanguageOpen(false)}
               />
-              <div className="absolute right-0 top-full mt-2 w-40 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-lg border border-blue-100 z-50 overflow-hidden">
+              <div className="absolute right-0 top-full mt-2 w-40 max-w-[calc(100vw-2rem)] bg-neu-bg dark:bg-neu-bg-dark rounded-xl shadow-neu dark:shadow-neu-dark z-50 overflow-hidden">
                 {SUPPORTED_LOCALES.map((loc) => (
                   <button
                     key={loc}
@@ -139,11 +139,11 @@ export function Header({ onMenuClick, className }: HeaderProps) {
                       setIsLanguageOpen(false)
                     }}
                     className={clsx(
-                      'w-full px-4 py-2.5 text-left text-sm transition-colors',
-                      'hover:bg-blue-50',
+                      'w-full px-4 py-2.5 text-left text-sm transition-all duration-200',
+                      'hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset',
                       locale === loc
-                        ? 'text-blue-600 font-medium bg-blue-50'
-                        : 'text-gray-700'
+                        ? 'text-primary-600 dark:text-primary-400 font-medium shadow-neu-inset dark:shadow-neu-dark-inset'
+                        : 'text-gray-700 dark:text-gray-300'
                     )}
                   >
                     {LOCALE_NAMES[loc as Locale]}
@@ -158,7 +158,7 @@ export function Header({ onMenuClick, className }: HeaderProps) {
         <div className="relative">
           <button
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            className="relative p-2 rounded-xl text-gray-500 hover:bg-blue-50 transition-colors"
+            className="relative p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all duration-200"
           >
             <Bell className="w-5 h-5" />
             {notifications.length > 0 && (
@@ -172,9 +172,9 @@ export function Header({ onMenuClick, className }: HeaderProps) {
                 className="fixed inset-0 z-40"
                 onClick={() => setIsNotificationsOpen(false)}
               />
-              <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-16 sm:top-full mt-0 sm:mt-2 w-auto sm:w-80 bg-white rounded-xl shadow-lg border border-blue-100 z-50 overflow-hidden">
-                <div className="px-4 py-3 border-b border-blue-100">
-                  <h3 className="font-semibold text-gray-800">
+              <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-16 sm:top-full mt-0 sm:mt-2 w-auto sm:w-80 bg-neu-bg dark:bg-neu-bg-dark rounded-xl shadow-neu dark:shadow-neu-dark z-50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-neu-dark/10 dark:border-neu-light-dark/10">
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-100">
                     {t.communication.notifications}
                   </h3>
                 </div>
@@ -182,24 +182,24 @@ export function Header({ onMenuClick, className }: HeaderProps) {
                   {notifications.map((notification) => (
                     <button
                       key={notification.id}
-                      className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-blue-50 last:border-0"
+                      className="w-full px-4 py-3 text-left hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all duration-200 border-b border-neu-dark/5 dark:border-neu-light-dark/5 last:border-0"
                     >
-                      <p className="font-medium text-sm text-gray-800">
+                      <p className="font-medium text-sm text-gray-800 dark:text-gray-100">
                         {notification.title}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {notification.message}
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                         {notification.time}
                       </p>
                     </button>
                   ))}
                 </div>
-                <div className="px-4 py-3 border-t border-blue-100">
+                <div className="px-4 py-3 border-t border-neu-dark/10 dark:border-neu-light-dark/10">
                   <Link
                     href="/dashboard/notifications"
-                    className="text-sm text-blue-600 hover:underline"
+                    className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
                   >
                     {t.help.viewAllNotifications}
                   </Link>
@@ -213,7 +213,7 @@ export function Header({ onMenuClick, className }: HeaderProps) {
         <div className="relative">
           <button
             onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="flex items-center gap-2 p-1.5 pr-3 rounded-xl hover:bg-blue-50 transition-colors"
+            className="flex items-center gap-2 p-1.5 pr-3 rounded-xl hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all duration-200"
           >
             <GlassAvatar
               name={user.name}
@@ -221,10 +221,10 @@ export function Header({ onMenuClick, className }: HeaderProps) {
               size="sm"
             />
             <div className="hidden sm:block text-left">
-              <p className="text-sm font-medium text-gray-800">
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-100">
                 {user.name}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {user.role}
               </p>
             </div>
@@ -237,12 +237,12 @@ export function Header({ onMenuClick, className }: HeaderProps) {
                 className="fixed inset-0 z-40"
                 onClick={() => setIsProfileOpen(false)}
               />
-              <div className="absolute right-0 top-full mt-2 w-56 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-lg border border-blue-100 z-50 overflow-hidden">
-                <div className="px-4 py-3 border-b border-blue-100">
-                  <p className="font-medium text-gray-800">
+              <div className="absolute right-0 top-full mt-2 w-56 max-w-[calc(100vw-2rem)] bg-neu-bg dark:bg-neu-bg-dark rounded-xl shadow-neu dark:shadow-neu-dark z-50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-neu-dark/10 dark:border-neu-light-dark/10">
+                  <p className="font-medium text-gray-800 dark:text-gray-100">
                     {user.name}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {user.email}
                   </p>
                 </div>
@@ -250,32 +250,32 @@ export function Header({ onMenuClick, className }: HeaderProps) {
                 <div className="py-1">
                   <Link
                     href="/dashboard/profile"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all duration-200"
                   >
                     <User className="w-4 h-4" />
                     {t.nav.profile}
                   </Link>
                   <Link
                     href="/dashboard/settings"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all duration-200"
                   >
                     <Settings className="w-4 h-4" />
                     {t.nav.settings}
                   </Link>
                   <Link
                     href="/dashboard/help"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset transition-all duration-200"
                   >
                     <HelpCircle className="w-4 h-4" />
                     {t.nav.help}
                   </Link>
                 </div>
 
-                <div className="border-t border-blue-100 py-1">
+                <div className="border-t border-neu-dark/10 dark:border-neu-light-dark/10 py-1">
                   <button
                     onClick={handleLogout}
                     disabled={isLoggingOut}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset hover:bg-red-500/5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <LogOut className="w-4 h-4" />
                     {isLoggingOut ? t.common.loading : t.nav.logout}

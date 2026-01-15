@@ -4,7 +4,7 @@ import { type HTMLAttributes, type ReactNode } from 'react'
 import { clsx } from 'clsx'
 import Image from 'next/image'
 
-// Avatar sizes
+// Avatar sizes - Neumorphism style
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
 
 interface GlassAvatarProps extends HTMLAttributes<HTMLDivElement> {
@@ -18,9 +18,9 @@ interface GlassAvatarProps extends HTMLAttributes<HTMLDivElement> {
 
 const sizeClasses: Record<AvatarSize, string> = {
   xs: 'w-6 h-6 text-xs',
-  sm: 'avatar-glass-sm',
-  md: 'avatar-glass-md',
-  lg: 'avatar-glass-lg',
+  sm: 'avatar-neu-sm',
+  md: 'avatar-neu-md',
+  lg: 'avatar-neu-lg',
   xl: 'w-20 h-20 text-2xl',
   '2xl': 'w-28 h-28 text-3xl',
 }
@@ -86,7 +86,7 @@ export function GlassAvatar({
     <div
       className={clsx(
         'relative inline-flex items-center justify-center rounded-full overflow-hidden',
-        'ring-2 ring-white/30 dark:ring-white/20',
+        'shadow-neu-sm dark:shadow-neu-dark-sm',
         sizeClasses[size],
         !src && bgColor,
         className
@@ -137,7 +137,7 @@ export function GlassAvatarGroup({
         <div
           className={clsx(
             'relative inline-flex items-center justify-center rounded-full',
-            'bg-gray-200 dark:bg-gray-700 ring-2 ring-white dark:ring-gray-900',
+            'bg-neu-bg dark:bg-neu-bg-dark shadow-neu-sm dark:shadow-neu-dark-sm',
             sizeClasses[size]
           )}
         >

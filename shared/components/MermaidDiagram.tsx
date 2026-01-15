@@ -67,7 +67,7 @@ export function MermaidDiagram({ chart, className = '' }: MermaidDiagramProps) {
 
   if (error) {
     return (
-      <div className={`my-4 p-4 glass rounded-lg border border-red-500/20 ${className}`}>
+      <div className={`my-4 p-4 neu rounded-xl border border-red-500/20 ${className}`}>
         <div className="flex items-start gap-3">
           <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -76,10 +76,10 @@ export function MermaidDiagram({ chart, className = '' }: MermaidDiagramProps) {
             <p className="text-sm font-medium text-red-400">Mermaid Diagram Error</p>
             <p className="text-xs text-red-300/70 mt-1">{error}</p>
             <details className="mt-2">
-              <summary className="text-xs text-[var(--text-muted)] cursor-pointer hover:text-[var(--text-secondary)]">
+              <summary className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300">
                 Show diagram code
               </summary>
-              <pre className="mt-2 text-xs text-[var(--text-muted)] whitespace-pre-wrap font-mono">
+              <pre className="mt-2 text-xs text-gray-500 dark:text-gray-400 whitespace-pre-wrap font-mono">
                 {chart}
               </pre>
             </details>
@@ -90,10 +90,10 @@ export function MermaidDiagram({ chart, className = '' }: MermaidDiagramProps) {
   }
 
   return (
-    <div className={`my-4 p-4 glass rounded-lg overflow-x-auto ${className}`}>
+    <div className={`my-4 p-4 neu rounded-xl overflow-x-auto ${className}`}>
       {isLoading && (
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--text-secondary)]" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
         </div>
       )}
       <div

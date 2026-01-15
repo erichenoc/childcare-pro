@@ -85,7 +85,7 @@ export function SidebarToggle() {
       {/* 🔘 HAMBURGER TOGGLE BUTTON */}
       <button
         onClick={toggle}
-        className="glass-hover p-2.5 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-white/10 relative z-50"
+        className="neu-sm p-2.5 rounded-lg flex items-center justify-center transition-all duration-200 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset relative z-50"
         aria-label={isOpen ? 'Close sidebar' : 'Open sidebar'}
         title={isOpen ? 'Close sidebar' : 'Open sidebar'}
       >

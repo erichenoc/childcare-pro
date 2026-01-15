@@ -13,7 +13,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-gradient-childcare">
+    <div className="min-h-screen bg-neu-bg dark:bg-neu-bg-dark">
       {/* Mobile Navigation */}
       <MobileNav
         isOpen={isMobileNavOpen}

@@ -3,7 +3,7 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode, useId } from 'react'
 import { clsx } from 'clsx'
 
-// Input variants
+// Input variants - Neumorphism style
 type InputVariant = 'default' | 'filled' | 'outline'
 type InputSize = 'sm' | 'md' | 'lg'
 
@@ -20,15 +20,15 @@ interface GlassInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 's
 }
 
 const variantClasses: Record<InputVariant, string> = {
-  default: 'input-glass',
-  filled: 'input-glass bg-white/20 dark:bg-black/20',
-  outline: 'input-glass bg-transparent border-2',
+  default: 'input-neu',
+  filled: 'input-neu bg-neu-dark/10 dark:bg-neu-light-dark/10',
+  outline: 'input-neu bg-transparent border-2 border-neu-dark/30 dark:border-neu-light-dark/30',
 }
 
 const sizeClasses: Record<InputSize, string> = {
-  sm: 'px-3 py-1.5 text-sm rounded-lg min-h-[36px]',
-  md: 'px-4 py-2.5 text-sm rounded-xl min-h-[44px]',
-  lg: 'px-5 py-3 text-base rounded-xl min-h-[52px]',
+  sm: 'px-3 py-1.5 text-sm rounded-neu-sm min-h-[36px]',
+  md: 'px-4 py-2.5 text-sm rounded-neu-sm min-h-[44px]',
+  lg: 'px-5 py-3 text-base rounded-neu min-h-[52px]',
 }
 
 export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
@@ -59,7 +59,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
         {label && (
           <label
             htmlFor={id}
-            className="input-glass-label block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200"
+            className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200"
           >
             {label}
           </label>
@@ -82,9 +82,9 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
               fullWidth && 'w-full',
               leftIcon && 'pl-10',
               rightIcon && 'pr-10',
-              hasError && 'border-error/50 focus:border-error focus:ring-error/30',
-              disabled && 'opacity-50 cursor-not-allowed bg-gray-100/50 dark:bg-gray-800/50',
-              'transition-all duration-200',
+              hasError && 'input-neu-error',
+              disabled && 'opacity-50 cursor-not-allowed',
+              'transition-shadow duration-200',
               className
             )}
             aria-invalid={hasError}
@@ -100,7 +100,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
         </div>
 
         {error && (
-          <p id={`${id}-error`} className="input-glass-error mt-1.5 text-sm text-error">
+          <p id={`${id}-error`} className="mt-1.5 text-sm text-error">
             {error}
           </p>
         )}
@@ -151,9 +151,9 @@ export const GlassTextarea = forwardRef<HTMLTextAreaElement, GlassTextareaProps>
     const hasError = Boolean(error)
 
     const paddingClasses: Record<InputSize, string> = {
-      sm: 'px-3 py-2 text-sm rounded-lg',
-      md: 'px-4 py-3 text-sm rounded-xl',
-      lg: 'px-5 py-4 text-base rounded-xl',
+      sm: 'px-3 py-2 text-sm rounded-neu-sm',
+      md: 'px-4 py-3 text-sm rounded-neu-sm',
+      lg: 'px-5 py-4 text-base rounded-neu',
     }
 
     return (
@@ -161,7 +161,7 @@ export const GlassTextarea = forwardRef<HTMLTextAreaElement, GlassTextareaProps>
         {label && (
           <label
             htmlFor={id}
-            className="input-glass-label block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200"
+            className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200"
           >
             {label}
           </label>
@@ -173,12 +173,12 @@ export const GlassTextarea = forwardRef<HTMLTextAreaElement, GlassTextareaProps>
           rows={rows}
           disabled={disabled}
           className={clsx(
-            variantClasses[variant],
+            'textarea-neu',
             paddingClasses[inputSize],
             fullWidth && 'w-full',
-            hasError && 'border-error/50 focus:border-error focus:ring-error/30',
-            disabled && 'opacity-50 cursor-not-allowed bg-gray-100/50 dark:bg-gray-800/50',
-            'transition-all duration-200 resize-none',
+            hasError && 'input-neu-error',
+            disabled && 'opacity-50 cursor-not-allowed',
+            'transition-shadow duration-200 resize-none',
             className
           )}
           aria-invalid={hasError}
@@ -187,7 +187,7 @@ export const GlassTextarea = forwardRef<HTMLTextAreaElement, GlassTextareaProps>
         />
 
         {error && (
-          <p id={`${id}-error`} className="input-glass-error mt-1.5 text-sm text-error">
+          <p id={`${id}-error`} className="mt-1.5 text-sm text-error">
             {error}
           </p>
         )}
