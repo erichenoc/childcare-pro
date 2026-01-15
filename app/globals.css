@@ -1,0 +1,610 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   LIQUID GLASS DESIGN SYSTEM - ChildCare Pro
+   Basado en Apple iOS 26 / WWDC 2025
+   ============================================ */
+
+@layer base {
+  :root {
+    /* ============================================
+       COLORES BASE - MODO CLARO (Azul Celeste)
+       ============================================ */
+    --background: 200 40% 96%;
+    --foreground: 210 20% 20%;
+
+    /* Glass Light Mode - Estilo limpio azul */
+    --glass-bg-light: rgba(255, 255, 255, 0.85);
+    --glass-bg-medium: rgba(255, 255, 255, 0.92);
+    --glass-bg-heavy: rgba(255, 255, 255, 0.98);
+    --glass-border: rgba(59, 130, 246, 0.2);
+    --glass-shadow: 0 4px 20px rgba(59, 130, 246, 0.08);
+
+    /* Colores de marca - Azul principal */
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 199 89% 48%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Estados */
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+    --error: 0 84% 60%;
+    --info: 217 91% 60%;
+
+    /* Superficies */
+    --card: 0 0% 100%;
+    --card-foreground: 210 20% 20%;
+    --muted: 200 30% 95%;
+    --muted-foreground: 210 10% 45%;
+
+    /* Bordes y anillos */
+    --border: 200 30% 88%;
+    --input: 200 30% 92%;
+    --ring: 217 91% 60%;
+
+    /* Blur levels */
+    --blur-sm: 6px;
+    --blur-md: 10px;
+    --blur-lg: 20px;
+    --blur-xl: 30px;
+
+    /* Gradientes del fondo - Azul celeste suave */
+    --gradient-start: #dbeafe;
+    --gradient-mid: #bfdbfe;
+    --gradient-end: #93c5fd;
+  }
+
+  .dark {
+    /* ============================================
+       COLORES BASE - MODO OSCURO
+       ============================================ */
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+
+    /* Glass Dark Mode */
+    --glass-bg-light: rgba(0, 0, 0, 0.2);
+    --glass-bg-medium: rgba(0, 0, 0, 0.35);
+    --glass-bg-heavy: rgba(0, 0, 0, 0.5);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+    /* Superficies oscuras */
+    --card: 240 10% 8%;
+    --card-foreground: 0 0% 98%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+
+    /* Bordes oscuros */
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+
+    /* Gradientes oscuros */
+    --gradient-start: #1a1a2e;
+    --gradient-mid: #16213e;
+    --gradient-end: #0f3460;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply antialiased scroll-smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Scrollbar elegante */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
+  }
+}
+
+/* ============================================
+   FILTROS SVG PARA REFRACCIÓN LIQUID GLASS
+   ============================================ */
+.liquid-glass-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* ============================================
+   FONDOS GRADIENTE PARA LIQUID GLASS
+   ============================================ */
+.bg-gradient-mesh {
+  background: linear-gradient(180deg, var(--gradient-start) 0%, var(--gradient-mid) 50%, var(--gradient-end) 100%);
+}
+
+.bg-gradient-childcare {
+  background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 30%, #7dd3fc 70%, #38bdf8 100%);
+}
+
+.bg-gradient-playful {
+  background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%);
+}
+
+.bg-gradient-calm {
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%);
+}
+
+@layer components {
+  /* ============================================
+     LIQUID GLASS - COMPONENTES BASE
+     ============================================ */
+
+  /* Glass Card - Regular */
+  .glass {
+    @apply relative;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: var(--glass-bg-light);
+    border: 1px solid var(--glass-border);
+    @apply rounded-glass;
+    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.06);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Glass Card - Clear (más transparente) */
+  .glass-clear {
+    @apply relative;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    @apply rounded-glass;
+  }
+
+  /* Glass Card - Frosted (más opaco) */
+  .glass-frosted {
+    @apply relative;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: var(--glass-bg-heavy);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    @apply rounded-glass;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.08);
+  }
+
+  /* Glass Card - Mist (efecto nebuloso) */
+  .glass-mist {
+    @apply relative;
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(59, 130, 246, 0.12);
+    @apply rounded-glass;
+  }
+
+  /* Glass con hover interactivo */
+  .glass-hover {
+    @apply glass cursor-pointer;
+  }
+
+  .glass-hover:hover {
+    background: var(--glass-bg-medium);
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .glass-hover:active {
+    transform: scale(0.98);
+  }
+
+  /* Glass con brillo especular */
+  .glass-specular {
+    @apply glass;
+    box-shadow:
+      0 4px 20px rgba(59, 130, 246, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+      inset 0 -1px 0 rgba(59, 130, 246, 0.05);
+  }
+
+  /* ============================================
+     BOTONES LIQUID GLASS
+     ============================================ */
+
+  .btn-glass {
+    @apply glass-hover inline-flex items-center justify-center gap-2;
+    @apply px-6 py-3 font-medium text-foreground;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none;
+  }
+
+  .btn-glass-primary {
+    @apply btn-glass;
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.25);
+    @apply text-blue-600;
+  }
+
+  .btn-glass-primary:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+  }
+
+  .btn-glass-secondary {
+    @apply btn-glass;
+    background: rgba(14, 165, 233, 0.1);
+    border-color: rgba(14, 165, 233, 0.25);
+    @apply text-sky-600;
+  }
+
+  .btn-glass-secondary:hover {
+    background: rgba(14, 165, 233, 0.2);
+    border-color: rgba(14, 165, 233, 0.4);
+    box-shadow: 0 4px 16px rgba(14, 165, 233, 0.2);
+  }
+
+  .btn-glass-danger {
+    @apply btn-glass;
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    @apply text-error;
+  }
+
+  .btn-glass-danger:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: rgba(239, 68, 68, 0.4);
+    @apply shadow-glass-glow-error;
+  }
+
+  .btn-glass-icon {
+    @apply glass-hover p-3 rounded-glass-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring;
+  }
+
+  /* ============================================
+     INPUTS LIQUID GLASS
+     ============================================ */
+
+  .input-glass {
+    @apply w-full px-4 py-3;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    @apply rounded-glass-sm text-foreground;
+    @apply placeholder:text-muted-foreground;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    transition: all 0.2s ease;
+  }
+
+  .input-glass:focus {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(59, 130, 246, 0.4);
+  }
+
+  .input-glass-label {
+    @apply block text-sm font-medium text-foreground mb-2;
+  }
+
+  .input-glass-error {
+    @apply input-glass;
+    border-color: rgba(239, 68, 68, 0.5);
+  }
+
+  /* ============================================
+     CARDS LIQUID GLASS
+     ============================================ */
+
+  .card-glass {
+    @apply glass p-6;
+  }
+
+  .card-glass-sm {
+    @apply glass p-4 rounded-glass-sm;
+  }
+
+  .card-glass-lg {
+    @apply glass-frosted p-8 rounded-glass-lg;
+  }
+
+  .card-glass-interactive {
+    @apply glass-hover p-6;
+  }
+
+  /* ============================================
+     NAVEGACIÓN LIQUID GLASS
+     ============================================ */
+
+  .nav-glass {
+    @apply glass-frosted;
+    @apply fixed top-4 left-1/2 -translate-x-1/2 z-50;
+    @apply px-6 py-3 rounded-glass-full;
+  }
+
+  .sidebar-glass {
+    @apply glass-frosted h-full overflow-y-auto;
+    @apply border-r border-white/10;
+  }
+
+  .nav-item-glass {
+    @apply flex items-center gap-3 px-4 py-3 rounded-glass-sm;
+    @apply text-muted-foreground hover:text-foreground;
+    @apply transition-all duration-200;
+  }
+
+  .nav-item-glass:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .nav-item-glass.active {
+    @apply text-primary bg-primary/10;
+    border-left: 3px solid theme('colors.primary.DEFAULT');
+  }
+
+  /* ============================================
+     MODAL LIQUID GLASS
+     ============================================ */
+
+  .modal-overlay {
+    @apply fixed inset-0 z-50;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .modal-glass {
+    @apply glass-frosted p-8 rounded-glass-lg;
+    @apply max-w-lg w-[90%] mx-auto;
+    @apply animate-scale-in;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+  }
+
+  /* ============================================
+     TABLAS LIQUID GLASS
+     ============================================ */
+
+  .table-glass {
+    @apply w-full;
+  }
+
+  .table-glass thead {
+    @apply glass-clear;
+  }
+
+  .table-glass th {
+    @apply px-4 py-3 text-left text-sm font-semibold text-foreground;
+  }
+
+  .table-glass td {
+    @apply px-4 py-3 text-sm text-foreground;
+  }
+
+  .table-glass tbody tr {
+    @apply border-b border-white/10;
+    transition: background 0.2s ease;
+  }
+
+  .table-glass tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  /* ============================================
+     BADGES / ESTADOS
+     ============================================ */
+
+  .badge-glass {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    backdrop-filter: blur(6px);
+  }
+
+  .badge-glass-success {
+    @apply badge-glass bg-success/20 text-success border border-success/30;
+  }
+
+  .badge-glass-warning {
+    @apply badge-glass bg-warning/20 text-warning border border-warning/30;
+  }
+
+  .badge-glass-error {
+    @apply badge-glass bg-error/20 text-error border border-error/30;
+  }
+
+  .badge-glass-info {
+    @apply badge-glass bg-info/20 text-info border border-info/30;
+  }
+
+  .badge-glass-neutral {
+    @apply badge-glass bg-muted text-muted-foreground border border-border;
+  }
+
+  /* ============================================
+     AVATARES
+     ============================================ */
+
+  .avatar-glass {
+    @apply relative inline-flex items-center justify-center;
+    @apply rounded-full overflow-hidden;
+    @apply bg-gradient-to-br from-primary/30 to-secondary/30;
+    @apply border-2 border-white/30;
+  }
+
+  .avatar-glass-sm {
+    @apply avatar-glass w-8 h-8 text-sm;
+  }
+
+  .avatar-glass-md {
+    @apply avatar-glass w-10 h-10 text-base;
+  }
+
+  .avatar-glass-lg {
+    @apply avatar-glass w-16 h-16 text-xl;
+  }
+
+  /* ============================================
+     ESTADÍSTICAS DASHBOARD
+     ============================================ */
+
+  .stat-card-glass {
+    @apply glass p-6 flex flex-col;
+  }
+
+  .stat-card-glass-value {
+    @apply text-3xl font-bold text-foreground;
+  }
+
+  .stat-card-glass-label {
+    @apply text-sm text-muted-foreground mt-1;
+  }
+
+  .stat-card-glass-trend {
+    @apply text-xs font-medium mt-2;
+  }
+
+  .stat-card-glass-trend.positive {
+    @apply text-success;
+  }
+
+  .stat-card-glass-trend.negative {
+    @apply text-error;
+  }
+
+  /* ============================================
+     RATIO INDICATOR (DCF Florida)
+     ============================================ */
+
+  .ratio-indicator {
+    @apply glass p-4 rounded-glass-sm flex items-center gap-4;
+  }
+
+  .ratio-indicator.compliant {
+    @apply border-success/30;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+  }
+
+  .ratio-indicator.warning {
+    @apply border-warning/30;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+  }
+
+  .ratio-indicator.non-compliant {
+    @apply border-error/30;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+  }
+
+  /* ============================================
+     TOOLTIPS
+     ============================================ */
+
+  .tooltip-glass {
+    @apply glass-clear px-3 py-2 text-sm rounded-glass-sm;
+    @apply animate-fade-in;
+  }
+
+  /* ============================================
+     TOAST / NOTIFICACIONES
+     ============================================ */
+
+  .toast-glass {
+    @apply glass-frosted px-6 py-4 rounded-glass;
+    @apply flex items-center gap-3;
+    @apply animate-slide-in-right;
+  }
+
+  .toast-glass.success {
+    @apply border-success/30;
+  }
+
+  .toast-glass.error {
+    @apply border-error/30;
+  }
+
+  .toast-glass.warning {
+    @apply border-warning/30;
+  }
+
+  .toast-glass.info {
+    @apply border-info/30;
+  }
+}
+
+@layer utilities {
+  /* ============================================
+     UTILIDADES ADICIONALES
+     ============================================ */
+
+  /* Texto con gradiente */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+
+  /* Divisor con gradiente */
+  .divider-gradient {
+    @apply h-px bg-gradient-to-r from-transparent via-border to-transparent;
+  }
+
+  /* Safe area para dispositivos con notch */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Viewport dinámico para iOS */
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
+
+  /* Reducir blur en móvil para mejor rendimiento */
+  @media (max-width: 768px) {
+    .glass,
+    .glass-frosted,
+    .glass-mist {
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+  }
+
+  /* Desactivar animaciones si el usuario lo prefiere */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Alto contraste */
+  @media (prefers-contrast: high) {
+    .glass,
+    .glass-frosted,
+    .glass-hover {
+      @apply border-foreground/30;
+    }
+  }
+}
+
+/* ============================================
+   FILTROS SVG PARA EFECTO DE REFRACCIÓN
+   (Se incluyen en el HTML via componente)
+   ============================================ */
