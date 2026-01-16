@@ -109,8 +109,8 @@ export default function NewChildPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.first_name || !formData.last_name || !formData.family_id) {
-      setError('Por favor complete los campos requeridos (nombre, apellido y familia)')
+    if (!formData.first_name || !formData.last_name || !formData.family_id || !formData.date_of_birth) {
+      setError('Por favor complete los campos requeridos (nombre, apellido, fecha de nacimiento y familia)')
       return
     }
 
@@ -215,7 +215,7 @@ export default function NewChildPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t.children.dateOfBirth}
+                  {t.children.dateOfBirth} *
                 </label>
                 <GlassInput
                   type="date"
@@ -223,6 +223,7 @@ export default function NewChildPage() {
                   value={formData.date_of_birth}
                   onChange={handleInputChange}
                   leftIcon={<Calendar className="w-5 h-5" />}
+                  required
                 />
               </div>
               <div>
