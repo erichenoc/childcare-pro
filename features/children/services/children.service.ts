@@ -61,16 +61,28 @@ export const childrenService = {
     const supabase = createClient()
     const orgId = await requireOrgId()
 
-    const { data, error } = await supabase
+    // Generate a UUID for the new record
+    const newId = crypto.randomUUID()
+
+    // Insert the record
+    const { error: insertError } = await supabase
       .from('children')
       .insert({
+        id: newId,
         ...child,
         organization_id: orgId,
       })
-      .select()
+
+    if (insertError) throw insertError
+
+    // Fetch the inserted record
+    const { data, error: selectError } = await supabase
+      .from('children')
+      .select('*')
+      .eq('id', newId)
       .single()
 
-    if (error) throw error
+    if (selectError) throw selectError
     return data
   },
 
