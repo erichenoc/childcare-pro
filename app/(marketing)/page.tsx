@@ -326,8 +326,8 @@ export default function LandingPage() {
         )}
       </nav>
 
-      {/* URGENCY BANNER - Position adjusted for larger logo */}
-      <div className="fixed top-[100px] sm:top-[108px] left-0 right-0 z-40 bg-gradient-to-r from-primary-500 to-primary-600 text-white py-2 px-4">
+      {/* URGENCY BANNER - Increased separation from nav */}
+      <div className="fixed top-[112px] sm:top-[120px] left-0 right-0 z-40 bg-gradient-to-r from-primary-500 to-primary-600 text-white py-2 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 text-sm font-medium">
           <Timer className="w-4 h-4 animate-pulse" />
           <span>
@@ -337,8 +337,8 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Hero Section - Adjusted for urgency banner */}
-      <section className="pt-44 pb-16 px-4 sm:px-6 lg:px-8">
+      {/* Hero Section - Increased padding for banner separation */}
+      <section className="pt-48 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className={`transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             {/* Logo Hero with Glow */}

@@ -296,8 +296,8 @@ export default async function CityPage({ params }: PageProps) {
         </div>
       </nav>
 
-      {/* URGENCY BANNER - Position adjusted for larger logo */}
-      <div className="fixed top-[100px] sm:top-[108px] left-0 right-0 z-40 bg-gradient-to-r from-primary-500 to-primary-600 text-white py-2 px-4">
+      {/* URGENCY BANNER - Increased separation from nav */}
+      <div className="fixed top-[112px] sm:top-[120px] left-0 right-0 z-40 bg-gradient-to-r from-primary-500 to-primary-600 text-white py-2 px-4">
         <div className="max-w-6xl mx-auto flex items-center justify-center gap-3 text-sm font-medium">
           <Timer className="w-4 h-4 animate-pulse" />
           <span>
@@ -307,8 +307,8 @@ export default async function CityPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Hero Section - Adjusted for urgency banner */}
-      <section className="pt-44 pb-16 px-4">
+      {/* Hero Section - Increased padding for banner separation */}
+      <section className="pt-48 pb-16 px-4">
         <div className="max-w-6xl mx-auto">
           {/* Main Hero Card */}
           <div className="neu-lg rounded-neu-xl p-6 sm:p-8 lg:p-12 mb-6 animate-fade-in-up">
