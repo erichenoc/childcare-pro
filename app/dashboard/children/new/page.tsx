@@ -57,7 +57,7 @@ export default function NewChildPage() {
     family_id: '',
     doctor_name: '',
     doctor_phone: '',
-    medical_notes: '',
+    notes: '',
     enrollment_date: new Date().toISOString().split('T')[0],
   })
 
@@ -127,7 +127,7 @@ export default function NewChildPage() {
         family_id: formData.family_id || null,
         doctor_name: formData.doctor_name || null,
         doctor_phone: formData.doctor_phone || null,
-        medical_notes: formData.medical_notes || null,
+        notes: formData.notes || null,
         enrollment_date: formData.enrollment_date || null,
         allergies: allergies,
         status: 'active',
@@ -357,8 +357,8 @@ export default function NewChildPage() {
                 {t.children.medicalNotes}
               </label>
               <GlassTextarea
-                name="medical_notes"
-                value={formData.medical_notes}
+                name="notes"
+                value={formData.notes}
                 onChange={handleInputChange}
                 rows={3}
                 placeholder={t.children.medicalNotesPlaceholder}

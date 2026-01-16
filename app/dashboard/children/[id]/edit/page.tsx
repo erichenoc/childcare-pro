@@ -61,7 +61,7 @@ export default function EditChildPage() {
     status: 'active',
     doctor_name: '',
     doctor_phone: '',
-    medical_notes: '',
+    notes: '',
     enrollment_date: '',
   })
 
@@ -99,7 +99,7 @@ export default function EditChildPage() {
           status: child.status || 'active',
           doctor_name: child.doctor_name || '',
           doctor_phone: child.doctor_phone || '',
-          medical_notes: child.medical_notes || '',
+          notes: child.notes || '',
           enrollment_date: child.enrollment_date || '',
         })
         setAllergies(Array.isArray(child.allergies) ? child.allergies as string[] : [])
@@ -139,7 +139,7 @@ export default function EditChildPage() {
         status: formData.status as 'active' | 'inactive',
         doctor_name: formData.doctor_name || null,
         doctor_phone: formData.doctor_phone || null,
-        medical_notes: formData.medical_notes || null,
+        notes: formData.notes || null,
         enrollment_date: formData.enrollment_date || null,
         allergies: allergies,
       })
@@ -355,8 +355,8 @@ export default function EditChildPage() {
               <GlassTextarea
                 rows={3}
                 placeholder={t.children.medicalNotesPlaceholder}
-                value={formData.medical_notes}
-                onChange={(e) => setFormData({ ...formData, medical_notes: e.target.value })}
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               />
             </div>
           </GlassCardContent>
