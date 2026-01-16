@@ -78,7 +78,7 @@ export default function NewChildPage() {
         ...classrooms.map(c => ({ value: c.id, label: c.name })),
       ])
       setFamilyOptions([
-        { value: '', label: 'Sin asignar' },
+        { value: '', label: 'Seleccionar familia...' },
         ...families.map(f => ({ value: f.id, label: f.primary_contact_name })),
       ])
     } catch (err) {
@@ -109,8 +109,8 @@ export default function NewChildPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.first_name || !formData.last_name) {
-      setError('Por favor complete los campos requeridos')
+    if (!formData.first_name || !formData.last_name || !formData.family_id) {
+      setError('Por favor complete los campos requeridos (nombre, apellido y familia)')
       return
     }
 
@@ -252,13 +252,14 @@ export default function NewChildPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t.nav.families}
+                  {t.nav.families} *
                 </label>
                 <GlassSelect
                   name="family_id"
                   value={formData.family_id}
                   onChange={handleInputChange}
                   options={familyOptions}
+                  required
                 />
               </div>
             </div>
