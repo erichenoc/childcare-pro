@@ -150,8 +150,8 @@ export default function MarketingLayout({
             name: 'ChildCare Pro',
             description: 'Childcare management software provider serving daycare centers in Central Florida',
             url: 'https://childcarepro.com',
-            telephone: '+1-407-555-0123',
-            email: 'hello@childcarepro.com',
+            telephone: '+1-321-246-8614',
+            email: 'info@childcareai.com',
             address: {
               '@type': 'PostalAddress',
               streetAddress: '123 Innovation Drive',

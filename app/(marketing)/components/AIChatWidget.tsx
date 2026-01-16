@@ -13,22 +13,22 @@ interface Message {
 const INITIAL_MESSAGE: Message = {
   id: '1',
   role: 'assistant',
-  content: `Hi! I'm Sarah, your ChildCare Pro specialist. I help daycare owners like you find the perfect solution for their center.
+  content: `¡Hola! Soy Ana, tu especialista de ChildCare AI. Ayudo a dueños de guarderías como tú a encontrar la solución perfecta para su centro.
 
-Are you looking to:
-- Automate your billing and save hours each week?
-- Stay DCF compliant with real-time ratio tracking?
-- Keep parents happy with instant updates?
+¿Estás buscando:
+- Automatizar tu facturación y ahorrar horas cada semana?
+- Mantenerte en cumplimiento DCF con monitoreo de ratios en tiempo real?
+- Mantener a los padres felices con actualizaciones instantáneas?
 
-What's your biggest challenge right now?`,
+¿Cuál es tu mayor desafío ahora mismo?`,
   timestamp: new Date(),
 }
 
 const QUICK_REPLIES = [
-  'Tell me about pricing',
-  'How does DCF compliance work?',
-  'Can I see a demo?',
-  'What makes you different?',
+  'Cuéntame sobre los precios',
+  '¿Cómo funciona el cumplimiento DCF?',
+  '¿Puedo ver una demo?',
+  '¿Qué los hace diferentes?',
 ]
 
 export function AIChatWidget() {
@@ -37,6 +37,7 @@ export function AIChatWidget() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showProactive, setShowProactive] = useState(false)
+  const [leadId, setLeadId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Proactive chat - show bubble after 30 seconds
@@ -77,12 +78,18 @@ export function AIChatWidget() {
             role: m.role,
             content: m.content,
           })),
+          leadId: leadId,
         }),
       })
 
       if (!response.ok) throw new Error('Failed to get response')
 
       const data = await response.json()
+
+      // Save lead ID for tracking across conversation
+      if (data.leadId && !leadId) {
+        setLeadId(data.leadId)
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -98,14 +105,15 @@ export function AIChatWidget() {
       const fallbackMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `I'd love to help you with that! For the best experience, let me connect you with our team.
+        content: `¡Me encantaría ayudarte con eso! Para la mejor experiencia, déjame conectarte con nuestro equipo.
 
-You can:
-- **Start a free trial** at childcarepro.com/register
-- **Schedule a demo** and we'll walk you through everything
-- **Email us** at hello@childcarepro.com
+Puedes:
+- **Iniciar prueba gratuita** en childcareai.com/register
+- **Agendar una demo** y te mostramos todo
+- **Llamarnos** al (321) 246-8614
+- **Escribirnos** a info@childcareai.com
 
-What would work best for you?`,
+¿Qué te funcionaría mejor?`,
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, fallbackMessage])
@@ -136,9 +144,9 @@ What would work best for you?`,
               <X className="w-4 h-4 text-gray-500" />
             </button>
             <p className="text-gray-700 text-sm">
-              <span className="font-semibold">Need help choosing a plan?</span>
+              <span className="font-semibold">¿Necesitas ayuda eligiendo un plan?</span>
               <br />
-              I can answer any questions about ChildCare Pro!
+              ¡Puedo responder cualquier pregunta sobre ChildCare AI!
             </p>
             <button
               onClick={() => {
@@ -147,7 +155,7 @@ What would work best for you?`,
               }}
               className="mt-3 text-blue-600 text-sm font-medium hover:text-blue-700"
             >
-              Chat with me →
+              Chatea conmigo →
             </button>
           </div>
           <div className="absolute -bottom-2 right-4 w-4 h-4 bg-white border-b border-r border-gray-100 transform rotate-45" />
@@ -191,7 +199,7 @@ What would work best for you?`,
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-blue-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-white font-semibold">Sarah - Sales Specialist</h3>
+              <h3 className="text-white font-semibold">Ana - Especialista de Ventas</h3>
               <p className="text-blue-100 text-sm flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
                 AI-Powered Assistant
@@ -273,7 +281,7 @@ What would work best for you?`,
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your message..."
+                placeholder="Escribe tu mensaje..."
                 className="flex-1 bg-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isLoading}
               />

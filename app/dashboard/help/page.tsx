@@ -172,7 +172,7 @@ export default function HelpPage() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <a
-            href="mailto:soporte@childcarepro.com"
+            href="mailto:info@childcareai.com"
             className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:bg-blue-50 transition-colors"
           >
             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -180,11 +180,11 @@ export default function HelpPage() {
             </div>
             <div>
               <p className="font-medium text-gray-800">{t.help.contactEmail}</p>
-              <p className="text-sm text-gray-500">soporte@childcarepro.com</p>
+              <p className="text-sm text-gray-500">info@childcareai.com</p>
             </div>
           </a>
           <a
-            href="tel:+18005551234"
+            href="tel:+13212468614"
             className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:bg-blue-50 transition-colors"
           >
             <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -192,7 +192,7 @@ export default function HelpPage() {
             </div>
             <div>
               <p className="font-medium text-gray-800">{t.help.contactPhone}</p>
-              <p className="text-sm text-gray-500">1-800-555-1234</p>
+              <p className="text-sm text-gray-500">(321) 246-8614</p>
             </div>
           </a>
           <a

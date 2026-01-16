@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
 
 **Need more help?**
 - Check the Help section in the sidebar
-- Email support@childcarepro.com
+- Email info@childcareai.com
 
 What would you like help with?`,
       })
@@ -203,7 +203,7 @@ What would you like help with?`,
 **Quick Help:**
 - 📖 Visit the Help page in the sidebar
 - 🔍 Use Ctrl+K for quick search
-- 📧 Email support@childcarepro.com
+- 📧 Email info@childcareai.com
 
 Try asking your question again in a moment!`,
     })

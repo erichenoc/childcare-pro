@@ -916,13 +916,13 @@ export default function LandingPage() {
               <h3 className="text-xl font-bold text-gray-800 mb-2">Still Have Questions?</h3>
               <p className="text-gray-600 mb-4">Our Florida-based team is here to help!</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="tel:+14075550123" className="btn-neu px-6 py-3 rounded-neu flex items-center justify-center gap-2">
+                <a href="tel:+13212468614" className="btn-neu px-6 py-3 rounded-neu flex items-center justify-center gap-2">
                   <Phone className="w-5 h-5 text-primary-500" />
-                  (407) 555-0123
+                  (321) 246-8614
                 </a>
-                <a href="mailto:hello@childcarepro.com" className="btn-neu px-6 py-3 rounded-neu flex items-center justify-center gap-2">
+                <a href="mailto:info@childcareai.com" className="btn-neu px-6 py-3 rounded-neu flex items-center justify-center gap-2">
                   <Mail className="w-5 h-5 text-primary-500" />
-                  hello@childcarepro.com
+                  info@childcareai.com
                 </a>
               </div>
             </div>

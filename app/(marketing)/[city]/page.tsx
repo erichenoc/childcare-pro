@@ -762,13 +762,13 @@ export default async function CityPage({ params }: PageProps) {
               <h3 className="text-lg font-bold text-gray-800 mb-2">Still Have Questions?</h3>
               <p className="text-gray-600 text-sm mb-4">Our Florida-based team is here to help!</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <a href="tel:+14075550123" className="neu px-5 py-2.5 rounded-neu flex items-center justify-center gap-2 text-sm hover:shadow-neu-lg transition-all">
+                <a href="tel:+13212468614" className="neu px-5 py-2.5 rounded-neu flex items-center justify-center gap-2 text-sm hover:shadow-neu-lg transition-all">
                   <Phone className="w-4 h-4 text-primary-500" />
-                  (407) 555-0123
+                  (321) 246-8614
                 </a>
-                <a href="mailto:hello@childcarepro.com" className="neu px-5 py-2.5 rounded-neu flex items-center justify-center gap-2 text-sm hover:shadow-neu-lg transition-all">
+                <a href="mailto:info@childcareai.com" className="neu px-5 py-2.5 rounded-neu flex items-center justify-center gap-2 text-sm hover:shadow-neu-lg transition-all">
                   <Mail className="w-4 h-4 text-primary-500" />
-                  hello@childcarepro.com
+                  info@childcareai.com
                 </a>
               </div>
             </div>
