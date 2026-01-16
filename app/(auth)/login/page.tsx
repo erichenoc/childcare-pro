@@ -70,10 +70,10 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-md animate-fade-in-up">
-      {/* Card con fondo sólido blanco para máxima legibilidad */}
-      <div className="bg-white rounded-3xl shadow-2xl shadow-blue-500/20 border border-blue-100 overflow-hidden">
-        {/* Header con fondo blanco para que el logo destaque */}
-        <div className="bg-white px-8 pt-8 pb-6 text-center border-b border-blue-100">
+      {/* Card con estilo Neumorphism */}
+      <div className="neu-lg bg-neu-bg dark:bg-neu-bg-dark rounded-3xl overflow-hidden">
+        {/* Header */}
+        <div className="bg-neu-bg dark:bg-neu-bg-dark px-8 pt-8 pb-6 text-center border-b border-gray-200 dark:border-gray-700">
           <div className="inline-flex items-center justify-center mb-4">
             <Image
               src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
@@ -84,20 +84,20 @@ export default function LoginPage() {
               priority
             />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
             {t.auth.welcomeMessage}
           </h1>
-          <p className="text-blue-600 mt-1 text-sm font-medium">
+          <p className="text-blue-600 dark:text-blue-400 mt-1 text-sm font-medium">
             {t.auth.login}
           </p>
         </div>
 
         {/* Form Content */}
-        <div className="px-8 py-8">
+        <div className="px-8 py-8 bg-neu-bg dark:bg-neu-bg-dark">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Error message */}
             {error && (
-              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm animate-fade-in flex items-center gap-2">
+              <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm animate-fade-in flex items-center gap-2">
                 <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
@@ -107,11 +107,11 @@ export default function LoginPage() {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 {t.auth.email}
               </label>
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
                   <Mail className="w-5 h-5" />
                 </div>
                 <input
@@ -122,18 +122,18 @@ export default function LoginPage() {
                   onChange={handleInputChange}
                   required
                   autoComplete="email"
-                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-300"
+                  className="input-neu w-full pl-12 pr-4 py-3.5"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 {t.auth.password}
               </label>
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
                   <Lock className="w-5 h-5" />
                 </div>
                 <input
@@ -144,12 +144,12 @@ export default function LoginPage() {
                   onChange={handleInputChange}
                   required
                   autoComplete="current-password"
-                  className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-300"
+                  className="input-neu w-full pl-12 pr-12 py-3.5"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -168,16 +168,16 @@ export default function LoginPage() {
                   name="rememberMe"
                   checked={formData.rememberMe}
                   onChange={handleInputChange}
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer"
                 />
-                <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">
+                <span className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-200 transition-colors">
                   {t.auth.rememberMe}
                 </span>
               </label>
 
               <Link
                 href="/forgot-password"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline transition-colors"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors"
               >
                 {t.auth.forgotPassword}
               </Link>
@@ -187,7 +187,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+              className="btn-neu-primary w-full py-3.5 px-6 font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -208,10 +208,10 @@ export default function LoginPage() {
             {/* Divider */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
+                <div className="w-full border-t border-gray-200 dark:border-gray-700" />
               </div>
               <div className="relative flex justify-center">
-                <span className="px-4 bg-white text-gray-500 text-sm">
+                <span className="px-4 bg-neu-bg dark:bg-neu-bg-dark text-gray-500 dark:text-gray-400 text-sm">
                   o continúa con
                 </span>
               </div>
@@ -222,7 +222,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isGoogleLoading}
-              className="w-full py-3.5 px-6 bg-white border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+              className="neu w-full py-3.5 px-6 bg-neu-bg dark:bg-neu-bg-dark text-gray-700 dark:text-gray-300 font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset"
             >
               {isGoogleLoading ? (
                 <svg className="animate-spin w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24">
@@ -253,11 +253,11 @@ export default function LoginPage() {
             </button>
 
             {/* Register link */}
-            <p className="text-center text-sm text-gray-600 mt-6">
+            <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
               {t.auth.dontHaveAccount}{' '}
               <Link
                 href="/register"
-                className="text-blue-600 font-semibold hover:text-blue-700 hover:underline transition-colors"
+                className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors"
               >
                 {t.auth.register}
               </Link>
@@ -268,7 +268,7 @@ export default function LoginPage() {
 
       {/* Footer decorativo */}
       <div className="text-center mt-6">
-        <p className="text-sm text-white/80 drop-shadow-lg">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Protegido con encriptación de última generación
         </p>
       </div>
