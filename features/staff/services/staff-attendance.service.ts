@@ -1,7 +1,6 @@
 import { createClient } from '@/shared/lib/supabase/client'
+import { requireOrgId } from '@/shared/lib/organization-context'
 import type { StaffAttendance, TablesInsert } from '@/shared/types/database.types'
-
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 
 export type StaffAttendanceWithStaff = StaffAttendance & {
   staff?: {
@@ -15,6 +14,7 @@ export type StaffAttendanceWithStaff = StaffAttendance & {
 export const staffAttendanceService = {
   async getByDate(date: string): Promise<StaffAttendanceWithStaff[]> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const { data, error } = await supabase
       .from('staff_attendance')
       .select(`
@@ -26,7 +26,7 @@ export const staffAttendanceService = {
           role
         )
       `)
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('date', date)
       .order('check_in', { ascending: true })
 
@@ -36,10 +36,11 @@ export const staffAttendanceService = {
 
   async getByStaff(staffId: string, startDate?: string, endDate?: string): Promise<StaffAttendance[]> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     let query = supabase
       .from('staff_attendance')
       .select('*')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('staff_id', staffId)
       .order('date', { ascending: false })
 
@@ -58,13 +59,14 @@ export const staffAttendanceService = {
 
   async checkIn(staffId: string, classroomId?: string): Promise<StaffAttendance> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const today = new Date().toISOString().split('T')[0]
     const now = new Date().toISOString()
 
     const { data, error } = await supabase
       .from('staff_attendance')
       .insert({
-        organization_id: DEMO_ORG_ID,
+        organization_id: orgId,
         staff_id: staffId,
         classroom_id: classroomId || null,
         date: today,
@@ -114,12 +116,13 @@ export const staffAttendanceService = {
 
   async create(attendance: Omit<TablesInsert<'staff_attendance'>, 'organization_id'>): Promise<StaffAttendance> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
 
     const { data, error } = await supabase
       .from('staff_attendance')
       .insert({
         ...attendance,
-        organization_id: DEMO_ORG_ID,
+        organization_id: orgId,
       })
       .select()
       .single()
@@ -130,12 +133,13 @@ export const staffAttendanceService = {
 
   async getTodayStats() {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const today = new Date().toISOString().split('T')[0]
 
     const { data, error } = await supabase
       .from('staff_attendance')
       .select('status')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('date', today)
 
     if (error) throw error
@@ -160,13 +164,14 @@ export const staffAttendanceService = {
 
   async getWeeklyStats(staffId: string) {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const today = new Date()
     const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
 
     const { data, error } = await supabase
       .from('staff_attendance')
       .select('date, status, check_in, check_out')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('staff_id', staffId)
       .gte('date', weekAgo.toISOString().split('T')[0])
       .lte('date', today.toISOString().split('T')[0])

@@ -1,7 +1,6 @@
 import { createClient } from '@/shared/lib/supabase/client'
+import { requireOrgId } from '@/shared/lib/organization-context'
 import type { Message, TablesInsert } from '@/shared/types/database.types'
-
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 
 export interface MessageWithSender extends Message {
   sender?: {
@@ -19,6 +18,7 @@ export interface MessageWithSender extends Message {
 export const messagesService = {
   async getInbox(userId: string): Promise<MessageWithSender[]> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const { data, error } = await supabase
       .from('messages')
       .select(`
@@ -26,7 +26,7 @@ export const messagesService = {
         sender:staff!messages_sender_id_fkey(id, first_name, last_name, role),
         family:families(id, primary_contact_name)
       `)
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .or(`recipient_id.eq.${userId},recipient_id.is.null`)
       .neq('message_type', 'announcement')
       .order('created_at', { ascending: false })
@@ -37,13 +37,14 @@ export const messagesService = {
 
   async getSent(userId: string): Promise<MessageWithSender[]> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const { data, error } = await supabase
       .from('messages')
       .select(`
         *,
         family:families(id, primary_contact_name)
       `)
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('sender_id', userId)
       .neq('message_type', 'announcement')
       .order('created_at', { ascending: false })
@@ -54,10 +55,11 @@ export const messagesService = {
 
   async getAnnouncements(): Promise<Message[]> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const { data, error } = await supabase
       .from('messages')
       .select('*')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('message_type', 'announcement')
       .order('created_at', { ascending: false })
 
@@ -99,11 +101,12 @@ export const messagesService = {
 
   async create(message: Omit<TablesInsert<'messages'>, 'organization_id'>): Promise<Message> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const { data, error } = await supabase
       .from('messages')
       .insert({
         ...message,
-        organization_id: DEMO_ORG_ID,
+        organization_id: orgId,
       })
       .select()
       .single()
@@ -114,10 +117,11 @@ export const messagesService = {
 
   async getStats() {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const { data, error } = await supabase
       .from('messages')
       .select('id, is_read, message_type, sender_id')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
 
     if (error) throw error
 
@@ -137,6 +141,7 @@ export const messagesService = {
 
   async getAll(): Promise<MessageWithSender[]> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const { data, error } = await supabase
       .from('messages')
       .select(`
@@ -144,7 +149,7 @@ export const messagesService = {
         sender:staff!messages_sender_id_fkey(id, first_name, last_name, role),
         family:families(id, primary_contact_name)
       `)
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .order('created_at', { ascending: false })
 
     if (error) throw error

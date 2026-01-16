@@ -37,8 +37,7 @@ import { childrenService } from '@/features/children/services/children.service'
 import { classroomsService } from '@/features/classrooms/services/classrooms.service'
 import type { ChildWithFamily, Classroom, Attendance } from '@/shared/types/database.types'
 import { createClient } from '@/shared/lib/supabase/client'
-
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+import { requireOrgId } from '@/shared/lib/organization-context'
 
 interface ChildDisplayData {
   id: string
@@ -96,6 +95,7 @@ export default function ChildrenPage() {
       setIsLoading(true)
       const today = new Date().toISOString().split('T')[0]
       const supabase = createClient()
+      const orgId = await requireOrgId()
 
       // Load children, classrooms, and today's attendance in parallel
       const [childrenData, classroomsData, attendanceData] = await Promise.all([
@@ -104,7 +104,7 @@ export default function ChildrenPage() {
         supabase
           .from('attendance')
           .select('child_id, status')
-          .eq('organization_id', DEMO_ORG_ID)
+          .eq('organization_id', orgId)
           .eq('date', today)
           .then(res => res.data || [])
       ])

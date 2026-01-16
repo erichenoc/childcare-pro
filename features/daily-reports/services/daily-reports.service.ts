@@ -1,7 +1,6 @@
 import { createClient } from '@/shared/lib/supabase/client'
+import { requireOrgId } from '@/shared/lib/organization-context'
 import type { DailyReport, TablesInsert, TablesUpdate } from '@/shared/types/database.types'
-
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 
 export interface DailyReportWithRelations extends DailyReport {
   child?: {
@@ -46,6 +45,7 @@ export interface DiaperEntry {
 export const dailyReportsService = {
   async getAll(): Promise<DailyReportWithRelations[]> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const { data, error } = await supabase
       .from('daily_reports')
       .select(`
@@ -54,7 +54,7 @@ export const dailyReportsService = {
         classroom:classrooms(id, name),
         creator:staff!daily_reports_created_by_fkey(id, first_name, last_name)
       `)
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .order('date', { ascending: false })
 
     if (error) throw error
@@ -106,6 +106,7 @@ export const dailyReportsService = {
 
   async getByDate(date: string): Promise<DailyReportWithRelations[]> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const { data, error } = await supabase
       .from('daily_reports')
       .select(`
@@ -114,7 +115,7 @@ export const dailyReportsService = {
         classroom:classrooms(id, name),
         creator:staff!daily_reports_created_by_fkey(id, first_name, last_name)
       `)
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('date', date)
       .order('created_at', { ascending: false })
 
@@ -124,6 +125,7 @@ export const dailyReportsService = {
 
   async getOrCreateForChildToday(childId: string): Promise<DailyReport> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const today = new Date().toISOString().split('T')[0]
 
     // Try to get existing report
@@ -142,7 +144,7 @@ export const dailyReportsService = {
       .insert({
         child_id: childId,
         date: today,
-        organization_id: DEMO_ORG_ID,
+        organization_id: orgId,
         meals: [],
         naps: [],
         activities: [],
@@ -157,11 +159,12 @@ export const dailyReportsService = {
 
   async create(report: Omit<TablesInsert<'daily_reports'>, 'organization_id'>): Promise<DailyReport> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const { data, error } = await supabase
       .from('daily_reports')
       .insert({
         ...report,
-        organization_id: DEMO_ORG_ID,
+        organization_id: orgId,
       })
       .select()
       .single()
@@ -261,12 +264,13 @@ export const dailyReportsService = {
 
   async getStats(date?: string) {
     const supabase = createClient()
+    const orgId = await requireOrgId()
     const targetDate = date || new Date().toISOString().split('T')[0]
 
     const { data, error } = await supabase
       .from('daily_reports')
       .select('id, sent_to_parents')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('date', targetDate)
 
     if (error) throw error

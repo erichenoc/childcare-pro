@@ -32,8 +32,6 @@ import { childrenService } from '@/features/children/services/children.service'
 import type { ChildWithFamily } from '@/shared/types/database.types'
 import { createClient } from '@/shared/lib/supabase/client'
 
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
-
 interface EmergencyContact {
   name: string
   relationship: string

@@ -2,8 +2,6 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
-
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
@@ -45,16 +43,32 @@ export async function GET(request: Request) {
         const user = session.user
         const metadata = user.user_metadata || {}
 
-        await supabase.from('profiles').insert({
-          id: user.id,
-          email: user.email!,
-          first_name: metadata.full_name?.split(' ')[0] || metadata.name?.split(' ')[0] || 'Usuario',
-          last_name: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.name?.split(' ').slice(1).join(' ') || '',
-          avatar_url: metadata.avatar_url || metadata.picture || null,
-          organization_id: DEMO_ORG_ID,
-          role: 'teacher',
-          status: 'active',
-        })
+        // Get the default organization (first one or from env)
+        const defaultOrgId = process.env.DEFAULT_ORGANIZATION_ID
+        let organizationId = defaultOrgId
+
+        if (!organizationId) {
+          // Fallback: get first organization from database
+          const { data: org } = await supabase
+            .from('organizations')
+            .select('id')
+            .limit(1)
+            .single()
+          organizationId = org?.id
+        }
+
+        if (organizationId) {
+          await supabase.from('profiles').insert({
+            id: user.id,
+            email: user.email!,
+            first_name: metadata.full_name?.split(' ')[0] || metadata.name?.split(' ')[0] || 'Usuario',
+            last_name: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.name?.split(' ').slice(1).join(' ') || '',
+            avatar_url: metadata.avatar_url || metadata.picture || null,
+            organization_id: organizationId,
+            role: 'teacher',
+            status: 'active',
+          })
+        }
       }
     }
   }
