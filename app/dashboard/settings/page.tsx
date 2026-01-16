@@ -793,7 +793,7 @@ export default function SettingsPage() {
                         </p>
                       )}
                       <ul className="text-sm text-gray-600 space-y-1 mb-4">
-                        <li>• Hasta 50 niños</li>
+                        <li>• Hasta 25 niños</li>
                         <li>• 5 usuarios staff</li>
                         <li>• Asistencia básica</li>
                         <li>• Reportes esenciales</li>
@@ -831,8 +831,8 @@ export default function SettingsPage() {
                         </p>
                       )}
                       <ul className="text-sm text-gray-600 space-y-1 mb-4">
-                        <li>• Hasta 150 niños</li>
-                        <li>• 15 usuarios staff</li>
+                        <li>• Hasta 70 niños</li>
+                        <li>• 10 usuarios staff</li>
                         <li>• Facturación integrada</li>
                         <li>• Comunicación con padres</li>
                         <li>• Reportes DCF</li>
