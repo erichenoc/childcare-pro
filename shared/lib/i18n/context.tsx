@@ -94,14 +94,18 @@ export function I18nProvider({ children, initialLocale }: I18nProviderProps) {
     return new Intl.DateTimeFormat(locale, options).format(d)
   }, [locale])
 
-  // Format currency according to locale
+  // Format currency - always use en-US for USD to get 1,000.00 format
   const formatCurrency = useCallback((
     amount: number,
     currency: string = 'USD'
   ) => {
-    return new Intl.NumberFormat(locale, {
+    // Use en-US locale for USD to ensure proper thousand separators (1,000.00)
+    const currencyLocale = currency === 'USD' ? 'en-US' : locale
+    return new Intl.NumberFormat(currencyLocale, {
       style: 'currency',
       currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount)
   }, [locale])
 
