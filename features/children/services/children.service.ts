@@ -61,29 +61,22 @@ export const childrenService = {
     const supabase = createClient()
     const orgId = await requireOrgId()
 
-    // Generate a UUID for the new record
-    const newId = crypto.randomUUID()
-
-    // Insert the record
-    const { error: insertError } = await supabase
+    // Use insert with select - let Supabase generate the ID
+    const { data, error } = await supabase
       .from('children')
       .insert({
-        id: newId,
         ...child,
         organization_id: orgId,
       })
-
-    if (insertError) throw insertError
-
-    // Fetch the inserted record
-    const { data, error: selectError } = await supabase
-      .from('children')
       .select('*')
-      .eq('id', newId)
-      .single()
 
-    if (selectError) throw selectError
-    return data
+    if (error) throw error
+
+    // Return the first (and only) inserted record
+    if (!data || data.length === 0) {
+      throw new Error('Failed to create child record')
+    }
+    return data[0]
   },
 
   async update(id: string, child: TablesUpdate<'children'>): Promise<Child> {
