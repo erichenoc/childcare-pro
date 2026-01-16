@@ -116,6 +116,61 @@ export default function BillingPage() {
     }
   }
 
+  function exportToCSV() {
+    if (filteredInvoices.length === 0) {
+      setErrorMessage(t.billing.noInvoicesFound)
+      return
+    }
+
+    // Create CSV headers
+    const headers = [
+      t.billing.invoiceNumber || 'Invoice Number',
+      t.families.familyName || 'Family',
+      t.billing.period || 'Period',
+      t.billing.total,
+      t.billing.amountPaid || 'Amount Paid',
+      t.billing.balance,
+      t.billing.dueDate,
+      t.common.status
+    ]
+
+    // Create CSV rows
+    const rows = filteredInvoices.map(invoice => {
+      const familyName = invoice.family ? invoice.family.primary_contact_name : ''
+      const balance = invoice.total - (invoice.amount_paid || 0)
+      const status = invoice.status || 'pending'
+
+      return [
+        invoice.invoice_number,
+        familyName,
+        formatPeriod(invoice.period_start),
+        invoice.total.toFixed(2),
+        (invoice.amount_paid || 0).toFixed(2),
+        balance.toFixed(2),
+        formatDate(invoice.due_date),
+        status
+      ]
+    })
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `invoices_${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   // Helper to format period from period_start date
   function formatPeriod(periodStart: string): string {
     const date = new Date(periodStart)
@@ -300,7 +355,11 @@ export default function BillingPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <GlassButton variant="secondary" leftIcon={<Download className="w-4 h-4" />}>
+          <GlassButton
+            variant="secondary"
+            leftIcon={<Download className="w-4 h-4" />}
+            onClick={exportToCSV}
+          >
             {t.common.export}
           </GlassButton>
           <Link href="/dashboard/billing/new">
