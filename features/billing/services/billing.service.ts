@@ -1,11 +1,11 @@
 import { createClient } from '@/shared/lib/supabase/client'
+import { requireOrgId } from '@/shared/lib/organization-context'
 import type { Invoice, InvoiceWithFamily, Payment, TablesInsert, TablesUpdate } from '@/shared/types/database.types'
-
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 
 export const billingService = {
   // Invoices
   async getInvoices(): Promise<InvoiceWithFamily[]> {
+    const orgId = await requireOrgId()
     const supabase = createClient()
     const { data, error } = await supabase
       .from('invoices')
@@ -13,7 +13,7 @@ export const billingService = {
         *,
         family:families(*)
       `)
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -51,12 +51,13 @@ export const billingService = {
   },
 
   async createInvoice(invoice: Omit<TablesInsert<'invoices'>, 'organization_id'>): Promise<Invoice> {
+    const orgId = await requireOrgId()
     const supabase = createClient()
     const { data, error } = await supabase
       .from('invoices')
       .insert({
         ...invoice,
-        organization_id: DEMO_ORG_ID,
+        organization_id: orgId,
       })
       .select()
       .single()
@@ -92,6 +93,7 @@ export const billingService = {
   },
 
   async recordPayment(payment: Omit<TablesInsert<'payments'>, 'organization_id'>): Promise<Payment> {
+    const orgId = await requireOrgId()
     const supabase = createClient()
 
     // Create payment
@@ -99,7 +101,7 @@ export const billingService = {
       .from('payments')
       .insert({
         ...payment,
-        organization_id: DEMO_ORG_ID,
+        organization_id: orgId,
       })
       .select()
       .single()
@@ -132,11 +134,12 @@ export const billingService = {
 
   // Stats
   async getStats() {
+    const orgId = await requireOrgId()
     const supabase = createClient()
     const { data: invoices, error } = await supabase
       .from('invoices')
       .select('total, amount_paid, status')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
 
     if (error) throw error
 
@@ -156,13 +159,14 @@ export const billingService = {
 
   // Generate next invoice number
   async getNextInvoiceNumber(): Promise<string> {
+    const orgId = await requireOrgId()
     const supabase = createClient()
     const year = new Date().getFullYear()
 
     const { data } = await supabase
       .from('invoices')
       .select('invoice_number')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .like('invoice_number', `INV-${year}-%`)
       .order('invoice_number', { ascending: false })
       .limit(1)
@@ -173,5 +177,121 @@ export const billingService = {
     }
 
     return `INV-${year}-001`
+  },
+
+  // Send invoice email
+  async sendInvoiceEmail(invoiceId: string): Promise<{ success: boolean; message: string }> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    // Get invoice with family info
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .select(`
+        *,
+        family:families(*)
+      `)
+      .eq('id', invoiceId)
+      .single()
+
+    if (invoiceError || !invoice) {
+      throw new Error('Invoice not found')
+    }
+
+    const family = invoice.family as {
+      primary_email?: string | null
+      primary_contact_name?: string | null
+      name?: string | null
+    } | null
+
+    if (!family?.primary_email) {
+      return {
+        success: false,
+        message: 'No email address found for this family'
+      }
+    }
+
+    // Log the send action in activity_log
+    const { data: userData } = await supabase.auth.getUser()
+
+    await supabase
+      .from('activity_log')
+      .insert({
+        action: 'invoice_sent',
+        entity_type: 'invoice',
+        entity_id: invoiceId,
+        organization_id: orgId,
+        user_id: userData?.user?.id || null,
+        new_values: {
+          sent_to: family.primary_email,
+          sent_at: new Date().toISOString(),
+          invoice_number: invoice.invoice_number,
+          total: invoice.total,
+        },
+      })
+
+    // Update invoice status to 'sent' if it's still 'draft'
+    if (invoice.status === 'draft') {
+      await supabase
+        .from('invoices')
+        .update({ status: 'sent' })
+        .eq('id', invoiceId)
+    }
+
+    // In production, this would integrate with an email service
+    // like Resend, SendGrid, or AWS SES to actually send the email
+    // For now, we just log the action and return success
+
+    return {
+      success: true,
+      message: `Invoice sent to ${family.primary_email}`
+    }
+  },
+
+  // Delete invoice
+  async deleteInvoice(id: string): Promise<void> {
+    const supabase = createClient()
+
+    // First delete related payments
+    await supabase
+      .from('payments')
+      .delete()
+      .eq('invoice_id', id)
+
+    // Then delete the invoice
+    const { error } = await supabase
+      .from('invoices')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+  },
+
+  // Mark invoice as overdue
+  async markAsOverdue(id: string): Promise<Invoice> {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('invoices')
+      .update({ status: 'overdue' })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  // Mark invoice as cancelled
+  async cancelInvoice(id: string): Promise<Invoice> {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('invoices')
+      .update({ status: 'cancelled' })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
   }
 }

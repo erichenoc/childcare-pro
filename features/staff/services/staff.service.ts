@@ -1,7 +1,6 @@
 import { createClient } from '@/shared/lib/supabase/client'
+import { requireOrgId } from '@/shared/lib/organization-context'
 import type { Profile, TablesInsert, TablesUpdate } from '@/shared/types/database.types'
-
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 
 export type StaffWithAssignments = Profile & {
   staff_assignments?: {
@@ -17,11 +16,12 @@ export type StaffWithAssignments = Profile & {
 
 export const staffService = {
   async getAll(): Promise<Profile[]> {
+    const orgId = await requireOrgId()
     const supabase = createClient()
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .in('role', ['teacher', 'assistant', 'admin', 'director'])
       .order('created_at', { ascending: false })
 
@@ -56,6 +56,7 @@ export const staffService = {
   },
 
   async create(profile: Omit<TablesInsert<'profiles'>, 'id' | 'organization_id'>): Promise<Profile> {
+    const orgId = await requireOrgId()
     const supabase = createClient()
     const id = crypto.randomUUID()
     const { data, error } = await supabase
@@ -63,7 +64,7 @@ export const staffService = {
       .insert({
         ...profile,
         id,
-        organization_id: DEMO_ORG_ID,
+        organization_id: orgId,
       })
       .select()
       .single()
@@ -86,11 +87,12 @@ export const staffService = {
   },
 
   async getStats() {
+    const orgId = await requireOrgId()
     const supabase = createClient()
     const { data, error } = await supabase
       .from('profiles')
       .select('id, status, role')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .in('role', ['teacher', 'assistant', 'admin', 'director'])
 
     if (error) throw error

@@ -2,119 +2,166 @@
 description: "Inicializar contexto del proyecto para el asistente AI. Usa esto al comenzar una nueva conversación para que Claude entienda rápidamente tu proyecto."
 ---
 
-# Primer: Contexto Inicial del Proyecto
+# Primer: Contexto SaaS Factory
 
-Proporciona un resumen ejecutivo del proyecto actual al asistente AI para que entienda rápidamente el contexto y pueda ser productivo desde el primer mensaje.
+Este proyecto fue creado con **SaaS Factory**, una template optimizada para desarrollo Agent-First. Al ejecutar `/primer`, el agente entiende inmediatamente qué tiene disponible y cómo trabajar.
+
+## Lo Que Ya Sabes (SaaS Factory DNA)
+
+### Golden Path (Stack Fijo)
+No hay decisiones técnicas que tomar. El stack está definido:
+
+| Capa | Tecnología | Notas |
+|------|------------|-------|
+| Framework | Next.js 16 + Turbopack | App Router, Server Components |
+| UI | React 19 + TypeScript | Strict mode |
+| Styling | Tailwind CSS 3.4 | Sin CSS custom |
+| Backend | Supabase | Auth + PostgreSQL + Storage + RLS |
+| Validation | Zod | Schemas compartidos client/server |
+
+### Arquitectura Feature-First
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── (auth)/            # Route group: páginas sin sidebar
+│   ├── (main)/            # Route group: páginas con sidebar
+│   └── api/               # API Routes
+├── features/              # Todo colocalizado por feature
+│   └── [feature-name]/
+│       ├── components/    # UI de la feature
+│       ├── services/      # Lógica de negocio
+│       ├── hooks/         # React hooks
+│       └── types/         # TypeScript types
+├── components/            # Componentes compartidos (Sidebar, etc.)
+└── lib/
+    └── supabase/          # Clients (client.ts, server.ts)
+```
+
+### MCPs Disponibles
+Tienes 3 MCPs conectados. Úsalos:
+
+| MCP | Comandos Clave | Cuándo Usar |
+|-----|----------------|-------------|
+| **Supabase** | `list_tables`, `execute_sql`, `apply_migration`, `get_logs` | SIEMPRE para BD. No uses CLI. |
+| **Next.js DevTools** | `nextjs_index`, `nextjs_call`, `browser_eval` | Debug errores, ver estado del servidor |
+| **Playwright** | `browser_navigate`, `browser_snapshot`, `browser_click` | Validación visual, testing UI |
+
+### Agentes Especializados
+Delega tareas complejas a agentes via `Task` tool:
+
+| Agente | Responsabilidad |
+|--------|-----------------|
+| `frontend-specialist` | UI/UX, componentes, Tailwind, animaciones |
+| `backend-specialist` | Server Actions, APIs, lógica de negocio |
+| `supabase-admin` | Migraciones, RLS policies, queries complejas |
+| `validacion-calidad` | Tests, quality gates, verificación |
+| `vercel-deployer` | Deploy, env vars, dominios |
+| `gestor-documentacion` | README, docs técnicos |
+| `codebase-analyst` | Patrones, convenciones del proyecto |
+
+### Comandos Slash Disponibles
+- `/primer` → Este comando (contexto inicial)
+- `/a2a-report` → Reporte para comunicar a otra IA
+- `/generar-prp` → Generar Product Requirements Proposal
+- `/new-app` → Crear nueva aplicación desde cero
+
+---
 
 ## Proceso de Contextualización
 
-### 1. **Leer Documentación Principal**
+### 1. Leer Identidad del Proyecto
 
-Lee en este orden de prioridad:
+Lee `CLAUDE.md` y extrae:
+- **Nombre del proyecto**
+- **Problema que resuelve** (propuesta de valor)
+- **Usuario target** (avatar)
+- **Reglas de negocio específicas**
 
-1. **CLAUDE.md** - Reglas globales y principios del proyecto
-2. **README.md** - Visión general, setup, y guía de inicio
-3. **PLANNING.md** o **ARQUITECTURA.md** (si existen) - Diseño del sistema
-4. **package.json** / **pyproject.toml** / **requirements.txt** - Dependencias y scripts
+### 2. Mapear Estado de BD (via Supabase MCP)
 
-### 2. **Analizar Estructura del Proyecto**
+Ejecuta `list_tables` para ver:
+- Qué tablas existen
+- Cuántos registros tiene cada una
+- Si RLS está habilitado
+- Relaciones entre tablas (foreign keys)
 
-Para proyectos **Next.js** (frontend):
-- `src/app/` - Rutas y páginas (App Router)
-- `src/features/` - Módulos organizados por característica
-- `src/shared/` - Código reutilizable (componentes, hooks, utils)
-- `public/` - Archivos estáticos
+### 3. Escanear Features Implementadas
 
-Para proyectos **Python + Next.js** (full-stack):
-- `frontend/src/` - Código del frontend (Next.js)
-- `backend/` - API y lógica de negocio (FastAPI)
-  - `api/` - Routers y endpoints
-  - `domain/` - Modelos y lógica de negocio
-  - `infrastructure/` - Database, external APIs
-- `tests/` - Tests unitarios e integración
+Revisa `src/app/` y `src/features/` para entender:
+- Qué páginas existen
+- Qué features están construidas
+- Qué API endpoints hay
 
-### 3. **Identificar Componentes Clave**
-
-Busca y lee rápidamente:
-- **Puntos de entrada**: `src/app/page.tsx`, `backend/main.py`
-- **Configuración**: `next.config.js`, `backend/settings.py`
-- **Base de datos**: Esquemas en `backend/domain/models/`
-- **Autenticación**: Features/auth o middleware de auth
-
-### 4. **Entender el Stack Tecnológico**
-
-Identifica:
-- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind, Zustand
-- **Backend** (si aplica): FastAPI, SQLModel, PostgreSQL/Supabase
-- **Testing**: Jest, pytest, Playwright
-- **Styling**: Tailwind CSS, shadcn/ui (si se usa)
-- **State Management**: Zustand con persistencia
-
-### 5. **Reportar Resumen al Usuario**
-
-Proporciona un resumen estructurado:
+### 4. Entregar Resumen
 
 ```markdown
-# 📊 Resumen del Proyecto
+# 🏭 [Nombre del Proyecto]
 
-## 🎯 Propósito
-[Descripción breve del proyecto y su objetivo principal]
+## Template
+SaaS Factory v1.0 (Next.js 16 + Supabase)
 
-## 🏗️ Arquitectura
-- **Tipo**: [Frontend-only / Full-stack]
-- **Pattern**: [Feature-First / Clean Architecture]
-- **Database**: [PostgreSQL/Supabase / None]
+## Propósito
+[Qué problema resuelve en 1-2 líneas]
 
-## 🛠️ Stack Tecnológico
-### Frontend
-- [Lista de tecnologías frontend]
+## Estado Actual
 
-### Backend (si aplica)
-- [Lista de tecnologías backend]
+### Base de Datos
+| Tabla | Registros | RLS |
+|-------|-----------|-----|
+| ... | ... | ✅/❌ |
 
-## 📂 Estructura de Archivos
+### Rutas Implementadas
+- `/` → [descripción]
+- `/dashboard` → [descripción]
+- ...
+
+### API Endpoints
+- `POST /api/xxx` → [qué hace]
+- ...
+
+## MCPs Activos
+✅ Supabase | ✅ Next.js DevTools | ✅ Playwright
+
+## Comandos
+- `npm run dev` → Desarrollo
+- `npm run build` → Build
+
+## Listo para trabajar
+¿En qué te ayudo?
 ```
-[Árbol de directorios principales]
-```
 
-## 🔑 Componentes Clave
-- **Entry Point**: [ruta al archivo principal]
-- **Auth**: [dónde está implementado]
-- **Database**: [esquemas y conexión]
-- **API Routes**: [dónde están definidas]
+---
 
-## 🧪 Testing
-- **Framework**: [Jest/pytest]
-- **Comando**: [comando para ejecutar tests]
-- **Cobertura**: [si hay target de cobertura]
+## Filosofía SaaS Factory
 
-## 📝 Principios de Desarrollo (de CLAUDE.md)
-- [2-3 principios clave que sigue el proyecto]
+### El Humano Decide QUÉ, Tú Ejecutas CÓMO
+- El humano define el problema de negocio
+- Tú traduces a código usando el Golden Path
+- No preguntas "¿qué stack usar?" - ya está decidido
 
-## ✅ Configuración Actual
-- **Node Version**: [versión si aplica]
-- **Python Version**: [versión si aplica]
-- **Dev Server**: [puerto y comando]
-- **Build Command**: [comando de build]
+### Velocidad = Inteligencia
+- Turbopack permite 100 iteraciones en 30 segundos
+- Usa Playwright para validar visualmente → código → screenshot → iterar
+- No planifiques de más, ejecuta y ajusta
 
-## 🚀 Siguiente Paso
-Estoy listo para ayudarte. ¿En qué quieres trabajar?
-```
+### MCPs son tus Sentidos
+- **Supabase MCP** = Tu conexión a la BD (no uses CLI)
+- **Next.js DevTools** = Tus ojos en errores/logs
+- **Playwright** = Tu validación visual
+
+---
 
 ## Uso
 
 ```bash
-# Al inicio de una conversación nueva
+# Al inicio de cada conversación nueva
 /primer
 
-# El asistente leerá todo y te dará el resumen
-# Luego puedes proceder con tu tarea
+# El agente lee el contexto y está listo para trabajar
 ```
 
-## Objetivo
-
-Reducir de **5-10 minutos** de explicación manual a **30 segundos** de contexto automático, permitiendo que Claude sea productivo inmediatamente.
+**Objetivo**: De 5-10 minutos de explicación a 30 segundos de contexto automático.
 
 ---
 
-**Nota**: Este comando es especialmente útil después de pausas largas o al cambiar de proyecto.
+*SaaS Factory: Agent-First Development*

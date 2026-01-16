@@ -87,6 +87,10 @@ export default function RegisterPage() {
         {
           firstName,
           lastName,
+        },
+        {
+          name: formData.centerName,
+          email: formData.email,
         }
       )
 

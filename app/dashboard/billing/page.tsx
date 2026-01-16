@@ -248,6 +248,21 @@ export default function BillingPage() {
     setPaymentNotes('')
   }
 
+  async function handleSendInvoice(invoice: InvoiceWithFamily) {
+    try {
+      const result = await billingService.sendInvoiceEmail(invoice.id)
+      if (result.success) {
+        setSuccessMessage(result.message)
+        await loadData()
+      } else {
+        setErrorMessage(result.message)
+      }
+    } catch (error) {
+      console.error('Error sending invoice:', error)
+      setErrorMessage(t.billing.sendError || 'Error sending invoice')
+    }
+  }
+
   async function handlePayment() {
     if (!paymentModal) return
 
@@ -515,6 +530,14 @@ export default function BillingPage() {
                       {t.common.view}
                     </GlassButton>
                   </Link>
+                  <GlassButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleSendInvoice(invoice)}
+                  >
+                    <Send className="w-4 h-4 mr-1" />
+                    {t.billing.send || 'Send'}
+                  </GlassButton>
                   {invoice.status !== 'paid' && (
                     <GlassButton
                       variant="primary"
@@ -591,17 +614,23 @@ export default function BillingPage() {
                         <GlassTableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Link href={`/dashboard/billing/${invoice.id}`}>
-                              <GlassButton variant="ghost" size="sm">
+                              <GlassButton variant="ghost" size="sm" title={t.common.view}>
                                 <Eye className="w-4 h-4" />
                               </GlassButton>
                             </Link>
-                            <GlassButton variant="ghost" size="sm">
+                            <GlassButton
+                              variant="ghost"
+                              size="sm"
+                              title={t.billing.sendInvoice || 'Send Invoice'}
+                              onClick={() => handleSendInvoice(invoice)}
+                            >
                               <Send className="w-4 h-4" />
                             </GlassButton>
                             {invoice.status !== 'paid' && (
                               <GlassButton
                                 variant="ghost"
                                 size="sm"
+                                title={t.billing.recordPayment}
                                 onClick={() => openPaymentModal(invoice)}
                               >
                                 <CreditCard className="w-4 h-4" />

@@ -1,11 +1,12 @@
 import { createClient } from '@/shared/lib/supabase/client'
+import { requireOrgId } from '@/shared/lib/organization-context'
 import type { Child, ChildWithFamily, TablesInsert, TablesUpdate } from '@/shared/types/database.types'
-
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 
 export const childrenService = {
   async getAll(): Promise<ChildWithFamily[]> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
+
     const { data, error } = await supabase
       .from('children')
       .select(`
@@ -13,7 +14,7 @@ export const childrenService = {
         family:families(*),
         classroom:classrooms(*)
       `)
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .order('first_name', { ascending: true })
 
     if (error) throw error
@@ -58,11 +59,13 @@ export const childrenService = {
 
   async create(child: Omit<TablesInsert<'children'>, 'organization_id'>): Promise<Child> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
+
     const { data, error } = await supabase
       .from('children')
       .insert({
         ...child,
-        organization_id: DEMO_ORG_ID,
+        organization_id: orgId,
       })
       .select()
       .single()
@@ -96,12 +99,13 @@ export const childrenService = {
 
   async getStats(date: string = new Date().toISOString().split('T')[0]) {
     const supabase = createClient()
+    const orgId = await requireOrgId()
 
     // Get all children
     const { data: children, error: childrenError } = await supabase
       .from('children')
       .select('id, status')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('status', 'active')
 
     if (childrenError) throw childrenError
@@ -110,7 +114,7 @@ export const childrenService = {
     const { data: attendance, error: attendanceError } = await supabase
       .from('attendance')
       .select('child_id, status')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('date', date)
 
     if (attendanceError) throw attendanceError

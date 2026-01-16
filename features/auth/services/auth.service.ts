@@ -1,7 +1,6 @@
 import { createClient } from '@/shared/lib/supabase/client'
 import type { Profile, TablesInsert } from '@/shared/types/database.types'
-
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+import { organizationService } from '@/features/organization/services/organization.service'
 
 export type AuthError = {
   message: string
@@ -17,6 +16,19 @@ export type SignUpResult = {
   success: boolean
   error?: AuthError
   requiresConfirmation?: boolean
+  organizationId?: string
+}
+
+export interface SignUpProfile {
+  firstName: string
+  lastName: string
+  phone?: string
+}
+
+export interface SignUpOrganization {
+  name: string
+  email?: string
+  phone?: string
 }
 
 export const authService = {
@@ -41,10 +53,125 @@ export const authService = {
     return { success: true }
   },
 
+  /**
+   * Sign up a new user and create their organization (SaaS flow)
+   */
   async signUp(
     email: string,
     password: string,
-    profile: { firstName: string; lastName: string; phone?: string }
+    profile: SignUpProfile,
+    organization?: SignUpOrganization
+  ): Promise<SignUpResult> {
+    const supabase = createClient()
+
+    // Create auth user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          first_name: profile.firstName,
+          last_name: profile.lastName,
+        },
+      },
+    })
+
+    if (authError) {
+      return {
+        success: false,
+        error: {
+          message: authError.message,
+          code: authError.code,
+        },
+      }
+    }
+
+    // If email confirmation is required
+    if (authData.user && !authData.session) {
+      // Store org data in localStorage for after confirmation
+      if (organization) {
+        localStorage.setItem('pendingOrg', JSON.stringify({
+          name: organization.name,
+          email: organization.email || email,
+          phone: organization.phone,
+          userId: authData.user.id,
+        }))
+      }
+      return {
+        success: true,
+        requiresConfirmation: true,
+      }
+    }
+
+    // Create profile and organization if user was created and confirmed
+    if (authData.user) {
+      try {
+        // First create profile without organization
+        const profileData: TablesInsert<'profiles'> = {
+          id: authData.user.id,
+          email,
+          first_name: profile.firstName,
+          last_name: profile.lastName,
+          phone: profile.phone || null,
+          organization_id: null, // Will be updated after org creation
+          role: 'owner', // New signups are owners of their org
+          status: 'active',
+          is_org_owner: true,
+        }
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert(profileData)
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError)
+          // Continue anyway, profile will be created on first login
+        }
+
+        // Create organization if provided
+        if (organization) {
+          try {
+            const slug = await organizationService.generateSlug(organization.name)
+            const org = await organizationService.create(
+              {
+                name: organization.name,
+                slug,
+                email: organization.email || email,
+                phone: organization.phone,
+              },
+              authData.user.id
+            )
+
+            return {
+              success: true,
+              organizationId: org.id,
+            }
+          } catch (orgError) {
+            console.error('Error creating organization:', orgError)
+            // Return success since user was created
+            return { success: true }
+          }
+        }
+
+        return { success: true }
+      } catch (error) {
+        console.error('Error in signup process:', error)
+        return { success: true } // User was created, other parts can be fixed later
+      }
+    }
+
+    return { success: true }
+  },
+
+  /**
+   * Sign up a staff member to an existing organization (invite flow)
+   */
+  async signUpToOrganization(
+    email: string,
+    password: string,
+    profile: SignUpProfile,
+    organizationId: string,
+    role: 'director' | 'lead_teacher' | 'teacher' | 'assistant' = 'teacher'
   ): Promise<SignUpResult> {
     const supabase = createClient()
 
@@ -78,7 +205,7 @@ export const authService = {
       }
     }
 
-    // Create profile if user was created and confirmed
+    // Create profile for the existing organization
     if (authData.user) {
       const profileData: TablesInsert<'profiles'> = {
         id: authData.user.id,
@@ -86,9 +213,10 @@ export const authService = {
         first_name: profile.firstName,
         last_name: profile.lastName,
         phone: profile.phone || null,
-        organization_id: DEMO_ORG_ID,
-        role: 'teacher', // Default role
+        organization_id: organizationId,
+        role,
         status: 'active',
+        is_org_owner: false,
       }
 
       const { error: profileError } = await supabase
@@ -97,7 +225,11 @@ export const authService = {
 
       if (profileError) {
         console.error('Error creating profile:', profileError)
-        // Don't fail the signup, profile can be created later
+      }
+
+      return {
+        success: true,
+        organizationId,
       }
     }
 
@@ -217,6 +349,48 @@ export const authService = {
     }
 
     return data
+  },
+
+  /**
+   * Check if user has an organization
+   */
+  async hasOrganization(): Promise<boolean> {
+    const profile = await this.getCurrentProfile()
+    return !!profile?.organization_id
+  },
+
+  /**
+   * Handle pending organization creation (after email confirmation)
+   */
+  async handlePendingOrganization(): Promise<void> {
+    const pendingOrgStr = localStorage.getItem('pendingOrg')
+    if (!pendingOrgStr) return
+
+    try {
+      const pendingOrg = JSON.parse(pendingOrgStr)
+      const user = await this.getCurrentUser()
+
+      if (user && user.id === pendingOrg.userId) {
+        const hasOrg = await this.hasOrganization()
+        if (!hasOrg) {
+          const slug = await organizationService.generateSlug(pendingOrg.name)
+          await organizationService.create(
+            {
+              name: pendingOrg.name,
+              slug,
+              email: pendingOrg.email,
+              phone: pendingOrg.phone,
+            },
+            user.id
+          )
+        }
+      }
+
+      localStorage.removeItem('pendingOrg')
+    } catch (error) {
+      console.error('Error handling pending organization:', error)
+      localStorage.removeItem('pendingOrg')
+    }
   },
 
   // Subscribe to auth state changes

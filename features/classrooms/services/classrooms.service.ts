@@ -1,7 +1,6 @@
 import { createClient } from '@/shared/lib/supabase/client'
+import { requireOrgId } from '@/shared/lib/organization-context'
 import type { Classroom, TablesInsert, TablesUpdate } from '@/shared/types/database.types'
-
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 
 export type ClassroomWithStats = Classroom & {
   children_count: number
@@ -11,11 +10,12 @@ export type ClassroomWithStats = Classroom & {
 
 export const classroomsService = {
   async getAll(): Promise<Classroom[]> {
+    const orgId = await requireOrgId()
     const supabase = createClient()
     const { data, error } = await supabase
       .from('classrooms')
       .select('*')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .order('name', { ascending: true })
 
     if (error) throw error
@@ -38,6 +38,7 @@ export const classroomsService = {
   },
 
   async getWithStats(): Promise<ClassroomWithStats[]> {
+    const orgId = await requireOrgId()
     const supabase = createClient()
     const today = new Date().toISOString().split('T')[0]
 
@@ -45,7 +46,7 @@ export const classroomsService = {
     const { data: classrooms, error: classroomsError } = await supabase
       .from('classrooms')
       .select('*')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('status', 'active')
       .order('name', { ascending: true })
 
@@ -55,7 +56,7 @@ export const classroomsService = {
     const { data: attendance, error: attendanceError } = await supabase
       .from('attendance')
       .select('classroom_id')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('date', today)
       .eq('status', 'present')
 
@@ -65,7 +66,7 @@ export const classroomsService = {
     const { data: staffAssignments, error: staffError } = await supabase
       .from('staff_assignments')
       .select('classroom_id')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('status', 'active')
 
     if (staffError) throw staffError
@@ -86,12 +87,13 @@ export const classroomsService = {
   },
 
   async create(classroom: Omit<TablesInsert<'classrooms'>, 'organization_id'>): Promise<Classroom> {
+    const orgId = await requireOrgId()
     const supabase = createClient()
     const { data, error } = await supabase
       .from('classrooms')
       .insert({
         ...classroom,
-        organization_id: DEMO_ORG_ID,
+        organization_id: orgId,
       })
       .select()
       .single()

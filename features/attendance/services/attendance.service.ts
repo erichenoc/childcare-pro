@@ -1,10 +1,10 @@
 import { createClient } from '@/shared/lib/supabase/client'
+import { requireOrgId } from '@/shared/lib/organization-context'
 import type { Attendance, AttendanceWithChild, TablesInsert, TablesUpdate } from '@/shared/types/database.types'
-
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 
 export const attendanceService = {
   async getByDate(date: string): Promise<AttendanceWithChild[]> {
+    const orgId = await requireOrgId()
     const supabase = createClient()
     const { data, error } = await supabase
       .from('attendance')
@@ -13,7 +13,7 @@ export const attendanceService = {
         child:children(*),
         classroom:classrooms(*)
       `)
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('date', date)
       .order('check_in_time', { ascending: true })
 
@@ -38,6 +38,7 @@ export const attendanceService = {
   },
 
   async checkIn(childId: string, classroomId: string, checkedInBy?: string): Promise<Attendance> {
+    const orgId = await requireOrgId()
     const supabase = createClient()
     const today = new Date().toISOString().split('T')[0]
     const now = new Date().toISOString()
@@ -71,7 +72,7 @@ export const attendanceService = {
       const { data, error } = await supabase
         .from('attendance')
         .insert({
-          organization_id: DEMO_ORG_ID,
+          organization_id: orgId,
           child_id: childId,
           classroom_id: classroomId,
           date: today,
@@ -108,6 +109,7 @@ export const attendanceService = {
   },
 
   async markAbsent(childId: string, date: string, notes?: string): Promise<Attendance> {
+    const orgId = await requireOrgId()
     const supabase = createClient()
 
     // Get child's classroom
@@ -120,7 +122,7 @@ export const attendanceService = {
     const { data, error } = await supabase
       .from('attendance')
       .upsert({
-        organization_id: DEMO_ORG_ID,
+        organization_id: orgId,
         child_id: childId,
         classroom_id: child?.classroom_id,
         date,
@@ -137,13 +139,14 @@ export const attendanceService = {
   },
 
   async getDailyStats(date: string) {
+    const orgId = await requireOrgId()
     const supabase = createClient()
 
     // Get all active children
     const { data: children, error: childrenError } = await supabase
       .from('children')
       .select('id, classroom_id')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('status', 'active')
 
     if (childrenError) throw childrenError
@@ -152,7 +155,7 @@ export const attendanceService = {
     const { data: attendance, error: attendanceError } = await supabase
       .from('attendance')
       .select('child_id, status, classroom_id')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('date', date)
 
     if (attendanceError) throw attendanceError
@@ -191,13 +194,14 @@ export const attendanceService = {
   },
 
   async getStats() {
+    const orgId = await requireOrgId()
     const supabase = createClient()
     const today = new Date().toISOString().split('T')[0]
 
     const { data, error } = await supabase
       .from('attendance')
       .select('status')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .eq('date', today)
 
     if (error) throw error

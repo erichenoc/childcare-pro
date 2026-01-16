@@ -1,15 +1,16 @@
 import { createClient } from '@/shared/lib/supabase/client'
+import { requireOrgId } from '@/shared/lib/organization-context'
 import type { Family, FamilyWithChildren, TablesInsert, TablesUpdate } from '@/shared/types/database.types'
-
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 
 export const familiesService = {
   async getAll(): Promise<Family[]> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
+
     const { data, error } = await supabase
       .from('families')
       .select('*')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -36,11 +37,13 @@ export const familiesService = {
 
   async create(family: Omit<TablesInsert<'families'>, 'organization_id'>): Promise<Family> {
     const supabase = createClient()
+    const orgId = await requireOrgId()
+
     const { data, error } = await supabase
       .from('families')
       .insert({
         ...family,
-        organization_id: DEMO_ORG_ID,
+        organization_id: orgId,
       })
       .select()
       .single()
@@ -74,10 +77,12 @@ export const familiesService = {
 
   async getStats() {
     const supabase = createClient()
+    const orgId = await requireOrgId()
+
     const { data, error } = await supabase
       .from('families')
       .select('id, status, balance')
-      .eq('organization_id', DEMO_ORG_ID)
+      .eq('organization_id', orgId)
 
     if (error) throw error
 
