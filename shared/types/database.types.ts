@@ -508,6 +508,15 @@ export type Database = {
           subscription_status: Database["public"]["Enums"]["status_type"] | null
           updated_at: string | null
           zip_code: string | null
+          // New subscription fields
+          trial_ends_at: string | null
+          stripe_subscription_id: string | null
+          current_period_start: string | null
+          current_period_end: string | null
+          cancel_at_period_end: boolean | null
+          max_children: number | null
+          max_staff: number | null
+          plan: Database["public"]["Enums"]["subscription_plan_type"] | null
         }
         Insert: {
           address?: string | null
@@ -527,6 +536,15 @@ export type Database = {
           subscription_status?: Database["public"]["Enums"]["status_type"] | null
           updated_at?: string | null
           zip_code?: string | null
+          // New subscription fields
+          trial_ends_at?: string | null
+          stripe_subscription_id?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          cancel_at_period_end?: boolean | null
+          max_children?: number | null
+          max_staff?: number | null
+          plan?: Database["public"]["Enums"]["subscription_plan_type"] | null
         }
         Update: {
           address?: string | null
@@ -546,6 +564,15 @@ export type Database = {
           subscription_status?: Database["public"]["Enums"]["status_type"] | null
           updated_at?: string | null
           zip_code?: string | null
+          // New subscription fields
+          trial_ends_at?: string | null
+          stripe_subscription_id?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          cancel_at_period_end?: boolean | null
+          max_children?: number | null
+          max_staff?: number | null
+          plan?: Database["public"]["Enums"]["subscription_plan_type"] | null
         }
         Relationships: []
       }
@@ -609,6 +636,7 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"] | null
           status: Database["public"]["Enums"]["status_type"] | null
           updated_at: string | null
+          is_org_owner: boolean | null
         }
         Insert: {
           avatar_url?: string | null
@@ -627,6 +655,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"] | null
           status?: Database["public"]["Enums"]["status_type"] | null
           updated_at?: string | null
+          is_org_owner?: boolean | null
         }
         Update: {
           avatar_url?: string | null
@@ -645,6 +674,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"] | null
           status?: Database["public"]["Enums"]["status_type"] | null
           updated_at?: string | null
+          is_org_owner?: boolean | null
         }
         Relationships: []
       }
@@ -786,6 +816,138 @@ export type Database = {
         }
         Relationships: []
       }
+      // ============================================
+      // SUBSCRIPTION MANAGEMENT TABLES
+      // ============================================
+      subscriptions: {
+        Row: {
+          id: string
+          organization_id: string
+          stripe_subscription_id: string
+          stripe_customer_id: string
+          stripe_price_id: string | null
+          plan: Database["public"]["Enums"]["subscription_plan_type"]
+          status: string
+          current_period_start: string
+          current_period_end: string
+          cancel_at_period_end: boolean | null
+          cancelled_at: string | null
+          ended_at: string | null
+          trial_start: string | null
+          trial_end: string | null
+          metadata: Json | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          stripe_subscription_id: string
+          stripe_customer_id: string
+          stripe_price_id?: string | null
+          plan?: Database["public"]["Enums"]["subscription_plan_type"]
+          status?: string
+          current_period_start: string
+          current_period_end: string
+          cancel_at_period_end?: boolean | null
+          cancelled_at?: string | null
+          ended_at?: string | null
+          trial_start?: string | null
+          trial_end?: string | null
+          metadata?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          stripe_subscription_id?: string
+          stripe_customer_id?: string
+          stripe_price_id?: string | null
+          plan?: Database["public"]["Enums"]["subscription_plan_type"]
+          status?: string
+          current_period_start?: string
+          current_period_end?: string
+          cancel_at_period_end?: boolean | null
+          cancelled_at?: string | null
+          ended_at?: string | null
+          trial_start?: string | null
+          trial_end?: string | null
+          metadata?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      subscription_events: {
+        Row: {
+          id: string
+          organization_id: string
+          subscription_id: string | null
+          event_type: string
+          stripe_event_id: string | null
+          data: Json | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          subscription_id?: string | null
+          event_type: string
+          stripe_event_id?: string | null
+          data?: Json | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          subscription_id?: string | null
+          event_type?: string
+          stripe_event_id?: string | null
+          data?: Json | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      plan_configs: {
+        Row: {
+          id: string
+          plan: Database["public"]["Enums"]["subscription_plan_type"]
+          name: string
+          max_children: number
+          max_staff: number
+          price_monthly_cents: number
+          price_annual_cents: number
+          features: Json | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          plan: Database["public"]["Enums"]["subscription_plan_type"]
+          name: string
+          max_children: number
+          max_staff: number
+          price_monthly_cents: number
+          price_annual_cents: number
+          features?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          plan?: Database["public"]["Enums"]["subscription_plan_type"]
+          name?: string
+          max_children?: number
+          max_staff?: number
+          price_monthly_cents?: number
+          price_annual_cents?: number
+          features?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -801,6 +963,7 @@ export type Database = {
       message_type: "direct" | "announcement" | "alert" | "report"
       status_type: "active" | "inactive" | "pending" | "suspended"
       user_role: "owner" | "director" | "lead_teacher" | "teacher" | "assistant" | "parent"
+      subscription_plan_type: "trial" | "starter" | "professional" | "enterprise" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -829,6 +992,10 @@ export type Incident = Tables<'incidents'>
 export type Message = Tables<'messages'>
 export type DailyReport = Tables<'daily_reports'>
 export type ActivityLog = Tables<'activity_log'>
+// Subscription management types
+export type Subscription = Tables<'subscriptions'>
+export type SubscriptionEvent = Tables<'subscription_events'>
+export type PlanConfig = Tables<'plan_configs'>
 
 // Enum types
 export type UserRole = Enums<'user_role'>
@@ -838,6 +1005,7 @@ export type InvoiceStatus = Enums<'invoice_status'>
 export type IncidentType = Enums<'incident_type'>
 export type IncidentSeverity = Enums<'incident_severity'>
 export type MessageType = Enums<'message_type'>
+export type SubscriptionPlanType = Enums<'subscription_plan_type'>
 
 // Extended types with relations
 export type ChildWithFamily = Child & {

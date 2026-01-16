@@ -1,21 +1,26 @@
 /**
  * Stripe Payment Service
  *
- * This service handles Stripe integration for processing payments.
+ * This service handles Stripe integration for processing payments and subscriptions.
  * Uses Stripe Checkout for secure payment processing.
  *
  * NOTE: Stripe keys must be configured in .env.local:
  * - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
  * - STRIPE_SECRET_KEY
+ * - STRIPE_WEBHOOK_SECRET
  */
 
 import { createClient } from '@/shared/lib/supabase/client'
+import { requireOrgId } from '@/shared/lib/organization-context'
+import type { SubscriptionPlanType } from '@/shared/types/database.types'
 
-const DEMO_ORG_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+// ==========================================
+// INVOICE PAYMENT TYPES
+// ==========================================
 
 export interface CreateCheckoutSessionParams {
   invoiceId: string
-  amount: number // in cents
+  amount: number // in dollars
   familyName: string
   invoiceNumber: string
   description?: string
@@ -29,12 +34,164 @@ export interface PaymentIntentResult {
   error?: string
 }
 
+// ==========================================
+// SUBSCRIPTION TYPES
+// ==========================================
+
+export type BillingCycle = 'monthly' | 'annual'
+
+export interface CreateSubscriptionCheckoutParams {
+  organizationId: string
+  plan: 'starter' | 'professional' | 'enterprise'
+  billingCycle: BillingCycle
+  customerEmail?: string
+  customerName?: string
+}
+
+export interface SubscriptionCheckoutResult {
+  url?: string
+  sessionId?: string
+  error?: string
+}
+
+export interface CustomerPortalResult {
+  url?: string
+  error?: string
+}
+
+// ==========================================
+// PLAN PRICING
+// ==========================================
+
+export const PLAN_PRICING = {
+  starter: {
+    monthly: 79,
+    annual: 79 * 10, // 2 months free
+  },
+  professional: {
+    monthly: 149,
+    annual: 149 * 10,
+  },
+  enterprise: {
+    monthly: 299,
+    annual: 299 * 10,
+  },
+} as const
+
+// ==========================================
+// SERVICE
+// ==========================================
+
 export const stripeService = {
+  // ==========================================
+  // SUBSCRIPTION METHODS
+  // ==========================================
+
+  /**
+   * Creates a Stripe Checkout Session for subscription
+   */
+  async createSubscriptionCheckout(
+    params: CreateSubscriptionCheckoutParams
+  ): Promise<SubscriptionCheckoutResult> {
+    try {
+      const response = await fetch('/api/stripe/subscription/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { error: data.error || 'Error creating subscription checkout' }
+      }
+
+      return { url: data.url, sessionId: data.sessionId }
+    } catch (error) {
+      console.error('Error creating subscription checkout:', error)
+      return { error: 'Error connecting to payment service' }
+    }
+  },
+
+  /**
+   * Opens the Stripe Customer Portal for subscription management
+   */
+  async openCustomerPortal(organizationId: string): Promise<CustomerPortalResult> {
+    try {
+      const response = await fetch('/api/stripe/subscription/portal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ organizationId }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { error: data.error || 'Error opening customer portal' }
+      }
+
+      return { url: data.url }
+    } catch (error) {
+      console.error('Error opening customer portal:', error)
+      return { error: 'Error connecting to payment service' }
+    }
+  },
+
+  /**
+   * Get formatted price for a plan
+   */
+  getPrice(
+    plan: 'starter' | 'professional' | 'enterprise',
+    billingCycle: BillingCycle
+  ): { monthly: number; total: number; savings: number } {
+    const pricing = PLAN_PRICING[plan]
+
+    if (billingCycle === 'annual') {
+      const total = pricing.annual
+      const monthlyEquivalent = total / 12
+      const monthlyCost = pricing.monthly
+      const savings = (monthlyCost * 12) - total
+
+      return {
+        monthly: Math.round(monthlyEquivalent * 100) / 100,
+        total,
+        savings,
+      }
+    }
+
+    return {
+      monthly: pricing.monthly,
+      total: pricing.monthly,
+      savings: 0,
+    }
+  },
+
+  /**
+   * Format price display
+   */
+  formatPrice(amount: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  },
+
+  // ==========================================
+  // INVOICE PAYMENT METHODS
+  // ==========================================
+
   /**
    * Creates a Stripe Checkout Session for an invoice payment
-   * This calls our API route that handles Stripe on the server
    */
-  async createCheckoutSession(params: CreateCheckoutSessionParams): Promise<{ url: string } | { error: string }> {
+  async createCheckoutSession(
+    params: CreateCheckoutSessionParams
+  ): Promise<{ url: string } | { error: string }> {
     try {
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
@@ -67,12 +224,14 @@ export const stripeService = {
     notes?: string
   }) {
     const supabase = createClient()
+    const orgId = await requireOrgId()
 
     // Get current invoice
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
-      .select('total, amount_paid')
+      .select('total, amount_paid, family_id')
       .eq('id', params.invoiceId)
+      .eq('organization_id', orgId)
       .single()
 
     if (invoiceError) throw invoiceError
@@ -82,12 +241,13 @@ export const stripeService = {
       .from('payments')
       .insert({
         invoice_id: params.invoiceId,
+        family_id: invoice.family_id,
         amount: params.amount,
         payment_method: params.paymentMethod,
         status: 'completed',
         paid_at: new Date().toISOString(),
         notes: params.notes,
-        organization_id: DEMO_ORG_ID,
+        organization_id: orgId,
       })
       .select()
       .single()
@@ -111,25 +271,17 @@ export const stripeService = {
   },
 
   /**
-   * Verifies a Stripe webhook signature
-   * This should be called from the webhook API route
-   */
-  verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
-    // This is handled server-side in the API route
-    // The client-side service just provides the interface
-    return true
-  },
-
-  /**
    * Gets payment history for an invoice
    */
   async getPaymentHistory(invoiceId: string) {
     const supabase = createClient()
+    const orgId = await requireOrgId()
 
     const { data, error } = await supabase
       .from('payments')
       .select('*')
       .eq('invoice_id', invoiceId)
+      .eq('organization_id', orgId)
       .order('paid_at', { ascending: false })
 
     if (error) throw error
@@ -140,6 +292,6 @@ export const stripeService = {
    * Checks if Stripe is configured
    */
   isConfigured(): boolean {
-    return !!(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
-  }
+    return !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  },
 }
