@@ -22,7 +22,7 @@ export const staffService = {
       .from('profiles')
       .select('*')
       .eq('organization_id', orgId)
-      .in('role', ['teacher', 'assistant', 'admin', 'director'])
+      .in('role', ['teacher', 'assistant', 'lead_teacher', 'director'])
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -93,7 +93,7 @@ export const staffService = {
       .from('profiles')
       .select('id, status, role')
       .eq('organization_id', orgId)
-      .in('role', ['teacher', 'assistant', 'admin', 'director'])
+      .in('role', ['teacher', 'assistant', 'lead_teacher', 'director'])
 
     if (error) throw error
 

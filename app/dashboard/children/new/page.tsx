@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -9,12 +9,11 @@ import {
   User,
   Calendar,
   Phone,
-  Mail,
-  MapPin,
   Heart,
   AlertTriangle,
   Plus,
   X,
+  Loader2,
 } from 'lucide-react'
 import { useTranslations } from '@/shared/lib/i18n'
 import {
@@ -27,6 +26,9 @@ import {
   GlassSelect,
   GlassTextarea,
 } from '@/shared/components/ui'
+import { childrenService } from '@/features/children/services/children.service'
+import { classroomsService } from '@/features/classrooms/services/classrooms.service'
+import { familiesService } from '@/features/families/services/families.service'
 
 const genderOptions = [
   { value: '', label: 'Seleccionar...' },
@@ -34,76 +36,57 @@ const genderOptions = [
   { value: 'female', label: 'Femenino' },
 ]
 
-const classroomOptions = [
-  { value: '', label: 'Seleccionar salón...' },
-  { value: 'bebes', label: 'Sala Bebés (0-12 meses)' },
-  { value: 'mariposas', label: 'Sala Mariposas (1-2 años)' },
-  { value: 'estrellas', label: 'Sala Estrellas (3-4 años)' },
-  { value: 'arcoiris', label: 'Sala Arcoíris (4-5 años)' },
-]
-
-const bloodTypeOptions = [
-  { value: '', label: 'Seleccionar...' },
-  { value: 'A+', label: 'A+' },
-  { value: 'A-', label: 'A-' },
-  { value: 'B+', label: 'B+' },
-  { value: 'B-', label: 'B-' },
-  { value: 'AB+', label: 'AB+' },
-  { value: 'AB-', label: 'AB-' },
-  { value: 'O+', label: 'O+' },
-  { value: 'O-', label: 'O-' },
-]
-
-const relationshipOptions = [
-  { value: '', label: 'Seleccionar...' },
-  { value: 'mother', label: 'Madre' },
-  { value: 'father', label: 'Padre' },
-  { value: 'grandparent', label: 'Abuelo/a' },
-  { value: 'sibling', label: 'Hermano/a' },
-  { value: 'aunt_uncle', label: 'Tío/a' },
-  { value: 'other', label: 'Otro' },
-]
-
-interface EmergencyContact {
-  name: string
-  relationship: string
-  phone: string
-  email: string
-  isPrimary: boolean
-}
-
 export default function NewChildPage() {
   const t = useTranslations()
   const router = useRouter()
 
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingData, setIsLoadingData] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [allergies, setAllergies] = useState<string[]>([])
   const [newAllergy, setNewAllergy] = useState('')
-
-  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([
-    { name: '', relationship: '', phone: '', email: '', isPrimary: true },
-  ])
+  const [classroomOptions, setClassroomOptions] = useState<{ value: string; label: string }[]>([])
+  const [familyOptions, setFamilyOptions] = useState<{ value: string; label: string }[]>([])
 
   const [formData, setFormData] = useState({
-    // Child info
-    firstName: '',
-    lastName: '',
-    dateOfBirth: '',
+    first_name: '',
+    last_name: '',
+    date_of_birth: '',
     gender: '',
-    classroom: '',
-
-    // Medical
-    bloodType: '',
-    doctorName: '',
-    doctorPhone: '',
-    medicalNotes: '',
-
-    // Address
-    street: '',
-    city: '',
-    state: 'FL',
-    zipCode: '',
+    classroom_id: '',
+    family_id: '',
+    doctor_name: '',
+    doctor_phone: '',
+    medical_notes: '',
+    enrollment_date: new Date().toISOString().split('T')[0],
   })
+
+  useEffect(() => {
+    loadOptions()
+  }, [])
+
+  async function loadOptions() {
+    try {
+      setIsLoadingData(true)
+      const [classrooms, families] = await Promise.all([
+        classroomsService.getAll(),
+        familiesService.getAll(),
+      ])
+
+      setClassroomOptions([
+        { value: '', label: 'Sin asignar' },
+        ...classrooms.map(c => ({ value: c.id, label: c.name })),
+      ])
+      setFamilyOptions([
+        { value: '', label: 'Sin asignar' },
+        ...families.map(f => ({ value: f.id, label: f.primary_contact_name })),
+      ])
+    } catch (err) {
+      console.error('Error loading options:', err)
+    } finally {
+      setIsLoadingData(false)
+    }
+  }
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -123,45 +106,52 @@ export default function NewChildPage() {
     setAllergies(allergies.filter((a) => a !== allergy))
   }
 
-  const addEmergencyContact = () => {
-    setEmergencyContacts([
-      ...emergencyContacts,
-      { name: '', relationship: '', phone: '', email: '', isPrimary: false },
-    ])
-  }
-
-  const removeEmergencyContact = (index: number) => {
-    if (emergencyContacts.length > 1) {
-      setEmergencyContacts(emergencyContacts.filter((_, i) => i !== index))
-    }
-  }
-
-  const updateEmergencyContact = (index: number, field: keyof EmergencyContact, value: string | boolean) => {
-    setEmergencyContacts(
-      emergencyContacts.map((contact, i) =>
-        i === index ? { ...contact, [field]: value } : contact
-      )
-    )
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!formData.first_name || !formData.last_name) {
+      setError('Por favor complete los campos requeridos')
+      return
+    }
+
     setIsLoading(true)
+    setError(null)
 
     try {
-      // TODO: Implement actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await childrenService.create({
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        date_of_birth: formData.date_of_birth || null,
+        gender: formData.gender || null,
+        classroom_id: formData.classroom_id || null,
+        family_id: formData.family_id || null,
+        doctor_name: formData.doctor_name || null,
+        doctor_phone: formData.doctor_phone || null,
+        medical_notes: formData.medical_notes || null,
+        enrollment_date: formData.enrollment_date || null,
+        allergies: allergies,
+        status: 'active',
+      })
 
       router.push('/dashboard/children')
-    } catch (error) {
-      console.error('Error saving child:', error)
+    } catch (err) {
+      console.error('Error saving child:', err)
+      setError('Error al guardar. Por favor intente de nuevo.')
     } finally {
       setIsLoading(false)
     }
   }
 
+  if (isLoadingData) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/children">
@@ -179,274 +169,201 @@ export default function NewChildPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="p-4 rounded-xl bg-error/10 border border-error/20 text-error">
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Child Information */}
-          <GlassCard>
-            <GlassCardHeader>
-              <GlassCardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5 text-primary-500" />
-                {t.children.childInfo}
-              </GlassCardTitle>
-            </GlassCardHeader>
-            <GlassCardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+        {/* Child Information */}
+        <GlassCard>
+          <GlassCardHeader>
+            <GlassCardTitle className="flex items-center gap-2">
+              <User className="w-5 h-5 text-primary-500" />
+              {t.children.childInfo}
+            </GlassCardTitle>
+          </GlassCardHeader>
+          <GlassCardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t.children.firstName} *
+                </label>
                 <GlassInput
-                  label={t.children.firstName}
-                  name="firstName"
-                  value={formData.firstName}
+                  name="first_name"
+                  value={formData.first_name}
                   onChange={handleInputChange}
-                  required
-                />
-                <GlassInput
-                  label={t.children.lastName}
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
+                  placeholder={t.children.firstName}
                   required
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t.children.lastName} *
+                </label>
                 <GlassInput
-                  type="date"
-                  label={t.children.dateOfBirth}
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
+                  name="last_name"
+                  value={formData.last_name}
                   onChange={handleInputChange}
-                  leftIcon={<Calendar className="w-5 h-5" />}
+                  placeholder={t.children.lastName}
                   required
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t.children.dateOfBirth}
+                </label>
+                <GlassInput
+                  type="date"
+                  name="date_of_birth"
+                  value={formData.date_of_birth}
+                  onChange={handleInputChange}
+                  leftIcon={<Calendar className="w-5 h-5" />}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t.children.gender}
+                </label>
                 <GlassSelect
-                  label={t.children.gender}
                   name="gender"
                   value={formData.gender}
                   onChange={handleInputChange}
                   options={genderOptions}
-                  required
                 />
               </div>
+            </div>
 
-              <GlassSelect
-                label={t.children.classroom}
-                name="classroom"
-                value={formData.classroom}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t.children.classroom}
+                </label>
+                <GlassSelect
+                  name="classroom_id"
+                  value={formData.classroom_id}
+                  onChange={handleInputChange}
+                  options={classroomOptions}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t.nav.families}
+                </label>
+                <GlassSelect
+                  name="family_id"
+                  value={formData.family_id}
+                  onChange={handleInputChange}
+                  options={familyOptions}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t.children.enrollmentDate}
+              </label>
+              <GlassInput
+                type="date"
+                name="enrollment_date"
+                value={formData.enrollment_date}
                 onChange={handleInputChange}
-                options={classroomOptions}
-                required
               />
-            </GlassCardContent>
-          </GlassCard>
+            </div>
+          </GlassCardContent>
+        </GlassCard>
 
-          {/* Medical Information */}
-          <GlassCard>
-            <GlassCardHeader>
-              <GlassCardTitle className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-error" />
-                {t.children.medicalInfo}
-              </GlassCardTitle>
-            </GlassCardHeader>
-            <GlassCardContent className="space-y-4">
-              <GlassSelect
-                label={t.children.bloodType}
-                name="bloodType"
-                value={formData.bloodType}
-                onChange={handleInputChange}
-                options={bloodTypeOptions}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
+        {/* Medical Information */}
+        <GlassCard>
+          <GlassCardHeader>
+            <GlassCardTitle className="flex items-center gap-2">
+              <Heart className="w-5 h-5 text-error" />
+              {t.children.medicalInfo}
+            </GlassCardTitle>
+          </GlassCardHeader>
+          <GlassCardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t.children.doctorName}
+                </label>
                 <GlassInput
-                  label={t.children.doctorName}
-                  name="doctorName"
-                  value={formData.doctorName}
+                  name="doctor_name"
+                  value={formData.doctor_name}
                   onChange={handleInputChange}
                   placeholder="Dr. Nombre Apellido"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t.children.doctorPhone}
+                </label>
                 <GlassInput
-                  label={t.children.doctorPhone}
-                  name="doctorPhone"
-                  value={formData.doctorPhone}
+                  name="doctor_phone"
+                  value={formData.doctor_phone}
                   onChange={handleInputChange}
                   leftIcon={<Phone className="w-5 h-5" />}
                   placeholder="(305) 555-0000"
                 />
               </div>
+            </div>
 
-              {/* Allergies */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <AlertTriangle className="w-4 h-4 inline mr-1 text-warning" />
-                  {t.children.allergies}
-                </label>
-                <div className="flex gap-2 mb-2">
-                  <GlassInput
-                    value={newAllergy}
-                    onChange={(e) => setNewAllergy(e.target.value)}
-                    placeholder={t.children.addAllergy}
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addAllergy())}
-                  />
-                  <GlassButton type="button" variant="secondary" onClick={addAllergy}>
-                    <Plus className="w-5 h-5" />
-                  </GlassButton>
-                </div>
-                {allergies.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {allergies.map((allergy) => (
-                      <span
-                        key={allergy}
-                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-error/20 text-error text-sm"
-                      >
-                        {allergy}
-                        <button
-                          type="button"
-                          onClick={() => removeAllergy(allergy)}
-                          className="hover:bg-error/20 rounded-full p-0.5"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
+            {/* Allergies */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <AlertTriangle className="w-4 h-4 inline mr-1 text-warning" />
+                {t.children.allergies}
+              </label>
+              <div className="flex gap-2 mb-2">
+                <GlassInput
+                  value={newAllergy}
+                  onChange={(e) => setNewAllergy(e.target.value)}
+                  placeholder={t.children.addAllergy}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addAllergy())}
+                />
+                <GlassButton type="button" variant="secondary" onClick={addAllergy}>
+                  <Plus className="w-5 h-5" />
+                </GlassButton>
               </div>
+              {allergies.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {allergies.map((allergy) => (
+                    <span
+                      key={allergy}
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-error/20 text-error text-sm"
+                    >
+                      {allergy}
+                      <button
+                        type="button"
+                        onClick={() => removeAllergy(allergy)}
+                        className="hover:bg-error/20 rounded-full p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t.children.medicalNotes}
+              </label>
               <GlassTextarea
-                label={t.children.medicalNotes}
-                name="medicalNotes"
-                value={formData.medicalNotes}
+                name="medical_notes"
+                value={formData.medical_notes}
                 onChange={handleInputChange}
                 rows={3}
                 placeholder={t.children.medicalNotesPlaceholder}
               />
-            </GlassCardContent>
-          </GlassCard>
-
-          {/* Address */}
-          <GlassCard>
-            <GlassCardHeader>
-              <GlassCardTitle className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-secondary-500" />
-                {t.children.address}
-              </GlassCardTitle>
-            </GlassCardHeader>
-            <GlassCardContent className="space-y-4">
-              <GlassInput
-                label={t.children.street}
-                name="street"
-                value={formData.street}
-                onChange={handleInputChange}
-                placeholder="123 Main Street"
-              />
-
-              <div className="grid grid-cols-3 gap-4">
-                <GlassInput
-                  label={t.children.city}
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  placeholder="Miami"
-                />
-                <GlassInput
-                  label={t.children.state}
-                  name="state"
-                  value={formData.state}
-                  onChange={handleInputChange}
-                  placeholder="FL"
-                />
-                <GlassInput
-                  label={t.children.zipCode}
-                  name="zipCode"
-                  value={formData.zipCode}
-                  onChange={handleInputChange}
-                  placeholder="33101"
-                />
-              </div>
-            </GlassCardContent>
-          </GlassCard>
-
-          {/* Emergency Contacts */}
-          <GlassCard>
-            <GlassCardHeader>
-              <div className="flex items-center justify-between">
-                <GlassCardTitle className="flex items-center gap-2">
-                  <Phone className="w-5 h-5 text-primary-500" />
-                  {t.children.emergencyContacts}
-                </GlassCardTitle>
-                <GlassButton
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={addEmergencyContact}
-                  leftIcon={<Plus className="w-4 h-4" />}
-                >
-                  {t.common.add}
-                </GlassButton>
-              </div>
-            </GlassCardHeader>
-            <GlassCardContent className="space-y-4">
-              {emergencyContacts.map((contact, index) => (
-                <div
-                  key={index}
-                  className={`p-4 rounded-xl border ${
-                    contact.isPrimary
-                      ? 'border-primary-500/30 bg-primary-500/5'
-                      : 'border-gray-200 dark:border-gray-700'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t.children.contact} #{index + 1}
-                      {contact.isPrimary && (
-                        <span className="ml-2 text-xs text-primary-500">
-                          ({t.children.primaryContact})
-                        </span>
-                      )}
-                    </span>
-                    {emergencyContacts.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeEmergencyContact(index)}
-                        className="text-gray-400 hover:text-error"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <GlassInput
-                      placeholder={t.children.contactName}
-                      value={contact.name}
-                      onChange={(e) => updateEmergencyContact(index, 'name', e.target.value)}
-                      required
-                    />
-                    <GlassSelect
-                      value={contact.relationship}
-                      onChange={(e) => updateEmergencyContact(index, 'relationship', e.target.value)}
-                      options={relationshipOptions}
-                      required
-                    />
-                    <GlassInput
-                      placeholder={t.children.phone}
-                      value={contact.phone}
-                      onChange={(e) => updateEmergencyContact(index, 'phone', e.target.value)}
-                      leftIcon={<Phone className="w-4 h-4" />}
-                      required
-                    />
-                    <GlassInput
-                      type="email"
-                      placeholder={t.children.email}
-                      value={contact.email}
-                      onChange={(e) => updateEmergencyContact(index, 'email', e.target.value)}
-                      leftIcon={<Mail className="w-4 h-4" />}
-                    />
-                  </div>
-                </div>
-              ))}
-            </GlassCardContent>
-          </GlassCard>
-        </div>
+            </div>
+          </GlassCardContent>
+        </GlassCard>
 
         {/* Submit Button */}
         <div className="flex justify-end gap-3">
@@ -458,10 +375,19 @@ export default function NewChildPage() {
           <GlassButton
             type="submit"
             variant="primary"
-            isLoading={isLoading}
-            leftIcon={<Save className="w-5 h-5" />}
+            disabled={isLoading}
           >
-            {t.common.save}
+            {isLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Guardando...
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5 mr-2" />
+                {t.common.save}
+              </>
+            )}
           </GlassButton>
         </div>
       </form>

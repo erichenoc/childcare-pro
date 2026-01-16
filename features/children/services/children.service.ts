@@ -76,14 +76,25 @@ export const childrenService = {
 
   async update(id: string, child: TablesUpdate<'children'>): Promise<Child> {
     const supabase = createClient()
-    const { data, error } = await supabase
+    const orgId = await requireOrgId()
+
+    // First update the record
+    const { error: updateError } = await supabase
       .from('children')
       .update(child)
       .eq('id', id)
-      .select()
+      .eq('organization_id', orgId)
+
+    if (updateError) throw updateError
+
+    // Then fetch the updated record
+    const { data, error: selectError } = await supabase
+      .from('children')
+      .select('*')
+      .eq('id', id)
       .single()
 
-    if (error) throw error
+    if (selectError) throw selectError
     return data
   },
 
