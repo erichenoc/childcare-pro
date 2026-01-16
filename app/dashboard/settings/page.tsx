@@ -1,5 +1,5 @@
 'use client'
-
+// Stripe subscription integration - v2
 import { useState, useEffect } from 'react'
 import {
   Building2,
@@ -235,7 +235,7 @@ export default function SettingsPage() {
     return colors[color] || colors.blue
   }
 
-  const getPlanBadgeColor = (plan: string | null) => {
+  const getPlanBadgeColor = (plan: string | null | undefined) => {
     switch (plan) {
       case 'enterprise': return 'bg-purple-100 text-purple-600'
       case 'professional': return 'bg-blue-100 text-blue-600'
@@ -245,7 +245,7 @@ export default function SettingsPage() {
     }
   }
 
-  const getPlanIcon = (plan: string | null) => {
+  const getPlanIcon = (plan: string | null | undefined) => {
     switch (plan) {
       case 'enterprise': return Crown
       case 'professional': return Sparkles

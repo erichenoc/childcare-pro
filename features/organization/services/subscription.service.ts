@@ -38,6 +38,7 @@ export interface SubscriptionDetails {
   isTrial: boolean
   daysRemaining: number
   cancelAtPeriodEnd: boolean
+  trialEndsAt: string | null
 }
 
 export const subscriptionService = {
@@ -350,6 +351,7 @@ export const subscriptionService = {
         isTrial: false,
         daysRemaining: 0,
         cancelAtPeriodEnd: false,
+        trialEndsAt: null,
       }
     }
 
@@ -380,6 +382,7 @@ export const subscriptionService = {
       isTrial,
       daysRemaining,
       cancelAtPeriodEnd: subscription?.cancel_at_period_end || org.cancel_at_period_end || false,
+      trialEndsAt: org.trial_ends_at || null,
     }
   },
 
