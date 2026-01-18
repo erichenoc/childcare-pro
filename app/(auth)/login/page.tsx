@@ -81,7 +81,6 @@ export default function LoginPage() {
               width={180}
               height={180}
               className="drop-shadow-md"
-              priority
             />
           </div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">

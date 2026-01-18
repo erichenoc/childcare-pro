@@ -374,7 +374,6 @@ export default async function CityPage({ params }: PageProps) {
                         alt="ChildCare Pro"
                         fill
                         className="object-contain"
-                        priority
                       />
                     </div>
                   </div>

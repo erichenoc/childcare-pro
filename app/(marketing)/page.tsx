@@ -237,7 +237,6 @@ export default function LandingPage() {
                     alt="ChildCare Pro"
                     fill
                     className="object-contain drop-shadow-lg"
-                    priority
                   />
                 </div>
               </div>
@@ -352,7 +351,6 @@ export default function LandingPage() {
                       alt="ChildCare Pro"
                       fill
                       className="object-contain"
-                      priority
                     />
                   </div>
                 </div>
