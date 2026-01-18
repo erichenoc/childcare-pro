@@ -17,11 +17,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true)
+    // Force light theme - clear any stored dark preference
     const stored = localStorage.getItem('theme') as Theme | null
-    if (stored) {
-      setTheme(stored)
+    if (stored === 'dark') {
+      // Clear dark theme preference and force light
+      localStorage.removeItem('theme')
+      setTheme('light')
+    } else if (stored === 'light') {
+      setTheme('light')
     } else {
-      // Default to light theme - ignore system preference
+      // Default to light theme
       setTheme('light')
     }
   }, [])
