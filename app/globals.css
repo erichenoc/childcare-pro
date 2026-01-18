@@ -10,14 +10,14 @@
 @layer base {
   :root {
     /* ============================================
-       COLORES BASE - MODO CLARO (Neumorphism)
+       COLORES BASE - MODO CLARO (Clean White)
        ============================================ */
-    --background: 230 14% 92%; /* #e6e7ee */
+    --background: 0 0% 100%; /* #ffffff */
     --foreground: 210 20% 20%;
 
-    /* Neumorphism Light Mode */
-    --neu-bg: #e6e7ee;
-    --neu-shadow-dark: #b8b9be;
+    /* Clean Light Mode with soft shadows */
+    --neu-bg: #ffffff;
+    --neu-shadow-dark: #e0e0e0;
     --neu-shadow-light: #ffffff;
 
     /* Colores de marca - Azul principal */
@@ -33,14 +33,14 @@
     --info: 217 91% 60%;
 
     /* Superficies */
-    --card: 230 14% 92%;
+    --card: 0 0% 100%;
     --card-foreground: 210 20% 20%;
-    --muted: 230 10% 85%;
+    --muted: 210 10% 96%;
     --muted-foreground: 210 10% 45%;
 
     /* Bordes y anillos */
-    --border: 230 10% 85%;
-    --input: 230 10% 88%;
+    --border: 210 10% 90%;
+    --input: 210 10% 96%;
     --ring: 217 91% 60%;
   }
 
