@@ -52,6 +52,7 @@ export const es: Translations = {
     allClassrooms: 'Todos los Salones',
     deleteChildConfirm: '¿Estás seguro de que deseas eliminar este niño?',
     deleteChildError: 'Error al eliminar el niño',
+    notes: 'Notas',
   },
 
   // ============================================
@@ -121,6 +122,7 @@ export const es: Translations = {
     addChild: 'Agregar Niño',
     addChildSubtitle: 'Completa la información del nuevo estudiante',
     editChild: 'Editar Niño',
+    editChildSubtitle: 'Actualiza la información del estudiante',
     childProfile: 'Perfil del Niño',
     childDetails: 'Detalles del Niño',
     childInfo: 'Información del Niño',
@@ -208,12 +210,17 @@ export const es: Translations = {
     subtitle: 'Administra la información de las familias',
     addFamily: 'Agregar Familia',
     editFamily: 'Editar Familia',
+    editFamilySubtitle: 'Actualiza la información de la familia',
     familyProfile: 'Perfil de Familia',
     familyName: 'Nombre de Familia',
     guardians: 'Tutores',
     addGuardian: 'Agregar Tutor',
     primaryContact: 'Contacto Principal',
+    primaryContactName: 'Nombre del Contacto Principal',
+    secondaryContact: 'Contacto Secundario',
+    secondaryContactName: 'Nombre del Contacto Secundario',
     billingContact: 'Contacto de Facturación',
+    addressInfo: 'Información de Dirección',
     address: 'Dirección',
     addressLine1: 'Dirección Línea 1',
     addressLine2: 'Dirección Línea 2',
@@ -258,6 +265,7 @@ export const es: Translations = {
     familiesList: 'Lista de Familias',
     viewChildren: 'Ver hijos',
     deleteFamilyConfirm: '¿Estás seguro de que deseas eliminar esta familia?',
+    notesPlaceholder: 'Agregar notas sobre esta familia...',
   },
 
   // ============================================
@@ -511,6 +519,12 @@ export const es: Translations = {
     amountExceedsBalance: 'El monto no puede exceder el saldo pendiente',
     invoicePayment: 'Pago de factura',
     stripeNotConfigured: 'Stripe no está configurado. Configure STRIPE_SECRET_KEY para procesar pagos con tarjeta.',
+    paymentPeriod: 'Período de Pago',
+    paymentRecordNote: 'Este registro es solo para control interno. El pago se procesa por su pasarela externa.',
+    selectFamily: 'Seleccionar Familia',
+    addLineItems: 'Agregar Líneas',
+    sendError: 'Error al enviar factura',
+    send: 'Enviar',
   },
 
   // ============================================

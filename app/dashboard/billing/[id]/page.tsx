@@ -12,6 +12,7 @@ import {
   CreditCard,
   DollarSign,
   Calendar,
+  CalendarDays,
   User,
   FileText,
   CheckCircle,
@@ -57,6 +58,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentAmount, setPaymentAmount] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card')
+  const [paymentPeriod, setPaymentPeriod] = useState<'1_week' | '2_weeks' | '3_weeks' | '1_month'>('1_week')
   const [paymentNotes, setPaymentNotes] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
 
@@ -132,37 +134,31 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     setError(null)
 
     try {
-      if (paymentMethod === 'card') {
-        const result = await stripeService.createCheckoutSession({
-          invoiceId: invoice.id,
-          amount,
-          familyName: invoice.family?.primary_contact_name || '',
-          invoiceNumber: invoice.invoice_number,
-          description: `${t.billing.invoicePayment || 'Pago de factura'} ${invoice.invoice_number}`,
-        })
-
-        if ('error' in result) {
-          setError(result.error)
-        } else if (result.url) {
-          window.location.href = result.url
-        }
-      } else {
-        await stripeService.recordManualPayment({
-          invoiceId: invoice.id,
-          amount,
-          paymentMethod,
-          notes: paymentNotes || undefined,
-        })
-
-        setSuccessMessage(t.billing.paymentRecorded || 'Pago registrado exitosamente')
-        setShowPaymentModal(false)
-        setPaymentAmount('')
-        setPaymentNotes('')
-        await loadData()
+      // Map period to description
+      const periodLabels: Record<string, string> = {
+        '1_week': '1 semana',
+        '2_weeks': '2 semanas',
+        '3_weeks': '3 semanas',
+        '1_month': '1 mes',
       }
+
+      // Record payment (all methods are manual recording now)
+      await stripeService.recordManualPayment({
+        invoiceId: invoice.id,
+        amount,
+        paymentMethod,
+        notes: `Período: ${periodLabels[paymentPeriod]}${paymentNotes ? ` | ${paymentNotes}` : ''}`,
+      })
+
+      setSuccessMessage(t.billing.paymentRecorded || 'Pago registrado exitosamente')
+      setShowPaymentModal(false)
+      setPaymentAmount('')
+      setPaymentPeriod('1_week')
+      setPaymentNotes('')
+      await loadData()
     } catch (err) {
-      console.error('Error processing payment:', err)
-      setError(t.billing.paymentError || 'Error al procesar el pago')
+      console.error('Error recording payment:', err)
+      setError(t.billing.paymentError || 'Error al registrar el pago')
     } finally {
       setIsProcessing(false)
     }
@@ -172,7 +168,11 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     if (!invoice) return
     try {
       const pdfData = await billingEnhancedService.getInvoicePDFData(invoice.id)
-      printInvoice(pdfData)
+      if (pdfData) {
+        printInvoice(pdfData)
+      } else {
+        window.print()
+      }
     } catch (err) {
       console.error('Error generating print view:', err)
       // Fallback to simple print
@@ -184,7 +184,11 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     if (!invoice) return
     try {
       const pdfData = await billingEnhancedService.getInvoicePDFData(invoice.id)
-      downloadInvoiceHTML(pdfData)
+      if (pdfData) {
+        downloadInvoiceHTML(pdfData)
+      } else {
+        setError('No se encontraron datos de la factura')
+      }
     } catch (err) {
       console.error('Error generating PDF:', err)
       setError('Error al generar el PDF')
@@ -585,6 +589,59 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                 </div>
               </div>
 
+              {/* Payment Period */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t.billing.paymentPeriod || 'Período de Pago'}
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setPaymentPeriod('1_week')}
+                    className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 transition-all ${
+                      paymentPeriod === '1_week'
+                        ? 'border-green-500 bg-green-50 text-green-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <CalendarDays className="w-4 h-4" />
+                    <span className="font-medium">1 Semana</span>
+                  </button>
+                  <button
+                    onClick={() => setPaymentPeriod('2_weeks')}
+                    className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 transition-all ${
+                      paymentPeriod === '2_weeks'
+                        ? 'border-green-500 bg-green-50 text-green-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <CalendarDays className="w-4 h-4" />
+                    <span className="font-medium">2 Semanas</span>
+                  </button>
+                  <button
+                    onClick={() => setPaymentPeriod('3_weeks')}
+                    className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 transition-all ${
+                      paymentPeriod === '3_weeks'
+                        ? 'border-green-500 bg-green-50 text-green-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <CalendarDays className="w-4 h-4" />
+                    <span className="font-medium">3 Semanas</span>
+                  </button>
+                  <button
+                    onClick={() => setPaymentPeriod('1_month')}
+                    className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 transition-all ${
+                      paymentPeriod === '1_month'
+                        ? 'border-green-500 bg-green-50 text-green-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <CalendarDays className="w-4 h-4" />
+                    <span className="font-medium">1 Mes</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Amount */}
               <GlassInput
                 type="number"
@@ -596,14 +653,12 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               />
 
               {/* Notes */}
-              {paymentMethod !== 'card' && (
-                <GlassInput
-                  label={`${t.billing.notes} (${t.common.optional.toLowerCase()})`}
-                  placeholder={t.billing.notesPlaceholder}
-                  value={paymentNotes}
-                  onChange={(e) => setPaymentNotes(e.target.value)}
-                />
-              )}
+              <GlassInput
+                label={`${t.billing.notes} (${t.common.optional.toLowerCase()})`}
+                placeholder={t.billing.notesPlaceholder || 'Número de referencia, cheque #, etc.'}
+                value={paymentNotes}
+                onChange={(e) => setPaymentNotes(e.target.value)}
+              />
 
               {/* Actions */}
               <div className="flex gap-3 pt-2">
@@ -620,17 +675,15 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                   fullWidth
                   onClick={handlePayment}
                   isLoading={isProcessing}
-                  leftIcon={paymentMethod === 'card' ? <CreditCard className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                  leftIcon={<CheckCircle className="w-4 h-4" />}
                 >
-                  {paymentMethod === 'card' ? (t.billing.payWithCard || 'Pagar con Tarjeta') : t.billing.recordPayment}
+                  {t.billing.recordPayment || 'Registrar Pago'}
                 </GlassButton>
               </div>
 
-              {paymentMethod === 'card' && (
-                <p className="text-xs text-gray-500 text-center">
-                  {t.billing.stripeRedirectMessage}
-                </p>
-              )}
+              <p className="text-xs text-gray-500 text-center">
+                {t.billing.paymentRecordNote || 'Este registro es solo para control interno. El pago se procesa por su pasarela externa.'}
+              </p>
             </GlassCardContent>
           </GlassCard>
         </div>
