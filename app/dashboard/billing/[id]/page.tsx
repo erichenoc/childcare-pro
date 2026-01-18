@@ -26,6 +26,8 @@ import {
 import { useTranslations, useI18n } from '@/shared/lib/i18n'
 import { billingService } from '@/features/billing/services/billing.service'
 import { stripeService } from '@/features/billing/services/stripe.service'
+import { billingEnhancedService } from '@/features/billing/services/billing-enhanced.service'
+import { printInvoice, downloadInvoiceHTML } from '@/features/billing/utils/invoice-pdf'
 import type { InvoiceWithFamily, Payment } from '@/shared/types/database.types'
 import {
   GlassCard,
@@ -166,13 +168,27 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     }
   }
 
-  function handlePrint() {
-    window.print()
+  async function handlePrint() {
+    if (!invoice) return
+    try {
+      const pdfData = await billingEnhancedService.getInvoicePDFData(invoice.id)
+      printInvoice(pdfData)
+    } catch (err) {
+      console.error('Error generating print view:', err)
+      // Fallback to simple print
+      window.print()
+    }
   }
 
-  function handleDownloadPDF() {
-    // For now, just print - could implement PDF generation later
-    window.print()
+  async function handleDownloadPDF() {
+    if (!invoice) return
+    try {
+      const pdfData = await billingEnhancedService.getInvoicePDFData(invoice.id)
+      downloadInvoiceHTML(pdfData)
+    } catch (err) {
+      console.error('Error generating PDF:', err)
+      setError('Error al generar el PDF')
+    }
   }
 
   const getStatusBadge = (status: string | null) => {

@@ -57,6 +57,10 @@ export interface Translations {
     classrooms: string
     attendance: string
     billing: string
+    foodProgram: string
+    programs: string
+    accounting: string
+    notifications: string
     communication: string
     reports: string
     incidents: string

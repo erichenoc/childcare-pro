@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import type { SubscriptionPlanType } from '@/shared/types/database.types'
+import { emailService } from '@/features/notifications/services/email.service'
 
 // Plan limits for updating organization
 const PLAN_LIMITS: Record<string, { max_children: number; max_staff: number }> = {
@@ -337,10 +338,10 @@ async function handleInvoicePaymentFailed(
   try {
     const subscriptionId = invoice.subscription as string
 
-    // Find organization by subscription
+    // Find organization by subscription with owner info
     const { data: org } = await supabase
       .from('organizations')
-      .select('id')
+      .select('id, name')
       .eq('stripe_subscription_id', subscriptionId)
       .single()
 
@@ -367,8 +368,33 @@ async function handleInvoicePaymentFailed(
       },
     })
 
-    // TODO: Send notification to organization owner about failed payment
-    console.log(`Payment failed for org ${org.id}`)
+    // Send notification to organization owner about failed payment
+    const { data: owner } = await supabase
+      .from('profiles')
+      .select('id, email, full_name')
+      .eq('organization_id', org.id)
+      .eq('role', 'owner')
+      .single()
+
+    if (owner?.email) {
+      const amount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: invoice.currency.toUpperCase(),
+      }).format(invoice.amount_due / 100)
+
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcarepro.app'
+      const retryUrl = `${appUrl}/dashboard/settings?tab=billing`
+
+      await emailService.sendPaymentFailed(owner.email, {
+        organizationName: org.name || 'your organization',
+        amount,
+        retryUrl,
+      })
+
+      console.log(`Payment failed notification sent to ${owner.email} for org ${org.id}`)
+    } else {
+      console.log(`Payment failed for org ${org.id} - no owner email found`)
+    }
   } catch (error) {
     console.error('Error handling invoice payment failed:', error)
   }

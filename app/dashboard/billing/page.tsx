@@ -17,6 +17,7 @@ import {
   Loader2,
   X,
   Banknote,
+  CalendarDays,
 } from 'lucide-react'
 import { useTranslations, useI18n } from '@/shared/lib/i18n'
 import { billingService } from '@/features/billing/services/billing.service'
@@ -369,7 +370,7 @@ export default function BillingPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <GlassButton
             variant="secondary"
             leftIcon={<Download className="w-4 h-4" />}
@@ -377,6 +378,11 @@ export default function BillingPage() {
           >
             {t.common.export}
           </GlassButton>
+          <Link href="/dashboard/billing/multi-week">
+            <GlassButton variant="secondary" leftIcon={<CalendarDays className="w-4 h-4" />}>
+              Multi-Semana
+            </GlassButton>
+          </Link>
           <Link href="/dashboard/billing/new">
             <GlassButton variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
               {t.billing.createInvoice}

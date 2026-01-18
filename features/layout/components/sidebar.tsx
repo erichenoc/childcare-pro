@@ -20,6 +20,10 @@ import {
   ChevronRight,
   Baby,
   GraduationCap,
+  UtensilsCrossed,
+  Award,
+  Calculator,
+  Bell,
 } from 'lucide-react'
 import { useTranslations } from '@/shared/lib/i18n'
 
@@ -39,6 +43,10 @@ const mainNavItems: NavItem[] = [
   { key: 'classrooms', href: '/dashboard/classrooms', icon: GraduationCap },
   { key: 'attendance', href: '/dashboard/attendance', icon: ClipboardCheck },
   { key: 'billing', href: '/dashboard/billing', icon: CreditCard },
+  { key: 'foodProgram', href: '/dashboard/food-program', icon: UtensilsCrossed },
+  { key: 'programs', href: '/dashboard/programs', icon: Award },
+  { key: 'accounting', href: '/dashboard/accounting', icon: Calculator },
+  { key: 'notifications', href: '/dashboard/notifications', icon: Bell },
   { key: 'communication', href: '/dashboard/communication', icon: MessageSquare },
   { key: 'reports', href: '/dashboard/reports', icon: FileText },
   { key: 'incidents', href: '/dashboard/incidents', icon: AlertTriangle },

@@ -15,6 +15,10 @@ import {
   User,
   Calendar,
   Loader2,
+  Users,
+  Shield,
+  AlertTriangle,
+  ChevronRight,
 } from 'lucide-react'
 import { useTranslations, useI18n } from '@/shared/lib/i18n'
 import { familiesService } from '@/features/families/services/families.service'
@@ -187,6 +191,19 @@ export default function FamilyDetailPage() {
                   </p>
                 </div>
               )}
+
+              {/* Link to full contacts management */}
+              <div className="border-t border-gray-100 pt-4">
+                <Link href={`/dashboard/families/${familyId}/contacts`}>
+                  <GlassButton variant="secondary" fullWidth className="justify-between">
+                    <span className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Gestionar Tutores y Autorizados
+                    </span>
+                    <ChevronRight className="w-4 h-4" />
+                  </GlassButton>
+                </Link>
+              </div>
             </GlassCardContent>
           </GlassCard>
 

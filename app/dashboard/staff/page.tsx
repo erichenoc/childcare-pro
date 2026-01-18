@@ -15,9 +15,14 @@ import {
   Award,
   GraduationCap,
   Loader2,
+  ShieldCheck,
+  AlertTriangle,
+  CheckCircle2,
+  ChevronRight,
 } from 'lucide-react'
 import { useTranslations, useI18n } from '@/shared/lib/i18n'
 import { staffService } from '@/features/staff/services/staff.service'
+import { certificationService } from '@/features/staff/services/certification.service'
 import type { Profile } from '@/shared/types/database.types'
 import {
   GlassCard,
@@ -70,6 +75,14 @@ export default function StaffPage() {
   const [selectedRole, setSelectedRole] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('')
   const [stats, setStats] = useState({ total: 0, active: 0, teachers: 0, assistants: 0 })
+  const [complianceStats, setComplianceStats] = useState({
+    totalStaff: 0,
+    compliantCount: 0,
+    complianceRate: 0,
+    expiringSoon: 0,
+    missingTraining: 0,
+    expiredCerts: 0,
+  })
 
   useEffect(() => {
     loadStaff()
@@ -78,12 +91,14 @@ export default function StaffPage() {
   async function loadStaff() {
     try {
       setIsLoading(true)
-      const [staffData, statsData] = await Promise.all([
+      const [staffData, statsData, complianceData] = await Promise.all([
         staffService.getAll(),
         staffService.getStats(),
+        certificationService.getComplianceStats(),
       ])
       setStaff(staffData)
       setStats(statsData)
+      setComplianceStats(complianceData)
     } catch (error) {
       console.error('Error loading staff:', error)
     } finally {
@@ -195,6 +210,68 @@ export default function StaffPage() {
           </div>
         </GlassCard>
       </div>
+
+      {/* DCF Compliance Quick View */}
+      <GlassCard className="border-l-4 border-l-primary-500">
+        <GlassCardContent className="py-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center">
+                <ShieldCheck className="w-6 h-6 text-primary-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Cumplimiento DCF</h3>
+                <p className="text-sm text-gray-500">Estado de certificaciones del personal</p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <div>
+                  <p className="text-lg font-bold text-gray-900">{complianceStats.complianceRate}%</p>
+                  <p className="text-xs text-gray-500">Cumplimiento</p>
+                </div>
+              </div>
+
+              {complianceStats.expiringSoon > 0 && (
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-yellow-600" />
+                  <div>
+                    <p className="text-lg font-bold text-yellow-600">{complianceStats.expiringSoon}</p>
+                    <p className="text-xs text-gray-500">Por vencer</p>
+                  </div>
+                </div>
+              )}
+
+              {complianceStats.missingTraining > 0 && (
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                  <div>
+                    <p className="text-lg font-bold text-red-600">{complianceStats.missingTraining}</p>
+                    <p className="text-xs text-gray-500">Entren. faltante</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                <Link href="/dashboard/staff/compliance">
+                  <GlassButton variant="secondary" size="sm">
+                    Ver Detalles
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </GlassButton>
+                </Link>
+                <Link href="/dashboard/staff/training">
+                  <GlassButton variant="primary" size="sm">
+                    <GraduationCap className="w-4 h-4 mr-1" />
+                    Registrar Horas
+                  </GlassButton>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </GlassCardContent>
+      </GlassCard>
 
       {/* Filters */}
       <GlassCard>

@@ -14,6 +14,13 @@ import {
   Award,
   MapPin,
   Loader2,
+  ShieldCheck,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  GraduationCap,
+  ChevronRight,
 } from 'lucide-react'
 import { useTranslations, useI18n } from '@/shared/lib/i18n'
 import {
@@ -26,6 +33,7 @@ import {
   GlassAvatar,
 } from '@/shared/components/ui'
 import { staffService, type StaffWithAssignments } from '@/features/staff/services/staff.service'
+import { certificationService, type ComplianceResult } from '@/features/staff/services/certification.service'
 
 const roleLabels: Record<string, string> = {
   teacher: 'Maestro/a',
@@ -44,6 +52,7 @@ export default function StaffDetailPage() {
   const staffId = params.id as string
 
   const [staff, setStaff] = useState<StaffWithAssignments | null>(null)
+  const [compliance, setCompliance] = useState<ComplianceResult | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -53,8 +62,12 @@ export default function StaffDetailPage() {
   async function loadStaff() {
     try {
       setIsLoading(true)
-      const data = await staffService.getById(staffId)
-      setStaff(data)
+      const [staffData, complianceData] = await Promise.all([
+        staffService.getById(staffId),
+        certificationService.checkCompliance(staffId),
+      ])
+      setStaff(staffData)
+      setCompliance(complianceData)
     } catch (error) {
       console.error('Error loading staff:', error)
     } finally {
@@ -177,13 +190,109 @@ export default function StaffDetailPage() {
             </GlassCardContent>
           </GlassCard>
 
+          {/* DCF Compliance Status */}
+          {compliance && (
+            <GlassCard className={`border-l-4 ${
+              compliance.is_compliant ? 'border-l-green-500' : 'border-l-red-500'
+            }`}>
+              <GlassCardHeader>
+                <div className="flex items-center justify-between w-full">
+                  <GlassCardTitle className="flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5" />
+                    Cumplimiento DCF
+                  </GlassCardTitle>
+                  <Link href={`/dashboard/staff/${staffId}/certifications`}>
+                    <GlassButton variant="ghost" size="sm">
+                      <GraduationCap className="w-4 h-4 mr-1" />
+                      Ver Certificaciones
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </GlassButton>
+                  </Link>
+                </div>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className={`text-3xl font-bold ${
+                    compliance.compliance_score >= 80 ? 'text-green-600' :
+                    compliance.compliance_score >= 60 ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
+                    {compliance.compliance_score}%
+                  </div>
+                  <div className="flex-1">
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          compliance.compliance_score >= 80 ? 'bg-green-500' :
+                          compliance.compliance_score >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${compliance.compliance_score}%` }}
+                      />
+                    </div>
+                  </div>
+                  {compliance.is_compliant ? (
+                    <GlassBadge variant="success">
+                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                      Cumple
+                    </GlassBadge>
+                  ) : (
+                    <GlassBadge variant="error">
+                      <XCircle className="w-3 h-3 mr-1" />
+                      Pendiente
+                    </GlassBadge>
+                  )}
+                </div>
+
+                {compliance.missing_requirements.length > 0 && (
+                  <div className="p-3 bg-red-50 rounded-lg mb-3">
+                    <p className="text-sm font-medium text-red-700 mb-1 flex items-center gap-1">
+                      <AlertTriangle className="w-4 h-4" />
+                      Requisitos Faltantes
+                    </p>
+                    <ul className="text-sm text-red-600 space-y-1">
+                      {compliance.missing_requirements.map((req, idx) => (
+                        <li key={idx} className="flex items-center gap-1">
+                          <XCircle className="w-3 h-3" />
+                          {req}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {compliance.expiring_soon.length > 0 && (
+                  <div className="p-3 bg-yellow-50 rounded-lg">
+                    <p className="text-sm font-medium text-yellow-700 mb-1 flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      Por Vencer
+                    </p>
+                    <ul className="text-sm text-yellow-600 space-y-1">
+                      {compliance.expiring_soon.map((exp, idx) => (
+                        <li key={idx} className="flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          {exp}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </GlassCardContent>
+            </GlassCard>
+          )}
+
           {/* Certifications */}
           <GlassCard>
             <GlassCardHeader>
-              <GlassCardTitle className="flex items-center gap-2">
-                <Award className="w-5 h-5" />
-                Certificaciones
-              </GlassCardTitle>
+              <div className="flex items-center justify-between w-full">
+                <GlassCardTitle className="flex items-center gap-2">
+                  <Award className="w-5 h-5" />
+                  Certificaciones
+                </GlassCardTitle>
+                <Link href={`/dashboard/staff/${staffId}/certifications`}>
+                  <GlassButton variant="secondary" size="sm">
+                    Gestionar
+                  </GlassButton>
+                </Link>
+              </div>
             </GlassCardHeader>
             <GlassCardContent>
               {certifications.length > 0 ? (
@@ -195,7 +304,14 @@ export default function StaffDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500">Sin certificaciones registradas</p>
+                <div className="text-center py-4">
+                  <p className="text-gray-500 mb-2">Sin certificaciones registradas</p>
+                  <Link href={`/dashboard/staff/${staffId}/certifications`}>
+                    <GlassButton variant="secondary" size="sm">
+                      Agregar Certificación
+                    </GlassButton>
+                  </Link>
+                </div>
               )}
             </GlassCardContent>
           </GlassCard>

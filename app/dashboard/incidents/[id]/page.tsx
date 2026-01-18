@@ -13,6 +13,9 @@ import {
   User,
   CheckCircle,
   Loader2,
+  PenTool,
+  FileText,
+  XCircle,
 } from 'lucide-react'
 import { useTranslations, useI18n } from '@/shared/lib/i18n'
 import {
@@ -265,6 +268,60 @@ export default function IncidentDetailPage() {
             </GlassCardContent>
           </GlassCard>
         )}
+
+        {/* Parent Signature Section */}
+        <GlassCard className={`border-l-4 ${
+          (incident as { parent_signed_at?: string }).parent_signed_at
+            ? 'border-l-green-500'
+            : 'border-l-yellow-500'
+        }`}>
+          <GlassCardHeader>
+            <GlassCardTitle className="flex items-center gap-2">
+              <PenTool className="w-5 h-5" />
+              Firma del Padre/Tutor
+            </GlassCardTitle>
+          </GlassCardHeader>
+          <GlassCardContent>
+            {(incident as { parent_signed_at?: string; parent_signed_by_name?: string }).parent_signed_at ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Firmado</p>
+                    <p className="text-sm text-gray-500">
+                      Por: {(incident as { parent_signed_by_name?: string }).parent_signed_by_name || 'Padre/Tutor'} - {formatDate((incident as { parent_signed_at?: string }).parent_signed_at!)}
+                    </p>
+                  </div>
+                </div>
+                <GlassBadge variant="success">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Completado
+                </GlassBadge>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                    <XCircle className="w-5 h-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Pendiente de Firma</p>
+                    <p className="text-sm text-gray-500">
+                      Se requiere firma del padre/tutor para cerrar el incidente
+                    </p>
+                  </div>
+                </div>
+                <Link href={`/dashboard/incidents/${incidentId}/sign`}>
+                  <GlassButton variant="primary" leftIcon={<PenTool className="w-4 h-4" />}>
+                    Firmar Ahora
+                  </GlassButton>
+                </Link>
+              </div>
+            )}
+          </GlassCardContent>
+        </GlassCard>
       </div>
     </div>
   )

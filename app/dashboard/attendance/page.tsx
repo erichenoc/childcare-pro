@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import {
   Search,
   UserCheck,
@@ -14,6 +15,8 @@ import {
   Loader2,
   LogIn,
   LogOut,
+  Monitor,
+  ShieldCheck,
 } from 'lucide-react'
 import { useTranslations, useI18n } from '@/shared/lib/i18n'
 import { attendanceService } from '@/features/attendance/services/attendance.service'
@@ -230,11 +233,38 @@ export default function AttendancePage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link href="/dashboard/attendance/kiosk">
+            <GlassButton variant="primary" leftIcon={<Monitor className="w-4 h-4" />}>
+              Modo Kiosco
+            </GlassButton>
+          </Link>
           <GlassButton variant="secondary" leftIcon={<Download className="w-4 h-4" />}>
             {t.common.export}
           </GlassButton>
         </div>
       </div>
+
+      {/* Quick Actions - DCF Ratios Link */}
+      <GlassCard className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-l-primary-500">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5 text-primary-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Ratios DCF en Tiempo Real</p>
+              <p className="text-sm text-gray-500">
+                {presentCount} niños presentes en {classrooms.filter(c => c.status === 'active').length} salones
+              </p>
+            </div>
+          </div>
+          <Link href="/dashboard/classrooms">
+            <GlassButton variant="secondary" size="sm">
+              Ver Ratios por Salón
+            </GlassButton>
+          </Link>
+        </div>
+      </GlassCard>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
