@@ -137,8 +137,8 @@ export default function AdminOrganizationsPage() {
 
   const stats = {
     total: organizations.length,
-    active: organizations.filter(o => o.status === 'active').length,
-    trial: organizations.filter(o => o.status === 'trial').length,
+    active: organizations.filter(o => o.status?.toLowerCase() === 'active').length,
+    trial: organizations.filter(o => o.status?.toLowerCase() === 'trial').length,
     mrr: organizations.reduce((sum, org) => {
       if (org.status === 'active' && org.plan_type) {
         return sum + (PLAN_CONFIG[org.plan_type]?.price || 0)
@@ -303,7 +303,7 @@ export default function AdminOrganizationsPage() {
                 <tbody className="divide-y divide-gray-100">
                   {filteredOrganizations.map((org) => {
                     const statusConfig = STATUS_CONFIG[org.status] || STATUS_CONFIG.active
-                    const planConfig = PLAN_CONFIG[org.plan_type || 'free']
+                    const planConfig = PLAN_CONFIG[org.plan_type || 'free'] || PLAN_CONFIG.free
 
                     return (
                       <tr key={org.id} className="hover:bg-gray-50">
@@ -452,11 +452,11 @@ export default function AdminOrganizationsPage() {
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-gray-900">{selectedOrg.name}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_CONFIG[selectedOrg.status].color}`}>
-                        {STATUS_CONFIG[selectedOrg.status].label}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${(STATUS_CONFIG[selectedOrg.status] || STATUS_CONFIG.active).color}`}>
+                        {(STATUS_CONFIG[selectedOrg.status] || STATUS_CONFIG.active).label}
                       </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${PLAN_CONFIG[selectedOrg.plan_type || 'free'].color}`}>
-                        {PLAN_CONFIG[selectedOrg.plan_type || 'free'].label}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${(PLAN_CONFIG[selectedOrg.plan_type || 'free'] || PLAN_CONFIG.free).color}`}>
+                        {(PLAN_CONFIG[selectedOrg.plan_type || 'free'] || PLAN_CONFIG.free).label}
                       </span>
                     </div>
                   </div>
