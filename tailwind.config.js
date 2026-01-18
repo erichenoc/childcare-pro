@@ -58,9 +58,9 @@ module.exports = {
         info: '#3B82F6',
         // Neumorphism colors
         neu: {
-          // Light mode
-          bg: '#e6e7ee',
-          dark: '#b8b9be',
+          // Light mode - Clean White
+          bg: '#ffffff',
+          dark: '#d1d5db',
           light: '#ffffff',
           // Dark mode
           'bg-dark': '#2d2d2d',
@@ -82,19 +82,19 @@ module.exports = {
       },
       // Sombras Neumorphism
       boxShadow: {
-        // Light mode - Raised (elevado)
-        'neu-xs': '2px 2px 4px #b8b9be, -2px -2px 4px #ffffff',
-        'neu-sm': '3px 3px 6px #b8b9be, -3px -3px 6px #ffffff',
-        'neu': '6px 6px 12px #b8b9be, -6px -6px 12px #ffffff',
-        'neu-md': '8px 8px 16px #b8b9be, -8px -8px 16px #ffffff',
-        'neu-lg': '12px 12px 24px #b8b9be, -12px -12px 24px #ffffff',
-        'neu-xl': '20px 20px 40px #b8b9be, -20px -20px 40px #ffffff',
+        // Light mode - Raised (elevado) - Soft shadows for white background
+        'neu-xs': '2px 2px 4px #d1d5db, -2px -2px 4px #ffffff',
+        'neu-sm': '3px 3px 6px #d1d5db, -3px -3px 6px #ffffff',
+        'neu': '6px 6px 12px #d1d5db, -6px -6px 12px #ffffff',
+        'neu-md': '8px 8px 16px #d1d5db, -8px -8px 16px #ffffff',
+        'neu-lg': '12px 12px 24px #d1d5db, -12px -12px 24px #ffffff',
+        'neu-xl': '20px 20px 40px #d1d5db, -20px -20px 40px #ffffff',
         // Light mode - Inset (hundido)
-        'neu-inset-xs': 'inset 2px 2px 4px #b8b9be, inset -2px -2px 4px #ffffff',
-        'neu-inset-sm': 'inset 3px 3px 6px #b8b9be, inset -3px -3px 6px #ffffff',
-        'neu-inset': 'inset 4px 4px 8px #b8b9be, inset -4px -4px 8px #ffffff',
-        'neu-inset-md': 'inset 6px 6px 12px #b8b9be, inset -6px -6px 12px #ffffff',
-        'neu-inset-lg': 'inset 8px 8px 16px #b8b9be, inset -8px -8px 16px #ffffff',
+        'neu-inset-xs': 'inset 2px 2px 4px #d1d5db, inset -2px -2px 4px #ffffff',
+        'neu-inset-sm': 'inset 3px 3px 6px #d1d5db, inset -3px -3px 6px #ffffff',
+        'neu-inset': 'inset 4px 4px 8px #d1d5db, inset -4px -4px 8px #ffffff',
+        'neu-inset-md': 'inset 6px 6px 12px #d1d5db, inset -6px -6px 12px #ffffff',
+        'neu-inset-lg': 'inset 8px 8px 16px #d1d5db, inset -8px -8px 16px #ffffff',
         // Dark mode - Raised
         'neu-dark-sm': '3px 3px 6px #1a1a1a, -3px -3px 6px #404040',
         'neu-dark': '6px 6px 12px #1a1a1a, -6px -6px 12px #404040',
@@ -103,13 +103,13 @@ module.exports = {
         'neu-dark-inset': 'inset 4px 4px 8px #1a1a1a, inset -4px -4px 8px #404040',
         'neu-dark-inset-sm': 'inset 3px 3px 6px #1a1a1a, inset -3px -3px 6px #404040',
         // Estado activo/pressed
-        'neu-pressed': 'inset 2px 2px 5px #b8b9be, inset -2px -2px 5px #ffffff',
+        'neu-pressed': 'inset 2px 2px 5px #d1d5db, inset -2px -2px 5px #ffffff',
         'neu-dark-pressed': 'inset 2px 2px 5px #1a1a1a, inset -2px -2px 5px #404040',
         // Glow effects para estados
-        'neu-glow-primary': '0 0 20px rgba(59, 130, 246, 0.3), 6px 6px 12px #b8b9be, -6px -6px 12px #ffffff',
-        'neu-glow-success': '0 0 20px rgba(34, 197, 94, 0.3), 6px 6px 12px #b8b9be, -6px -6px 12px #ffffff',
-        'neu-glow-warning': '0 0 20px rgba(245, 158, 11, 0.3), 6px 6px 12px #b8b9be, -6px -6px 12px #ffffff',
-        'neu-glow-error': '0 0 20px rgba(239, 68, 68, 0.3), 6px 6px 12px #b8b9be, -6px -6px 12px #ffffff',
+        'neu-glow-primary': '0 0 20px rgba(59, 130, 246, 0.3), 6px 6px 12px #d1d5db, -6px -6px 12px #ffffff',
+        'neu-glow-success': '0 0 20px rgba(34, 197, 94, 0.3), 6px 6px 12px #d1d5db, -6px -6px 12px #ffffff',
+        'neu-glow-warning': '0 0 20px rgba(245, 158, 11, 0.3), 6px 6px 12px #d1d5db, -6px -6px 12px #ffffff',
+        'neu-glow-error': '0 0 20px rgba(239, 68, 68, 0.3), 6px 6px 12px #d1d5db, -6px -6px 12px #ffffff',
       },
       // Animaciones
       animation: {
