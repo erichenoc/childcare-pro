@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import {
   BarChart3,
@@ -17,11 +17,35 @@ import {
   Wallet,
   FileSpreadsheet,
   Table2,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
+  Activity,
+  GitCompare,
+  Banknote,
 } from 'lucide-react'
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from 'recharts'
 import {
   accountingService,
   type IncomeStatement,
   type BalanceSheet,
+  type ComparativeIncomeStatement,
+  type MonthlyTrend,
+  type CashFlowStatement,
+  type YearOverYearComparison,
 } from '@/features/accounting/services/accounting.service'
 import {
   GlassCard,
@@ -36,15 +60,18 @@ import {
   exportToCSV,
   exportToPDF,
   type ReportData,
-  formatCurrency as formatCurrencyUtil,
 } from '@/shared/utils/report-export'
 
-type ReportType = 'income-statement' | 'balance-sheet'
+type ReportType = 'income-statement' | 'balance-sheet' | 'comparative' | 'trends' | 'cash-flow' | 'yoy'
 
 export default function FinancialReportsPage() {
   const [reportType, setReportType] = useState<ReportType>('income-statement')
   const [period, setPeriod] = useState<string>('this-month')
   const [incomeStatement, setIncomeStatement] = useState<IncomeStatement | null>(null)
+  const [comparative, setComparative] = useState<ComparativeIncomeStatement | null>(null)
+  const [trends, setTrends] = useState<MonthlyTrend[]>([])
+  const [cashFlow, setCashFlow] = useState<CashFlowStatement | null>(null)
+  const [yoyComparison, setYoyComparison] = useState<YearOverYearComparison | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isExporting, setIsExporting] = useState<string | null>(null)
   const [showExportMenu, setShowExportMenu] = useState(false)
@@ -58,7 +85,16 @@ export default function FinancialReportsPage() {
       setIsLoading(true)
       // Use mock data for development
       const statement = accountingService.getMockIncomeStatement()
+      const comp = accountingService.getMockComparativeIncomeStatement()
+      const trendData = accountingService.getMockMonthlyTrends()
+      const cashFlowData = accountingService.getMockCashFlowStatement()
+      const yoy = accountingService.getMockYearOverYearComparison()
+
       setIncomeStatement(statement)
+      setComparative(comp)
+      setTrends(trendData)
+      setCashFlow(cashFlowData)
+      setYoyComparison(yoy)
     } catch (error) {
       console.error('Error loading report data:', error)
     } finally {
@@ -82,110 +118,83 @@ export default function FinancialReportsPage() {
   }
 
   // Mock balance sheet data
-  const balanceSheet: BalanceSheet = {
-    as_of_date: new Date().toISOString().split('T')[0],
-    assets: {
-      accounts: [
-        { account_id: '1', account_number: '1000', account_name: 'Cash', account_type: 'asset', opening_balance: 0, debits: 0, credits: 0, closing_balance: 5250 },
-        { account_id: '2', account_number: '1010', account_name: 'Checking Account', account_type: 'asset', opening_balance: 0, debits: 0, credits: 0, closing_balance: 40000 },
-        { account_id: '3', account_number: '1100', account_name: 'Accounts Receivable', account_type: 'asset', opening_balance: 0, debits: 0, credits: 0, closing_balance: 8750 },
-        { account_id: '4', account_number: '1500', account_name: 'Equipment', account_type: 'asset', opening_balance: 0, debits: 0, credits: 0, closing_balance: 15000 },
-      ],
-      total: 69000,
-    },
-    liabilities: {
-      accounts: [
-        { account_id: '5', account_number: '2000', account_name: 'Accounts Payable', account_type: 'liability', opening_balance: 0, debits: 0, credits: 0, closing_balance: 2300 },
-        { account_id: '6', account_number: '2100', account_name: 'Deferred Revenue', account_type: 'liability', opening_balance: 0, debits: 0, credits: 0, closing_balance: 4500 },
-        { account_id: '7', account_number: '2200', account_name: 'Payroll Liabilities', account_type: 'liability', opening_balance: 0, debits: 0, credits: 0, closing_balance: 3200 },
-      ],
-      total: 10000,
-    },
-    equity: {
-      accounts: [
-        { account_id: '8', account_number: '3000', account_name: 'Owner\'s Equity', account_type: 'equity', opening_balance: 0, debits: 0, credits: 0, closing_balance: 50000 },
-        { account_id: '9', account_number: '3100', account_name: 'Retained Earnings', account_type: 'equity', opening_balance: 0, debits: 0, credits: 0, closing_balance: 9000 },
-      ],
-      total: 59000,
-    },
-  }
+  const balanceSheet: BalanceSheet = useMemo(() => accountingService.getMockBalanceSheet(), [])
 
-  // Calculate percentages for visual indicators
   const calculatePercentage = (value: number, total: number) => {
     if (total === 0) return 0
     return Math.round((value / total) * 100)
   }
 
-  // Get period label for reports
-  const getPeriodLabel = () => {
-    switch (period) {
-      case 'this-month': return 'Este Mes'
-      case 'last-month': return 'Mes Pasado'
-      case 'this-quarter': return 'Este Trimestre'
-      case 'this-year': return 'Este Año'
-      default: return period
+  const ChangeIndicator = ({ value, showPercent = false }: { value: number; showPercent?: boolean }) => {
+    if (value > 0) {
+      return (
+        <span className="flex items-center text-green-600 font-medium">
+          <ArrowUpRight className="w-4 h-4 mr-1" />
+          {showPercent ? `+${value.toFixed(1)}%` : `+${formatCurrency(value)}`}
+        </span>
+      )
+    } else if (value < 0) {
+      return (
+        <span className="flex items-center text-red-600 font-medium">
+          <ArrowDownRight className="w-4 h-4 mr-1" />
+          {showPercent ? `${value.toFixed(1)}%` : formatCurrency(value)}
+        </span>
+      )
     }
+    return (
+      <span className="flex items-center text-gray-500 font-medium">
+        <Minus className="w-4 h-4 mr-1" />
+        0%
+      </span>
+    )
   }
 
-  // Generate Income Statement report data
-  const generateIncomeStatementReport = (): ReportData => {
-    if (!incomeStatement) {
-      throw new Error('No income statement data available')
-    }
-
-    const rows: Record<string, unknown>[] = []
-
-    // Revenue section
-    rows.push({ category: 'INGRESOS', account: '', amount: '' })
-    incomeStatement.revenue.accounts.forEach(account => {
-      rows.push({
-        category: '',
-        account: `${account.account_number} - ${account.account_name}`,
-        amount: formatCurrency(account.closing_balance)
+  // Generate report data for export
+  const generateReportData = (): ReportData => {
+    if (reportType === 'income-statement' && incomeStatement) {
+      const rows: Record<string, unknown>[] = []
+      rows.push({ category: 'INGRESOS', account: '', amount: '' })
+      incomeStatement.revenue.accounts.forEach(account => {
+        rows.push({
+          category: '',
+          account: `${account.account_number} - ${account.account_name}`,
+          amount: formatCurrency(account.closing_balance)
+        })
       })
-    })
-    rows.push({ category: '', account: 'Total Ingresos', amount: formatCurrency(incomeStatement.revenue.total) })
-    rows.push({ category: '', account: '', amount: '' })
-
-    // Expenses section
-    rows.push({ category: 'GASTOS', account: '', amount: '' })
-    incomeStatement.expenses.accounts.forEach(account => {
-      rows.push({
-        category: '',
-        account: `${account.account_number} - ${account.account_name}`,
-        amount: formatCurrency(account.closing_balance)
+      rows.push({ category: '', account: 'Total Ingresos', amount: formatCurrency(incomeStatement.revenue.total) })
+      rows.push({ category: '', account: '', amount: '' })
+      rows.push({ category: 'GASTOS', account: '', amount: '' })
+      incomeStatement.expenses.accounts.forEach(account => {
+        rows.push({
+          category: '',
+          account: `${account.account_number} - ${account.account_name}`,
+          amount: formatCurrency(account.closing_balance)
+        })
       })
-    })
-    rows.push({ category: '', account: 'Total Gastos', amount: formatCurrency(incomeStatement.expenses.total) })
-    rows.push({ category: '', account: '', amount: '' })
+      rows.push({ category: '', account: 'Total Gastos', amount: formatCurrency(incomeStatement.expenses.total) })
+      rows.push({ category: '', account: '', amount: '' })
+      rows.push({ category: 'UTILIDAD NETA', account: '', amount: formatCurrency(incomeStatement.net_income) })
 
-    // Net Income
-    rows.push({ category: 'UTILIDAD NETA', account: '', amount: formatCurrency(incomeStatement.net_income) })
-
-    return {
-      title: 'Estado de Resultados',
-      subtitle: `Período: ${formatDate(incomeStatement.period_start)} - ${formatDate(incomeStatement.period_end)}`,
-      generatedAt: new Date(),
-      columns: [
-        { header: 'Categoría', key: 'category', width: 15 },
-        { header: 'Cuenta', key: 'account', width: 35 },
-        { header: 'Monto', key: 'amount', width: 15 },
-      ],
-      rows,
-      summary: {
-        'Total Ingresos': formatCurrency(incomeStatement.revenue.total),
-        'Total Gastos': formatCurrency(incomeStatement.expenses.total),
-        'Utilidad Neta': formatCurrency(incomeStatement.net_income),
-        'Margen de Utilidad': `${calculatePercentage(incomeStatement.net_income, incomeStatement.revenue.total)}%`,
+      return {
+        title: 'Estado de Resultados',
+        subtitle: `Período: ${formatDate(incomeStatement.period_start)} - ${formatDate(incomeStatement.period_end)}`,
+        generatedAt: new Date(),
+        columns: [
+          { header: 'Categoría', key: 'category', width: 15 },
+          { header: 'Cuenta', key: 'account', width: 35 },
+          { header: 'Monto', key: 'amount', width: 15 },
+        ],
+        rows,
+        summary: {
+          'Total Ingresos': formatCurrency(incomeStatement.revenue.total),
+          'Total Gastos': formatCurrency(incomeStatement.expenses.total),
+          'Utilidad Neta': formatCurrency(incomeStatement.net_income),
+        }
       }
     }
-  }
 
-  // Generate Balance Sheet report data
-  const generateBalanceSheetReport = (): ReportData => {
+    // Default balance sheet
     const rows: Record<string, unknown>[] = []
-
-    // Assets section
     rows.push({ category: 'ACTIVOS', account: '', amount: '' })
     balanceSheet.assets.accounts.forEach(account => {
       rows.push({
@@ -195,30 +204,6 @@ export default function FinancialReportsPage() {
       })
     })
     rows.push({ category: '', account: 'Total Activos', amount: formatCurrency(balanceSheet.assets.total) })
-    rows.push({ category: '', account: '', amount: '' })
-
-    // Liabilities section
-    rows.push({ category: 'PASIVOS', account: '', amount: '' })
-    balanceSheet.liabilities.accounts.forEach(account => {
-      rows.push({
-        category: '',
-        account: `${account.account_number} - ${account.account_name}`,
-        amount: formatCurrency(account.closing_balance)
-      })
-    })
-    rows.push({ category: '', account: 'Total Pasivos', amount: formatCurrency(balanceSheet.liabilities.total) })
-    rows.push({ category: '', account: '', amount: '' })
-
-    // Equity section
-    rows.push({ category: 'CAPITAL', account: '', amount: '' })
-    balanceSheet.equity.accounts.forEach(account => {
-      rows.push({
-        category: '',
-        account: `${account.account_number} - ${account.account_name}`,
-        amount: formatCurrency(account.closing_balance)
-      })
-    })
-    rows.push({ category: '', account: 'Total Capital', amount: formatCurrency(balanceSheet.equity.total) })
 
     return {
       title: 'Balance General',
@@ -234,32 +219,18 @@ export default function FinancialReportsPage() {
         'Total Activos': formatCurrency(balanceSheet.assets.total),
         'Total Pasivos': formatCurrency(balanceSheet.liabilities.total),
         'Total Capital': formatCurrency(balanceSheet.equity.total),
-        'Pasivo + Capital': formatCurrency(balanceSheet.liabilities.total + balanceSheet.equity.total),
-        'Ratio de Liquidez': (balanceSheet.assets.total / balanceSheet.liabilities.total).toFixed(2),
-        'Ratio de Endeudamiento': `${((balanceSheet.liabilities.total / balanceSheet.assets.total) * 100).toFixed(1)}%`,
       }
     }
   }
 
-  // Handle export
   const handleExport = async (format: 'excel' | 'csv' | 'pdf') => {
     setIsExporting(format)
     setShowExportMenu(false)
 
     try {
-      // Small delay for UI feedback
       await new Promise(resolve => setTimeout(resolve, 300))
-
-      let reportData: ReportData
-      let filename: string
-
-      if (reportType === 'income-statement') {
-        reportData = generateIncomeStatementReport()
-        filename = `estado_resultados_${new Date().toISOString().split('T')[0]}`
-      } else {
-        reportData = generateBalanceSheetReport()
-        filename = `balance_general_${new Date().toISOString().split('T')[0]}`
-      }
+      const reportData = generateReportData()
+      const filename = `reporte_financiero_${new Date().toISOString().split('T')[0]}`
 
       switch (format) {
         case 'excel':
@@ -298,10 +269,8 @@ export default function FinancialReportsPage() {
             </GlassButton>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Reportes Financieros</h1>
-            <p className="text-gray-500">
-              Análisis financiero del centro
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900">Reportes Financieros Avanzados</h1>
+            <p className="text-gray-500">Análisis financiero completo con comparativos y tendencias</p>
           </div>
         </div>
         <div className="relative">
@@ -355,46 +324,63 @@ export default function FinancialReportsPage() {
         </div>
       </div>
 
-      {/* Report Selection */}
+      {/* Report Type Selection */}
       <GlassCard variant="clear" className="p-4">
-        <div className="flex flex-wrap gap-4">
-          <div className="flex gap-2">
-            <GlassButton
-              variant={reportType === 'income-statement' ? 'primary' : 'secondary'}
-              onClick={() => setReportType('income-statement')}
-            >
-              <PieChart className="w-4 h-4 mr-2" />
-              Estado de Resultados
-            </GlassButton>
-            <GlassButton
-              variant={reportType === 'balance-sheet' ? 'primary' : 'secondary'}
-              onClick={() => setReportType('balance-sheet')}
-            >
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Balance General
-            </GlassButton>
-          </div>
-
-          <div className="flex items-center gap-2 ml-auto">
-            <Calendar className="w-4 h-4 text-gray-400" />
-            <GlassSelect
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              className="w-48"
-            >
-              <option value="this-month">Este Mes</option>
-              <option value="last-month">Mes Pasado</option>
-              <option value="this-quarter">Este Trimestre</option>
-              <option value="this-year">Este Año</option>
-            </GlassSelect>
-          </div>
+        <div className="flex flex-wrap gap-2">
+          <GlassButton
+            variant={reportType === 'income-statement' ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => setReportType('income-statement')}
+          >
+            <PieChart className="w-4 h-4 mr-2" />
+            Estado de Resultados
+          </GlassButton>
+          <GlassButton
+            variant={reportType === 'balance-sheet' ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => setReportType('balance-sheet')}
+          >
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Balance General
+          </GlassButton>
+          <GlassButton
+            variant={reportType === 'comparative' ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => setReportType('comparative')}
+          >
+            <GitCompare className="w-4 h-4 mr-2" />
+            Comparativo
+          </GlassButton>
+          <GlassButton
+            variant={reportType === 'trends' ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => setReportType('trends')}
+          >
+            <Activity className="w-4 h-4 mr-2" />
+            Tendencias
+          </GlassButton>
+          <GlassButton
+            variant={reportType === 'cash-flow' ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => setReportType('cash-flow')}
+          >
+            <Banknote className="w-4 h-4 mr-2" />
+            Flujo de Caja
+          </GlassButton>
+          <GlassButton
+            variant={reportType === 'yoy' ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => setReportType('yoy')}
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Año vs Año
+          </GlassButton>
         </div>
       </GlassCard>
 
       {/* Income Statement */}
       {reportType === 'income-statement' && incomeStatement && (
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main Report */}
           <div className="lg:col-span-2">
             <GlassCard>
               <GlassCardHeader>
@@ -419,10 +405,7 @@ export default function FinancialReportsPage() {
                     </div>
                     <div className="space-y-3">
                       {incomeStatement.revenue.accounts.map((account) => (
-                        <div
-                          key={account.account_id}
-                          className="flex items-center justify-between"
-                        >
+                        <div key={account.account_id} className="flex items-center justify-between">
                           <span className="text-gray-600">
                             {account.account_number} - {account.account_name}
                           </span>
@@ -450,10 +433,7 @@ export default function FinancialReportsPage() {
                     </div>
                     <div className="space-y-3">
                       {incomeStatement.expenses.accounts.map((account) => (
-                        <div
-                          key={account.account_id}
-                          className="flex items-center justify-between"
-                        >
+                        <div key={account.account_id} className="flex items-center justify-between">
                           <span className="text-gray-600">
                             {account.account_number} - {account.account_name}
                           </span>
@@ -474,9 +454,7 @@ export default function FinancialReportsPage() {
                   {/* Net Income */}
                   <div className="pt-4 border-t-2 border-gray-300">
                     <div className="flex items-center justify-between">
-                      <span className="text-xl font-bold text-gray-900">
-                        UTILIDAD NETA
-                      </span>
+                      <span className="text-xl font-bold text-gray-900">UTILIDAD NETA</span>
                       <span className={`text-2xl font-bold ${
                         incomeStatement.net_income >= 0 ? 'text-emerald-600' : 'text-red-600'
                       }`}>
@@ -491,7 +469,6 @@ export default function FinancialReportsPage() {
 
           {/* Summary Sidebar */}
           <div className="space-y-6">
-            {/* Profit Margin */}
             <GlassCard>
               <GlassCardHeader>
                 <GlassCardTitle>Margen de Utilidad</GlassCardTitle>
@@ -503,14 +480,11 @@ export default function FinancialReportsPage() {
                   }`}>
                     {calculatePercentage(incomeStatement.net_income, incomeStatement.revenue.total)}%
                   </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Utilidad / Ingresos
-                  </p>
+                  <p className="text-sm text-gray-500 mt-2">Utilidad / Ingresos</p>
                 </div>
               </GlassCardContent>
             </GlassCard>
 
-            {/* Top Revenue Sources */}
             <GlassCard>
               <GlassCardHeader>
                 <GlassCardTitle>Principales Ingresos</GlassCardTitle>
@@ -531,49 +505,9 @@ export default function FinancialReportsPage() {
                         <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
-                              index === 0 ? 'bg-green-500' :
-                              index === 1 ? 'bg-green-400' :
-                              'bg-green-300'
+                              index === 0 ? 'bg-green-500' : index === 1 ? 'bg-green-400' : 'bg-green-300'
                             }`}
-                            style={{
-                              width: `${calculatePercentage(account.closing_balance, incomeStatement.revenue.total)}%`
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </GlassCardContent>
-            </GlassCard>
-
-            {/* Top Expenses */}
-            <GlassCard>
-              <GlassCardHeader>
-                <GlassCardTitle>Principales Gastos</GlassCardTitle>
-              </GlassCardHeader>
-              <GlassCardContent>
-                <div className="space-y-3">
-                  {incomeStatement.expenses.accounts
-                    .sort((a, b) => b.closing_balance - a.closing_balance)
-                    .slice(0, 3)
-                    .map((account, index) => (
-                      <div key={account.account_id}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm text-gray-600">{account.account_name}</span>
-                          <span className="text-sm font-medium">
-                            {calculatePercentage(account.closing_balance, incomeStatement.expenses.total)}%
-                          </span>
-                        </div>
-                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${
-                              index === 0 ? 'bg-red-500' :
-                              index === 1 ? 'bg-red-400' :
-                              'bg-red-300'
-                            }`}
-                            style={{
-                              width: `${calculatePercentage(account.closing_balance, incomeStatement.expenses.total)}%`
-                            }}
+                            style={{ width: `${calculatePercentage(account.closing_balance, incomeStatement.revenue.total)}%` }}
                           />
                         </div>
                       </div>
@@ -588,22 +522,17 @@ export default function FinancialReportsPage() {
       {/* Balance Sheet */}
       {reportType === 'balance-sheet' && (
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main Report */}
           <div className="lg:col-span-2">
             <GlassCard>
               <GlassCardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <GlassCardTitle>Balance General</GlassCardTitle>
-                    <p className="text-sm text-gray-500">
-                      Al {formatDate(balanceSheet.as_of_date)}
-                    </p>
-                  </div>
+                <div>
+                  <GlassCardTitle>Balance General</GlassCardTitle>
+                  <p className="text-sm text-gray-500">Al {formatDate(balanceSheet.as_of_date)}</p>
                 </div>
               </GlassCardHeader>
               <GlassCardContent>
                 <div className="space-y-8">
-                  {/* Assets Section */}
+                  {/* Assets */}
                   <div>
                     <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
                       <h3 className="font-semibold text-gray-900 flex items-center gap-2">
@@ -613,28 +542,19 @@ export default function FinancialReportsPage() {
                     </div>
                     <div className="space-y-3">
                       {balanceSheet.assets.accounts.map((account) => (
-                        <div
-                          key={account.account_id}
-                          className="flex items-center justify-between"
-                        >
-                          <span className="text-gray-600">
-                            {account.account_number} - {account.account_name}
-                          </span>
-                          <span className="font-medium text-gray-900">
-                            {formatCurrency(account.closing_balance)}
-                          </span>
+                        <div key={account.account_id} className="flex items-center justify-between">
+                          <span className="text-gray-600">{account.account_number} - {account.account_name}</span>
+                          <span className="font-medium text-gray-900">{formatCurrency(account.closing_balance)}</span>
                         </div>
                       ))}
                       <div className="flex items-center justify-between pt-2 border-t border-gray-200">
                         <span className="font-semibold text-gray-900">Total Activos</span>
-                        <span className="font-bold text-blue-600 text-lg">
-                          {formatCurrency(balanceSheet.assets.total)}
-                        </span>
+                        <span className="font-bold text-blue-600 text-lg">{formatCurrency(balanceSheet.assets.total)}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Liabilities Section */}
+                  {/* Liabilities */}
                   <div>
                     <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
                       <h3 className="font-semibold text-gray-900 flex items-center gap-2">
@@ -644,28 +564,19 @@ export default function FinancialReportsPage() {
                     </div>
                     <div className="space-y-3">
                       {balanceSheet.liabilities.accounts.map((account) => (
-                        <div
-                          key={account.account_id}
-                          className="flex items-center justify-between"
-                        >
-                          <span className="text-gray-600">
-                            {account.account_number} - {account.account_name}
-                          </span>
-                          <span className="font-medium text-gray-900">
-                            {formatCurrency(account.closing_balance)}
-                          </span>
+                        <div key={account.account_id} className="flex items-center justify-between">
+                          <span className="text-gray-600">{account.account_number} - {account.account_name}</span>
+                          <span className="font-medium text-gray-900">{formatCurrency(account.closing_balance)}</span>
                         </div>
                       ))}
                       <div className="flex items-center justify-between pt-2 border-t border-gray-200">
                         <span className="font-semibold text-gray-900">Total Pasivos</span>
-                        <span className="font-bold text-orange-600 text-lg">
-                          {formatCurrency(balanceSheet.liabilities.total)}
-                        </span>
+                        <span className="font-bold text-orange-600 text-lg">{formatCurrency(balanceSheet.liabilities.total)}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Equity Section */}
+                  {/* Equity */}
                   <div>
                     <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
                       <h3 className="font-semibold text-gray-900 flex items-center gap-2">
@@ -675,51 +586,24 @@ export default function FinancialReportsPage() {
                     </div>
                     <div className="space-y-3">
                       {balanceSheet.equity.accounts.map((account) => (
-                        <div
-                          key={account.account_id}
-                          className="flex items-center justify-between"
-                        >
-                          <span className="text-gray-600">
-                            {account.account_number} - {account.account_name}
-                          </span>
-                          <span className="font-medium text-gray-900">
-                            {formatCurrency(account.closing_balance)}
-                          </span>
+                        <div key={account.account_id} className="flex items-center justify-between">
+                          <span className="text-gray-600">{account.account_number} - {account.account_name}</span>
+                          <span className="font-medium text-gray-900">{formatCurrency(account.closing_balance)}</span>
                         </div>
                       ))}
                       <div className="flex items-center justify-between pt-2 border-t border-gray-200">
                         <span className="font-semibold text-gray-900">Total Capital</span>
-                        <span className="font-bold text-purple-600 text-lg">
-                          {formatCurrency(balanceSheet.equity.total)}
-                        </span>
+                        <span className="font-bold text-purple-600 text-lg">{formatCurrency(balanceSheet.equity.total)}</span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Balance Check */}
-                  <div className="pt-4 border-t-2 border-gray-300">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl font-bold text-gray-900">
-                        PASIVO + CAPITAL
-                      </span>
-                      <span className="text-2xl font-bold text-gray-900">
-                        {formatCurrency(balanceSheet.liabilities.total + balanceSheet.equity.total)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-2 text-right">
-                      {balanceSheet.assets.total === balanceSheet.liabilities.total + balanceSheet.equity.total
-                        ? '✓ Balance cuadrado correctamente'
-                        : '⚠ Balance no cuadra'}
-                    </p>
                   </div>
                 </div>
               </GlassCardContent>
             </GlassCard>
           </div>
 
-          {/* Summary Sidebar */}
+          {/* Financial Ratios Sidebar */}
           <div className="space-y-6">
-            {/* Financial Ratios */}
             <GlassCard>
               <GlassCardHeader>
                 <GlassCardTitle>Ratios Financieros</GlassCardTitle>
@@ -747,32 +631,507 @@ export default function FinancialReportsPage() {
                 </div>
               </GlassCardContent>
             </GlassCard>
+          </div>
+        </div>
+      )}
 
-            {/* Asset Composition */}
+      {/* Comparative Analysis */}
+      {reportType === 'comparative' && comparative && (
+        <div className="space-y-6">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <GlassCard className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Cambio en Ingresos</p>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(comparative.variance.revenue_change)}</p>
+                </div>
+                <ChangeIndicator value={comparative.variance.revenue_change_pct} showPercent />
+              </div>
+            </GlassCard>
+            <GlassCard className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Cambio en Gastos</p>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(comparative.variance.expense_change)}</p>
+                </div>
+                <ChangeIndicator value={-comparative.variance.expense_change_pct} showPercent />
+              </div>
+            </GlassCard>
+            <GlassCard className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Cambio en Utilidad</p>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(comparative.variance.net_income_change)}</p>
+                </div>
+                <ChangeIndicator value={comparative.variance.net_income_change_pct} showPercent />
+              </div>
+            </GlassCard>
+          </div>
+
+          {/* Comparative Table */}
+          <GlassCard>
+            <GlassCardHeader>
+              <GlassCardTitle>Comparativo de Ingresos vs Período Anterior</GlassCardTitle>
+            </GlassCardHeader>
+            <GlassCardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Cuenta</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Período Actual</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Período Anterior</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Variación</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-green-50">
+                      <td colSpan={5} className="py-2 px-4 font-semibold text-green-800">INGRESOS</td>
+                    </tr>
+                    {comparative.current.revenue.accounts.map((account, index) => {
+                      const prevAccount = comparative.previous.revenue.accounts[index]
+                      const change = account.closing_balance - (prevAccount?.closing_balance || 0)
+                      const changePct = prevAccount?.closing_balance
+                        ? ((change / prevAccount.closing_balance) * 100)
+                        : 0
+                      return (
+                        <tr key={account.account_id} className="border-b border-gray-100">
+                          <td className="py-2 px-4 text-gray-600">{account.account_name}</td>
+                          <td className="py-2 px-4 text-right font-medium">{formatCurrency(account.closing_balance)}</td>
+                          <td className="py-2 px-4 text-right text-gray-500">{formatCurrency(prevAccount?.closing_balance || 0)}</td>
+                          <td className="py-2 px-4 text-right">
+                            <span className={change >= 0 ? 'text-green-600' : 'text-red-600'}>
+                              {change >= 0 ? '+' : ''}{formatCurrency(change)}
+                            </span>
+                          </td>
+                          <td className="py-2 px-4 text-right">
+                            <span className={changePct >= 0 ? 'text-green-600' : 'text-red-600'}>
+                              {changePct >= 0 ? '+' : ''}{changePct.toFixed(1)}%
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                    <tr className="bg-green-100 font-semibold">
+                      <td className="py-2 px-4">Total Ingresos</td>
+                      <td className="py-2 px-4 text-right">{formatCurrency(comparative.current.revenue.total)}</td>
+                      <td className="py-2 px-4 text-right text-gray-600">{formatCurrency(comparative.previous.revenue.total)}</td>
+                      <td className="py-2 px-4 text-right text-green-700">+{formatCurrency(comparative.variance.revenue_change)}</td>
+                      <td className="py-2 px-4 text-right text-green-700">+{comparative.variance.revenue_change_pct.toFixed(1)}%</td>
+                    </tr>
+                    <tr className="bg-red-50">
+                      <td colSpan={5} className="py-2 px-4 font-semibold text-red-800">GASTOS</td>
+                    </tr>
+                    {comparative.current.expenses.accounts.map((account, index) => {
+                      const prevAccount = comparative.previous.expenses.accounts[index]
+                      const change = account.closing_balance - (prevAccount?.closing_balance || 0)
+                      const changePct = prevAccount?.closing_balance
+                        ? ((change / prevAccount.closing_balance) * 100)
+                        : 0
+                      return (
+                        <tr key={account.account_id} className="border-b border-gray-100">
+                          <td className="py-2 px-4 text-gray-600">{account.account_name}</td>
+                          <td className="py-2 px-4 text-right font-medium">{formatCurrency(account.closing_balance)}</td>
+                          <td className="py-2 px-4 text-right text-gray-500">{formatCurrency(prevAccount?.closing_balance || 0)}</td>
+                          <td className="py-2 px-4 text-right">
+                            <span className={change <= 0 ? 'text-green-600' : 'text-red-600'}>
+                              {change >= 0 ? '+' : ''}{formatCurrency(change)}
+                            </span>
+                          </td>
+                          <td className="py-2 px-4 text-right">
+                            <span className={changePct <= 0 ? 'text-green-600' : 'text-red-600'}>
+                              {changePct >= 0 ? '+' : ''}{changePct.toFixed(1)}%
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </GlassCardContent>
+          </GlassCard>
+        </div>
+      )}
+
+      {/* Trends Analysis */}
+      {reportType === 'trends' && trends.length > 0 && (
+        <div className="space-y-6">
+          {/* Income & Expenses Trend */}
+          <GlassCard>
+            <GlassCardHeader>
+              <GlassCardTitle>Tendencia de Ingresos vs Gastos (12 meses)</GlassCardTitle>
+            </GlassCardHeader>
+            <GlassCardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trends}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="month_name" tick={{ fill: '#6b7280', fontSize: 12 }} />
+                    <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                    <Tooltip
+                      formatter={(value: number) => formatCurrency(value)}
+                      contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                    />
+                    <Legend />
+                    <Area type="monotone" dataKey="total_income" name="Ingresos" stroke="#10b981" fill="#10b98133" strokeWidth={2} />
+                    <Area type="monotone" dataKey="total_expenses" name="Gastos" stroke="#ef4444" fill="#ef444433" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </GlassCardContent>
+          </GlassCard>
+
+          {/* Net Income & Profit Margin */}
+          <div className="grid lg:grid-cols-2 gap-6">
             <GlassCard>
               <GlassCardHeader>
-                <GlassCardTitle>Composición de Activos</GlassCardTitle>
+                <GlassCardTitle>Utilidad Neta Mensual</GlassCardTitle>
               </GlassCardHeader>
               <GlassCardContent>
-                <div className="space-y-3">
-                  {balanceSheet.assets.accounts.map((account) => (
-                    <div key={account.account_id}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-gray-600">{account.account_name}</span>
-                        <span className="text-sm font-medium">
-                          {calculatePercentage(account.closing_balance, balanceSheet.assets.total)}%
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={trends}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="month_name" tick={{ fill: '#6b7280', fontSize: 12 }} />
+                      <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Bar dataKey="net_income" name="Utilidad Neta" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </GlassCardContent>
+            </GlassCard>
+
+            <GlassCard>
+              <GlassCardHeader>
+                <GlassCardTitle>Margen de Utilidad (%)</GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={trends}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="month_name" tick={{ fill: '#6b7280', fontSize: 12 }} />
+                      <YAxis tickFormatter={(value) => `${value}%`} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                      <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
+                      <Line type="monotone" dataKey="profit_margin" name="Margen" stroke="#f59e0b" strokeWidth={3} dot={{ fill: '#f59e0b' }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </GlassCardContent>
+            </GlassCard>
+          </div>
+
+          {/* Summary Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <GlassCard className="p-4 text-center">
+              <p className="text-sm text-gray-500">Promedio Ingresos</p>
+              <p className="text-xl font-bold text-green-600">
+                {formatCurrency(trends.reduce((sum, t) => sum + t.total_income, 0) / trends.length)}
+              </p>
+            </GlassCard>
+            <GlassCard className="p-4 text-center">
+              <p className="text-sm text-gray-500">Promedio Gastos</p>
+              <p className="text-xl font-bold text-red-600">
+                {formatCurrency(trends.reduce((sum, t) => sum + t.total_expenses, 0) / trends.length)}
+              </p>
+            </GlassCard>
+            <GlassCard className="p-4 text-center">
+              <p className="text-sm text-gray-500">Mejor Mes</p>
+              <p className="text-xl font-bold text-purple-600">
+                {trends.reduce((best, t) => t.net_income > best.net_income ? t : best).month_name}
+              </p>
+            </GlassCard>
+            <GlassCard className="p-4 text-center">
+              <p className="text-sm text-gray-500">Margen Promedio</p>
+              <p className="text-xl font-bold text-amber-600">
+                {(trends.reduce((sum, t) => sum + t.profit_margin, 0) / trends.length).toFixed(1)}%
+              </p>
+            </GlassCard>
+          </div>
+        </div>
+      )}
+
+      {/* Cash Flow Statement */}
+      {reportType === 'cash-flow' && cashFlow && (
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <GlassCard>
+              <GlassCardHeader>
+                <div>
+                  <GlassCardTitle>Estado de Flujo de Efectivo</GlassCardTitle>
+                  <p className="text-sm text-gray-500">
+                    {formatDate(cashFlow.period_start)} - {formatDate(cashFlow.period_end)}
+                  </p>
+                </div>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <div className="space-y-8">
+                  {/* Operating Activities */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
+                      <h3 className="font-semibold text-gray-900">ACTIVIDADES DE OPERACIÓN</h3>
+                    </div>
+                    <div className="space-y-2">
+                      {cashFlow.operating_activities.items.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className="text-gray-600">{item.name}</span>
+                          <span className={`font-medium ${item.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {formatCurrency(item.amount)}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                        <span className="font-semibold text-gray-900">Flujo Neto de Operaciones</span>
+                        <span className={`font-bold text-lg ${cashFlow.operating_activities.total >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(cashFlow.operating_activities.total)}
                         </span>
                       </div>
-                      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-blue-500"
-                          style={{
-                            width: `${calculatePercentage(account.closing_balance, balanceSheet.assets.total)}%`
-                          }}
-                        />
+                    </div>
+                  </div>
+
+                  {/* Investing Activities */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
+                      <h3 className="font-semibold text-gray-900">ACTIVIDADES DE INVERSIÓN</h3>
+                    </div>
+                    <div className="space-y-2">
+                      {cashFlow.investing_activities.items.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className="text-gray-600">{item.name}</span>
+                          <span className={`font-medium ${item.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {formatCurrency(item.amount)}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                        <span className="font-semibold text-gray-900">Flujo Neto de Inversiones</span>
+                        <span className={`font-bold text-lg ${cashFlow.investing_activities.total >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(cashFlow.investing_activities.total)}
+                        </span>
                       </div>
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Financing Activities */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
+                      <h3 className="font-semibold text-gray-900">ACTIVIDADES DE FINANCIAMIENTO</h3>
+                    </div>
+                    <div className="space-y-2">
+                      {cashFlow.financing_activities.items.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className="text-gray-600">{item.name}</span>
+                          <span className={`font-medium ${item.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {formatCurrency(item.amount)}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                        <span className="font-semibold text-gray-900">Flujo Neto de Financiamiento</span>
+                        <span className={`font-bold text-lg ${cashFlow.financing_activities.total >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(cashFlow.financing_activities.total)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Net Change */}
+                  <div className="pt-4 border-t-2 border-gray-300">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Efectivo al Inicio</span>
+                        <span className="font-medium">{formatCurrency(cashFlow.beginning_cash)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-gray-900">Cambio Neto en Efectivo</span>
+                        <span className={`font-bold ${cashFlow.net_cash_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(cashFlow.net_cash_change)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                        <span className="text-xl font-bold text-gray-900">EFECTIVO AL FINAL</span>
+                        <span className="text-2xl font-bold text-blue-600">{formatCurrency(cashFlow.ending_cash)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </GlassCardContent>
+            </GlassCard>
+          </div>
+
+          {/* Cash Flow Summary */}
+          <div className="space-y-6">
+            <GlassCard>
+              <GlassCardHeader>
+                <GlassCardTitle>Resumen de Flujos</GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        { name: 'Operación', value: cashFlow.operating_activities.total },
+                        { name: 'Inversión', value: cashFlow.investing_activities.total },
+                        { name: 'Financiam.', value: cashFlow.financing_activities.total },
+                      ]}
+                      layout="vertical"
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                      <YAxis type="category" dataKey="name" width={80} />
+                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </GlassCardContent>
+            </GlassCard>
+
+            <GlassCard className="p-4">
+              <div className="text-center">
+                <p className="text-sm text-gray-500">Cambio Neto</p>
+                <p className={`text-3xl font-bold ${cashFlow.net_cash_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {cashFlow.net_cash_change >= 0 ? '+' : ''}{formatCurrency(cashFlow.net_cash_change)}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {((cashFlow.net_cash_change / cashFlow.beginning_cash) * 100).toFixed(1)}% vs inicio
+                </p>
+              </div>
+            </GlassCard>
+          </div>
+        </div>
+      )}
+
+      {/* Year over Year Comparison */}
+      {reportType === 'yoy' && yoyComparison && (
+        <div className="space-y-6">
+          <GlassCard>
+            <GlassCardHeader>
+              <GlassCardTitle>Comparación Año vs Año ({yoyComparison.current_year} vs {yoyComparison.previous_year})</GlassCardTitle>
+            </GlassCardHeader>
+            <GlassCardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Métrica</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">{yoyComparison.current_year}</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">{yoyComparison.previous_year}</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Cambio</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {yoyComparison.metrics.map((metric, index) => {
+                      const isPositiveGood = !metric.name.includes('Gastos')
+                      const isPositive = metric.change >= 0
+                      const colorClass = isPositiveGood === isPositive ? 'text-green-600' : 'text-red-600'
+                      const isCurrency = metric.name.includes('$') || metric.name.includes('Ingresos') || metric.name.includes('Gastos') || metric.name.includes('Utilidad')
+
+                      return (
+                        <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4 font-medium text-gray-900">{metric.name}</td>
+                          <td className="py-3 px-4 text-right font-semibold">
+                            {isCurrency ? formatCurrency(metric.current) : metric.current.toLocaleString()}
+                            {metric.name.includes('Margen') && '%'}
+                          </td>
+                          <td className="py-3 px-4 text-right text-gray-500">
+                            {isCurrency ? formatCurrency(metric.previous) : metric.previous.toLocaleString()}
+                            {metric.name.includes('Margen') && '%'}
+                          </td>
+                          <td className={`py-3 px-4 text-right font-medium ${colorClass}`}>
+                            {metric.change >= 0 ? '+' : ''}
+                            {isCurrency ? formatCurrency(metric.change) : metric.change.toLocaleString()}
+                            {metric.name.includes('Margen') && ' pts'}
+                          </td>
+                          <td className={`py-3 px-4 text-right font-medium ${colorClass}`}>
+                            <div className="flex items-center justify-end gap-1">
+                              {metric.change_pct >= 0 ? (
+                                <ArrowUpRight className="w-4 h-4" />
+                              ) : (
+                                <ArrowDownRight className="w-4 h-4" />
+                              )}
+                              {metric.change_pct >= 0 ? '+' : ''}{metric.change_pct.toFixed(1)}%
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </GlassCardContent>
+          </GlassCard>
+
+          {/* Visual Comparison */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <GlassCard>
+              <GlassCardHeader>
+                <GlassCardTitle>Ingresos vs Gastos por Año</GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        {
+                          name: yoyComparison.previous_year.toString(),
+                          Ingresos: yoyComparison.metrics[0].previous,
+                          Gastos: yoyComparison.metrics[1].previous,
+                        },
+                        {
+                          name: yoyComparison.current_year.toString(),
+                          Ingresos: yoyComparison.metrics[0].current,
+                          Gastos: yoyComparison.metrics[1].current,
+                        },
+                      ]}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Legend />
+                      <Bar dataKey="Ingresos" fill="#10b981" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </GlassCardContent>
+            </GlassCard>
+
+            <GlassCard>
+              <GlassCardHeader>
+                <GlassCardTitle>Crecimiento Interanual</GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <div className="space-y-4">
+                  {yoyComparison.metrics.slice(0, 4).map((metric, index) => {
+                    const isPositiveGood = !metric.name.includes('Gastos')
+                    const isPositive = metric.change_pct >= 0
+                    const bgColor = isPositiveGood === isPositive ? 'bg-green-50' : 'bg-red-50'
+                    const textColor = isPositiveGood === isPositive ? 'text-green-700' : 'text-red-700'
+
+                    return (
+                      <div key={index} className={`p-3 rounded-lg ${bgColor}`}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">{metric.name}</span>
+                          <span className={`font-bold ${textColor}`}>
+                            {metric.change_pct >= 0 ? '+' : ''}{metric.change_pct.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="mt-2 w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${isPositiveGood === isPositive ? 'bg-green-500' : 'bg-red-500'}`}
+                            style={{ width: `${Math.min(Math.abs(metric.change_pct), 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </GlassCardContent>
             </GlassCard>

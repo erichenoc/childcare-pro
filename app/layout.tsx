@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { Providers } from './providers'
 import './globals.css'
@@ -6,6 +6,17 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'ChildCare Pro - Gestión Integral de Guarderías',
   description: 'Plataforma SaaS para la gestión integral de guarderías y centros de cuidado infantil',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'ChildCare Pro',
+  },
+  formatDetection: {
+    telephone: true,
+    email: true,
+    address: true,
+  },
   icons: {
     icon: [
       { url: 'https://res.cloudinary.com/dbftvu8ab/image/upload/w_32,h_32,c_fill/v1768448813/Emoticon_-_CildCare_qz0fjc.png', sizes: '32x32', type: 'image/png' },
@@ -17,6 +28,14 @@ export const metadata: Metadata = {
       { url: 'https://res.cloudinary.com/dbftvu8ab/image/upload/w_180,h_180,c_fill/v1768448813/Emoticon_-_CildCare_qz0fjc.png', sizes: '180x180', type: 'image/png' },
     ],
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#3b82f6',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({

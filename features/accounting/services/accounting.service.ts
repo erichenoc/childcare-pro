@@ -178,6 +178,47 @@ export interface MonthlyPnL {
   expenses_by_category: { category: string; amount: number }[]
 }
 
+export interface AccountLine {
+  account_id: string
+  account_number: string
+  account_name: string
+  account_type: string
+  opening_balance: number
+  debits: number
+  credits: number
+  closing_balance: number
+}
+
+export interface IncomeStatement {
+  period_start: string
+  period_end: string
+  revenue: {
+    accounts: AccountLine[]
+    total: number
+  }
+  expenses: {
+    accounts: AccountLine[]
+    total: number
+  }
+  net_income: number
+}
+
+export interface BalanceSheet {
+  as_of_date: string
+  assets: {
+    accounts: AccountLine[]
+    total: number
+  }
+  liabilities: {
+    accounts: AccountLine[]
+    total: number
+  }
+  equity: {
+    accounts: AccountLine[]
+    total: number
+  }
+}
+
 export interface TaxSummary {
   total_income: number
   taxable_income: number
@@ -186,6 +227,64 @@ export interface TaxSummary {
   deductible_expenses: number
   net_taxable_income: number
   quarterly_summaries: { quarter: number; income: number; expenses: number; net: number }[]
+}
+
+// Comparative Analysis Types
+export interface ComparativeIncomeStatement {
+  current: IncomeStatement
+  previous: IncomeStatement
+  variance: {
+    revenue_change: number
+    revenue_change_pct: number
+    expense_change: number
+    expense_change_pct: number
+    net_income_change: number
+    net_income_change_pct: number
+    revenue_by_account: { account_id: string; change: number; change_pct: number }[]
+    expenses_by_account: { account_id: string; change: number; change_pct: number }[]
+  }
+}
+
+export interface MonthlyTrend {
+  month: string
+  month_name: string
+  year: number
+  total_income: number
+  total_expenses: number
+  net_income: number
+  profit_margin: number
+}
+
+export interface CashFlowStatement {
+  period_start: string
+  period_end: string
+  operating_activities: {
+    items: { name: string; amount: number }[]
+    total: number
+  }
+  investing_activities: {
+    items: { name: string; amount: number }[]
+    total: number
+  }
+  financing_activities: {
+    items: { name: string; amount: number }[]
+    total: number
+  }
+  net_cash_change: number
+  beginning_cash: number
+  ending_cash: number
+}
+
+export interface YearOverYearComparison {
+  current_year: number
+  previous_year: number
+  metrics: {
+    name: string
+    current: number
+    previous: number
+    change: number
+    change_pct: number
+  }[]
 }
 
 // ============================================
@@ -967,6 +1066,217 @@ class AccountingService {
         { category: 'Classroom Supplies', amount: 380 },
         { category: 'Food & Snacks', amount: 1200 },
       ],
+    }
+  }
+
+  getMockIncomeStatement(): IncomeStatement {
+    const today = new Date()
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+
+    return {
+      period_start: startOfMonth.toISOString().split('T')[0],
+      period_end: endOfMonth.toISOString().split('T')[0],
+      revenue: {
+        accounts: [
+          { account_id: '1', account_number: '4000', account_name: 'Tuition Revenue', account_type: 'income', opening_balance: 0, debits: 0, credits: 28500, closing_balance: 28500 },
+          { account_id: '2', account_number: '4010', account_name: 'Registration Fees', account_type: 'income', opening_balance: 0, debits: 0, credits: 450, closing_balance: 450 },
+          { account_id: '3', account_number: '4100', account_name: 'VPK Reimbursement', account_type: 'income', opening_balance: 0, debits: 0, credits: 4300, closing_balance: 4300 },
+          { account_id: '4', account_number: '4110', account_name: 'School Readiness', account_type: 'income', opening_balance: 0, debits: 0, credits: 2100, closing_balance: 2100 },
+        ],
+        total: 35350,
+      },
+      expenses: {
+        accounts: [
+          { account_id: '5', account_number: '5000', account_name: 'Salaries & Wages', account_type: 'expense', opening_balance: 0, debits: 18500, credits: 0, closing_balance: 18500 },
+          { account_id: '6', account_number: '5010', account_name: 'Payroll Taxes', account_type: 'expense', opening_balance: 0, debits: 1850, credits: 0, closing_balance: 1850 },
+          { account_id: '7', account_number: '5100', account_name: 'Rent', account_type: 'expense', opening_balance: 0, debits: 3500, credits: 0, closing_balance: 3500 },
+          { account_id: '8', account_number: '5110', account_name: 'Utilities', account_type: 'expense', opening_balance: 0, debits: 450, credits: 0, closing_balance: 450 },
+          { account_id: '9', account_number: '5200', account_name: 'Classroom Supplies', account_type: 'expense', opening_balance: 0, debits: 380, credits: 0, closing_balance: 380 },
+          { account_id: '10', account_number: '5300', account_name: 'Food & Snacks', account_type: 'expense', opening_balance: 0, debits: 1200, credits: 0, closing_balance: 1200 },
+        ],
+        total: 25880,
+      },
+      net_income: 9470,
+    }
+  }
+
+  getMockBalanceSheet(): BalanceSheet {
+    const today = new Date()
+
+    return {
+      as_of_date: today.toISOString().split('T')[0],
+      assets: {
+        accounts: [
+          { account_id: '1', account_number: '1000', account_name: 'Cash', account_type: 'asset', opening_balance: 0, debits: 0, credits: 0, closing_balance: 5250 },
+          { account_id: '2', account_number: '1010', account_name: 'Checking Account', account_type: 'asset', opening_balance: 0, debits: 0, credits: 0, closing_balance: 40000 },
+          { account_id: '3', account_number: '1100', account_name: 'Accounts Receivable', account_type: 'asset', opening_balance: 0, debits: 0, credits: 0, closing_balance: 8750 },
+          { account_id: '4', account_number: '1500', account_name: 'Equipment', account_type: 'asset', opening_balance: 0, debits: 0, credits: 0, closing_balance: 15000 },
+        ],
+        total: 69000,
+      },
+      liabilities: {
+        accounts: [
+          { account_id: '5', account_number: '2000', account_name: 'Accounts Payable', account_type: 'liability', opening_balance: 0, debits: 0, credits: 0, closing_balance: 2300 },
+          { account_id: '6', account_number: '2100', account_name: 'Deferred Revenue', account_type: 'liability', opening_balance: 0, debits: 0, credits: 0, closing_balance: 4500 },
+          { account_id: '7', account_number: '2200', account_name: 'Payroll Liabilities', account_type: 'liability', opening_balance: 0, debits: 0, credits: 0, closing_balance: 3200 },
+        ],
+        total: 10000,
+      },
+      equity: {
+        accounts: [
+          { account_id: '8', account_number: '3000', account_name: 'Owner\'s Equity', account_type: 'equity', opening_balance: 0, debits: 0, credits: 0, closing_balance: 50000 },
+          { account_id: '9', account_number: '3100', account_name: 'Retained Earnings', account_type: 'equity', opening_balance: 0, debits: 0, credits: 0, closing_balance: 9000 },
+        ],
+        total: 59000,
+      },
+    }
+  }
+
+  // ============================================
+  // ADVANCED P&L REPORTS - MOCK DATA
+  // ============================================
+
+  getMockComparativeIncomeStatement(): ComparativeIncomeStatement {
+    const current = this.getMockIncomeStatement()
+
+    // Previous period with slightly lower numbers
+    const previous: IncomeStatement = {
+      period_start: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toISOString().split('T')[0],
+      period_end: new Date(new Date().getFullYear(), new Date().getMonth(), 0).toISOString().split('T')[0],
+      revenue: {
+        accounts: [
+          { account_id: '1', account_number: '4000', account_name: 'Tuition Revenue', account_type: 'income', opening_balance: 0, debits: 0, credits: 26500, closing_balance: 26500 },
+          { account_id: '2', account_number: '4010', account_name: 'Registration Fees', account_type: 'income', opening_balance: 0, debits: 0, credits: 300, closing_balance: 300 },
+          { account_id: '3', account_number: '4100', account_name: 'VPK Reimbursement', account_type: 'income', opening_balance: 0, debits: 0, credits: 4100, closing_balance: 4100 },
+          { account_id: '4', account_number: '4110', account_name: 'School Readiness', account_type: 'income', opening_balance: 0, debits: 0, credits: 1900, closing_balance: 1900 },
+        ],
+        total: 32800,
+      },
+      expenses: {
+        accounts: [
+          { account_id: '5', account_number: '5000', account_name: 'Salaries & Wages', account_type: 'expense', opening_balance: 0, debits: 17800, credits: 0, closing_balance: 17800 },
+          { account_id: '6', account_number: '5010', account_name: 'Payroll Taxes', account_type: 'expense', opening_balance: 0, debits: 1780, credits: 0, closing_balance: 1780 },
+          { account_id: '7', account_number: '5100', account_name: 'Rent', account_type: 'expense', opening_balance: 0, debits: 3500, credits: 0, closing_balance: 3500 },
+          { account_id: '8', account_number: '5110', account_name: 'Utilities', account_type: 'expense', opening_balance: 0, debits: 420, credits: 0, closing_balance: 420 },
+          { account_id: '9', account_number: '5200', account_name: 'Classroom Supplies', account_type: 'expense', opening_balance: 0, debits: 320, credits: 0, closing_balance: 320 },
+          { account_id: '10', account_number: '5300', account_name: 'Food & Snacks', account_type: 'expense', opening_balance: 0, debits: 1100, credits: 0, closing_balance: 1100 },
+        ],
+        total: 24920,
+      },
+      net_income: 7880,
+    }
+
+    // Calculate variance
+    const revenueChange = current.revenue.total - previous.revenue.total
+    const expenseChange = current.expenses.total - previous.expenses.total
+    const netIncomeChange = current.net_income - previous.net_income
+
+    return {
+      current,
+      previous,
+      variance: {
+        revenue_change: revenueChange,
+        revenue_change_pct: previous.revenue.total > 0 ? (revenueChange / previous.revenue.total) * 100 : 0,
+        expense_change: expenseChange,
+        expense_change_pct: previous.expenses.total > 0 ? (expenseChange / previous.expenses.total) * 100 : 0,
+        net_income_change: netIncomeChange,
+        net_income_change_pct: previous.net_income > 0 ? (netIncomeChange / previous.net_income) * 100 : 0,
+        revenue_by_account: current.revenue.accounts.map((acc, i) => ({
+          account_id: acc.account_id,
+          change: acc.closing_balance - (previous.revenue.accounts[i]?.closing_balance || 0),
+          change_pct: previous.revenue.accounts[i]?.closing_balance
+            ? ((acc.closing_balance - previous.revenue.accounts[i].closing_balance) / previous.revenue.accounts[i].closing_balance) * 100
+            : 0
+        })),
+        expenses_by_account: current.expenses.accounts.map((acc, i) => ({
+          account_id: acc.account_id,
+          change: acc.closing_balance - (previous.expenses.accounts[i]?.closing_balance || 0),
+          change_pct: previous.expenses.accounts[i]?.closing_balance
+            ? ((acc.closing_balance - previous.expenses.accounts[i].closing_balance) / previous.expenses.accounts[i].closing_balance) * 100
+            : 0
+        })),
+      }
+    }
+  }
+
+  getMockMonthlyTrends(): MonthlyTrend[] {
+    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+    const today = new Date()
+    const trends: MonthlyTrend[] = []
+
+    // Generate 12 months of data
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1)
+      const baseIncome = 32000 + Math.random() * 6000 // Random between 32k-38k
+      const baseExpenses = 24000 + Math.random() * 4000 // Random between 24k-28k
+      const netIncome = baseIncome - baseExpenses
+
+      trends.push({
+        month: date.toISOString().split('T')[0].slice(0, 7),
+        month_name: monthNames[date.getMonth()],
+        year: date.getFullYear(),
+        total_income: Math.round(baseIncome),
+        total_expenses: Math.round(baseExpenses),
+        net_income: Math.round(netIncome),
+        profit_margin: Math.round((netIncome / baseIncome) * 100 * 10) / 10
+      })
+    }
+
+    return trends
+  }
+
+  getMockCashFlowStatement(): CashFlowStatement {
+    const today = new Date()
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+
+    return {
+      period_start: startOfMonth.toISOString().split('T')[0],
+      period_end: endOfMonth.toISOString().split('T')[0],
+      operating_activities: {
+        items: [
+          { name: 'Utilidad Neta', amount: 9470 },
+          { name: 'Depreciación', amount: 450 },
+          { name: 'Cambio en Cuentas por Cobrar', amount: -1250 },
+          { name: 'Cambio en Cuentas por Pagar', amount: 380 },
+          { name: 'Cambio en Ingresos Diferidos', amount: 850 },
+        ],
+        total: 9900,
+      },
+      investing_activities: {
+        items: [
+          { name: 'Compra de Equipo', amount: -1500 },
+          { name: 'Mejoras al Local', amount: -800 },
+        ],
+        total: -2300,
+      },
+      financing_activities: {
+        items: [
+          { name: 'Distribución al Propietario', amount: -3000 },
+          { name: 'Pago de Préstamos', amount: -500 },
+        ],
+        total: -3500,
+      },
+      net_cash_change: 4100,
+      beginning_cash: 41150,
+      ending_cash: 45250,
+    }
+  }
+
+  getMockYearOverYearComparison(): YearOverYearComparison {
+    const currentYear = new Date().getFullYear()
+    return {
+      current_year: currentYear,
+      previous_year: currentYear - 1,
+      metrics: [
+        { name: 'Ingresos Totales', current: 424200, previous: 385600, change: 38600, change_pct: 10.0 },
+        { name: 'Gastos Totales', current: 310560, previous: 298400, change: 12160, change_pct: 4.1 },
+        { name: 'Utilidad Neta', current: 113640, previous: 87200, change: 26440, change_pct: 30.3 },
+        { name: 'Margen de Utilidad', current: 26.8, previous: 22.6, change: 4.2, change_pct: 18.6 },
+        { name: 'Niños Promedio', current: 45, previous: 42, change: 3, change_pct: 7.1 },
+        { name: 'Ingresos por Niño', current: 9427, previous: 9181, change: 246, change_pct: 2.7 },
+      ]
     }
   }
 }

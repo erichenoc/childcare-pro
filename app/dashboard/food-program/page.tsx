@@ -19,6 +19,7 @@ import {
   Cookie,
   Moon,
   AlertCircle,
+  Milk,
 } from 'lucide-react'
 import {
   foodProgramService,
@@ -317,6 +318,11 @@ export default function FoodProgramPage() {
                 <Link href="/dashboard/food-program/reports">
                   <GlassButton variant="secondary" fullWidth leftIcon={<FileText className="w-4 h-4" />}>
                     Reportes CACFP
+                  </GlassButton>
+                </Link>
+                <Link href="/dashboard/food-program/milk-calculator" className="col-span-2">
+                  <GlassButton variant="secondary" fullWidth leftIcon={<Milk className="w-4 h-4" />}>
+                    Calculadora de Leche
                   </GlassButton>
                 </Link>
               </div>
