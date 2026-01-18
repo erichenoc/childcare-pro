@@ -12,6 +12,8 @@ import {
   ChevronRight,
   Users,
   UtensilsCrossed,
+  FileSpreadsheet,
+  Table2,
 } from 'lucide-react'
 import {
   foodProgramService,
@@ -33,6 +35,11 @@ import {
   GlassTableHead,
   GlassTableCell,
 } from '@/shared/components/ui'
+import {
+  exportToExcel,
+  exportToPDF,
+  type ReportData,
+} from '@/shared/utils/report-export'
 
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -60,6 +67,8 @@ export default function CACFPReportsPage() {
     operating_days: number
   } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const [isExporting, setIsExporting] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
@@ -95,6 +104,80 @@ export default function CACFPReportsPage() {
 
     setSelectedMonth(newMonth)
     setSelectedYear(newYear)
+  }
+
+  // Generate report data for export
+  function generateReportData(): ReportData {
+    const getMealCount = (report: CACFPReport, type: MealType) => {
+      const meal = report.meals_by_type.find(m => m.meal_type === type)
+      return meal?.total_served || 0
+    }
+
+    const rows = reports.map(report => ({
+      date: new Date(report.report_date + 'T12:00:00').toLocaleDateString('es-ES', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+      }),
+      children: report.total_children,
+      breakfast: getMealCount(report, 'breakfast'),
+      am_snack: getMealCount(report, 'am_snack'),
+      lunch: getMealCount(report, 'lunch'),
+      pm_snack: getMealCount(report, 'pm_snack'),
+      supper: getMealCount(report, 'supper'),
+      reimbursement: formatCurrency(report.reimbursement_estimate),
+    }))
+
+    return {
+      title: 'Reporte CACFP',
+      subtitle: `${MONTHS[selectedMonth - 1]} ${selectedYear}`,
+      generatedAt: new Date(),
+      columns: [
+        { header: 'Fecha', key: 'date', width: 15 },
+        { header: 'Niños', key: 'children', width: 10 },
+        { header: 'Desayuno', key: 'breakfast', width: 10 },
+        { header: 'Mer. AM', key: 'am_snack', width: 10 },
+        { header: 'Almuerzo', key: 'lunch', width: 10 },
+        { header: 'Mer. PM', key: 'pm_snack', width: 10 },
+        { header: 'Cena', key: 'supper', width: 10 },
+        { header: 'Reembolso', key: 'reimbursement', width: 12 },
+      ],
+      rows,
+      summary: summary ? {
+        'Días Operados': summary.operating_days,
+        'Total Comidas': summary.total_meals_served,
+        'Niños Atendidos': summary.total_children_served,
+        'Reembolso Estimado': formatCurrency(summary.estimated_reimbursement),
+        'Promedio Diario': summary.daily_average.toFixed(0),
+      } : undefined,
+    }
+  }
+
+  // Handle export
+  async function handleExport(format: 'excel' | 'csv' | 'pdf') {
+    if (reports.length === 0) return
+
+    setIsExporting(format)
+    setShowExportMenu(false)
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 300))
+      const filename = `cacfp_report_${selectedYear}_${String(selectedMonth).padStart(2, '0')}`
+
+      if (format === 'csv') {
+        exportToCSV()
+      } else if (format === 'excel') {
+        const reportData = generateReportData()
+        exportToExcel(reportData, filename)
+      } else if (format === 'pdf') {
+        const reportData = generateReportData()
+        exportToPDF(reportData, filename)
+      }
+    } catch (error) {
+      console.error('Error exporting:', error)
+    } finally {
+      setIsExporting(null)
+    }
   }
 
   function exportToCSV() {
@@ -198,14 +281,51 @@ export default function CACFPReportsPage() {
           </div>
         </div>
 
-        <GlassButton
-          variant="secondary"
-          onClick={exportToCSV}
-          leftIcon={<Download className="w-4 h-4" />}
-          disabled={reports.length === 0}
-        >
-          Exportar CSV
-        </GlassButton>
+        <div className="relative">
+          <GlassButton
+            variant="secondary"
+            onClick={() => setShowExportMenu(!showExportMenu)}
+            leftIcon={isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            disabled={reports.length === 0 || isExporting !== null}
+          >
+            {isExporting ? 'Exportando...' : 'Exportar'}
+          </GlassButton>
+
+          {showExportMenu && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+              <button
+                onClick={() => handleExport('excel')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Excel (.xlsx)</p>
+                  <p className="text-xs text-gray-500">Hoja de cálculo</p>
+                </div>
+              </button>
+              <button
+                onClick={() => handleExport('csv')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition border-t border-gray-100"
+              >
+                <Table2 className="w-4 h-4 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">CSV (.csv)</p>
+                  <p className="text-xs text-gray-500">Datos separados por coma</p>
+                </div>
+              </button>
+              <button
+                onClick={() => handleExport('pdf')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition border-t border-gray-100"
+              >
+                <FileText className="w-4 h-4 text-red-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">PDF (.pdf)</p>
+                  <p className="text-xs text-gray-500">Documento imprimible</p>
+                </div>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Month Navigation */}

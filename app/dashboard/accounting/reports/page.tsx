@@ -15,6 +15,8 @@ import {
   DollarSign,
   Building2,
   Wallet,
+  FileSpreadsheet,
+  Table2,
 } from 'lucide-react'
 import {
   accountingService,
@@ -29,6 +31,13 @@ import {
   GlassButton,
   GlassSelect,
 } from '@/shared/components/ui'
+import {
+  exportToExcel,
+  exportToCSV,
+  exportToPDF,
+  type ReportData,
+  formatCurrency as formatCurrencyUtil,
+} from '@/shared/utils/report-export'
 
 type ReportType = 'income-statement' | 'balance-sheet'
 
@@ -37,6 +46,8 @@ export default function FinancialReportsPage() {
   const [period, setPeriod] = useState<string>('this-month')
   const [incomeStatement, setIncomeStatement] = useState<IncomeStatement | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isExporting, setIsExporting] = useState<string | null>(null)
+  const [showExportMenu, setShowExportMenu] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -105,6 +116,169 @@ export default function FinancialReportsPage() {
     return Math.round((value / total) * 100)
   }
 
+  // Get period label for reports
+  const getPeriodLabel = () => {
+    switch (period) {
+      case 'this-month': return 'Este Mes'
+      case 'last-month': return 'Mes Pasado'
+      case 'this-quarter': return 'Este Trimestre'
+      case 'this-year': return 'Este Año'
+      default: return period
+    }
+  }
+
+  // Generate Income Statement report data
+  const generateIncomeStatementReport = (): ReportData => {
+    if (!incomeStatement) {
+      throw new Error('No income statement data available')
+    }
+
+    const rows: Record<string, unknown>[] = []
+
+    // Revenue section
+    rows.push({ category: 'INGRESOS', account: '', amount: '' })
+    incomeStatement.revenue.accounts.forEach(account => {
+      rows.push({
+        category: '',
+        account: `${account.account_number} - ${account.account_name}`,
+        amount: formatCurrency(account.closing_balance)
+      })
+    })
+    rows.push({ category: '', account: 'Total Ingresos', amount: formatCurrency(incomeStatement.revenue.total) })
+    rows.push({ category: '', account: '', amount: '' })
+
+    // Expenses section
+    rows.push({ category: 'GASTOS', account: '', amount: '' })
+    incomeStatement.expenses.accounts.forEach(account => {
+      rows.push({
+        category: '',
+        account: `${account.account_number} - ${account.account_name}`,
+        amount: formatCurrency(account.closing_balance)
+      })
+    })
+    rows.push({ category: '', account: 'Total Gastos', amount: formatCurrency(incomeStatement.expenses.total) })
+    rows.push({ category: '', account: '', amount: '' })
+
+    // Net Income
+    rows.push({ category: 'UTILIDAD NETA', account: '', amount: formatCurrency(incomeStatement.net_income) })
+
+    return {
+      title: 'Estado de Resultados',
+      subtitle: `Período: ${formatDate(incomeStatement.period_start)} - ${formatDate(incomeStatement.period_end)}`,
+      generatedAt: new Date(),
+      columns: [
+        { header: 'Categoría', key: 'category', width: 15 },
+        { header: 'Cuenta', key: 'account', width: 35 },
+        { header: 'Monto', key: 'amount', width: 15 },
+      ],
+      rows,
+      summary: {
+        'Total Ingresos': formatCurrency(incomeStatement.revenue.total),
+        'Total Gastos': formatCurrency(incomeStatement.expenses.total),
+        'Utilidad Neta': formatCurrency(incomeStatement.net_income),
+        'Margen de Utilidad': `${calculatePercentage(incomeStatement.net_income, incomeStatement.revenue.total)}%`,
+      }
+    }
+  }
+
+  // Generate Balance Sheet report data
+  const generateBalanceSheetReport = (): ReportData => {
+    const rows: Record<string, unknown>[] = []
+
+    // Assets section
+    rows.push({ category: 'ACTIVOS', account: '', amount: '' })
+    balanceSheet.assets.accounts.forEach(account => {
+      rows.push({
+        category: '',
+        account: `${account.account_number} - ${account.account_name}`,
+        amount: formatCurrency(account.closing_balance)
+      })
+    })
+    rows.push({ category: '', account: 'Total Activos', amount: formatCurrency(balanceSheet.assets.total) })
+    rows.push({ category: '', account: '', amount: '' })
+
+    // Liabilities section
+    rows.push({ category: 'PASIVOS', account: '', amount: '' })
+    balanceSheet.liabilities.accounts.forEach(account => {
+      rows.push({
+        category: '',
+        account: `${account.account_number} - ${account.account_name}`,
+        amount: formatCurrency(account.closing_balance)
+      })
+    })
+    rows.push({ category: '', account: 'Total Pasivos', amount: formatCurrency(balanceSheet.liabilities.total) })
+    rows.push({ category: '', account: '', amount: '' })
+
+    // Equity section
+    rows.push({ category: 'CAPITAL', account: '', amount: '' })
+    balanceSheet.equity.accounts.forEach(account => {
+      rows.push({
+        category: '',
+        account: `${account.account_number} - ${account.account_name}`,
+        amount: formatCurrency(account.closing_balance)
+      })
+    })
+    rows.push({ category: '', account: 'Total Capital', amount: formatCurrency(balanceSheet.equity.total) })
+
+    return {
+      title: 'Balance General',
+      subtitle: `Al ${formatDate(balanceSheet.as_of_date)}`,
+      generatedAt: new Date(),
+      columns: [
+        { header: 'Categoría', key: 'category', width: 15 },
+        { header: 'Cuenta', key: 'account', width: 35 },
+        { header: 'Monto', key: 'amount', width: 15 },
+      ],
+      rows,
+      summary: {
+        'Total Activos': formatCurrency(balanceSheet.assets.total),
+        'Total Pasivos': formatCurrency(balanceSheet.liabilities.total),
+        'Total Capital': formatCurrency(balanceSheet.equity.total),
+        'Pasivo + Capital': formatCurrency(balanceSheet.liabilities.total + balanceSheet.equity.total),
+        'Ratio de Liquidez': (balanceSheet.assets.total / balanceSheet.liabilities.total).toFixed(2),
+        'Ratio de Endeudamiento': `${((balanceSheet.liabilities.total / balanceSheet.assets.total) * 100).toFixed(1)}%`,
+      }
+    }
+  }
+
+  // Handle export
+  const handleExport = async (format: 'excel' | 'csv' | 'pdf') => {
+    setIsExporting(format)
+    setShowExportMenu(false)
+
+    try {
+      // Small delay for UI feedback
+      await new Promise(resolve => setTimeout(resolve, 300))
+
+      let reportData: ReportData
+      let filename: string
+
+      if (reportType === 'income-statement') {
+        reportData = generateIncomeStatementReport()
+        filename = `estado_resultados_${new Date().toISOString().split('T')[0]}`
+      } else {
+        reportData = generateBalanceSheetReport()
+        filename = `balance_general_${new Date().toISOString().split('T')[0]}`
+      }
+
+      switch (format) {
+        case 'excel':
+          exportToExcel(reportData, filename)
+          break
+        case 'csv':
+          exportToCSV(reportData, filename)
+          break
+        case 'pdf':
+          exportToPDF(reportData, filename)
+          break
+      }
+    } catch (error) {
+      console.error('Error exporting report:', error)
+    } finally {
+      setIsExporting(null)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -130,11 +304,54 @@ export default function FinancialReportsPage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <GlassButton variant="secondary">
-            <Download className="w-4 h-4 mr-2" />
-            Exportar PDF
+        <div className="relative">
+          <GlassButton
+            variant="secondary"
+            onClick={() => setShowExportMenu(!showExportMenu)}
+            disabled={isExporting !== null}
+          >
+            {isExporting ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            {isExporting ? 'Exportando...' : 'Exportar'}
           </GlassButton>
+
+          {showExportMenu && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+              <button
+                onClick={() => handleExport('excel')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Excel (.xlsx)</p>
+                  <p className="text-xs text-gray-500">Hoja de cálculo</p>
+                </div>
+              </button>
+              <button
+                onClick={() => handleExport('csv')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition border-t border-gray-100"
+              >
+                <Table2 className="w-4 h-4 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">CSV (.csv)</p>
+                  <p className="text-xs text-gray-500">Datos separados por coma</p>
+                </div>
+              </button>
+              <button
+                onClick={() => handleExport('pdf')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition border-t border-gray-100"
+              >
+                <FileText className="w-4 h-4 text-red-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">PDF (.pdf)</p>
+                  <p className="text-xs text-gray-500">Documento imprimible</p>
+                </div>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

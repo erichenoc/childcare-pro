@@ -11,6 +11,7 @@ import {
   BarChart3,
   TrendingUp,
   Loader2,
+  FileSpreadsheet,
 } from 'lucide-react'
 import { useTranslations } from '@/shared/lib/i18n'
 import {
@@ -26,6 +27,16 @@ import { attendanceService } from '@/features/attendance/services/attendance.ser
 import { incidentsService } from '@/features/incidents/services/incidents.service'
 import { classroomsService } from '@/features/classrooms/services/classrooms.service'
 import { staffService } from '@/features/staff/services/staff.service'
+import { billingService } from '@/features/billing/services/billing.service'
+import {
+  exportToExcel,
+  exportToCSV,
+  exportToPDF,
+  formatCurrency,
+  formatDate,
+  formatPercentage,
+  ReportData
+} from '@/shared/utils/report-export'
 
 interface ReportType {
   id: string
@@ -33,7 +44,7 @@ interface ReportType {
   color: string
   titleKey: 'attendanceReport' | 'financialReport' | 'enrollmentReport' | 'ratioReport' | 'staffReport' | 'incidentsReport'
   descriptionKey: 'attendanceReportDesc' | 'financialReportDesc' | 'enrollmentReportDesc' | 'ratioReportDesc' | 'incidentsReportDesc' | 'staffReportDesc'
-  formats: string[]
+  formats: ('PDF' | 'Excel')[]
 }
 
 const reportTypes: ReportType[] = [
@@ -67,7 +78,7 @@ const reportTypes: ReportType[] = [
     color: 'orange',
     titleKey: 'ratioReport',
     descriptionKey: 'ratioReportDesc',
-    formats: ['PDF'],
+    formats: ['PDF', 'Excel'],
   },
   {
     id: 'incidents',
@@ -111,6 +122,7 @@ export default function ReportsPage() {
 
   const [selectedPeriod, setSelectedPeriod] = useState('month')
   const [isLoading, setIsLoading] = useState(true)
+  const [isGenerating, setIsGenerating] = useState<string | null>(null)
   const [stats, setStats] = useState<ReportStats>({
     totalChildren: 0,
     activeChildren: 0,
@@ -195,9 +207,289 @@ export default function ReportsPage() {
     return colors[color] || colors.blue
   }
 
-  function handleDownload(reportId: string, format: string) {
-    // TODO: Implement actual report generation
-    alert(t.reports.generatingReport.replace('{reportId}', reportId).replace('{format}', format))
+  // Report generation functions
+  const generateAttendanceReport = async (): Promise<ReportData> => {
+    const records = await attendanceService.getAll()
+    const rows = records.slice(0, 100).map(record => ({
+      child: record.child_name || '-',
+      date: formatDate(record.date),
+      checkIn: record.check_in_time || '-',
+      checkOut: record.check_out_time || '-',
+      status: record.status,
+      notes: record.notes || '-',
+    }))
+
+    const stats = await attendanceService.getStats()
+
+    return {
+      title: 'Reporte de Asistencia',
+      subtitle: `Período: ${selectedPeriod}`,
+      generatedAt: new Date(),
+      columns: [
+        { header: 'Niño', key: 'child', width: 20 },
+        { header: 'Fecha', key: 'date', width: 12 },
+        { header: 'Entrada', key: 'checkIn', width: 10 },
+        { header: 'Salida', key: 'checkOut', width: 10 },
+        { header: 'Estado', key: 'status', width: 12 },
+        { header: 'Notas', key: 'notes', width: 25 },
+      ],
+      rows,
+      summary: {
+        'Total Registros': rows.length,
+        'Presentes': stats.present,
+        'Ausentes': stats.absent,
+        'Tardanzas': stats.late,
+        'Tasa Asistencia': formatPercentage(stats.present > 0 ? (stats.present / (stats.present + stats.absent)) * 100 : 0),
+      }
+    }
+  }
+
+  const generateFinancialReport = async (): Promise<ReportData> => {
+    const invoices = await billingService.getAll()
+    const rows = invoices.map(inv => ({
+      number: inv.invoice_number || '-',
+      family: inv.family_name || '-',
+      amount: formatCurrency(inv.total_amount),
+      paid: formatCurrency(inv.paid_amount || 0),
+      balance: formatCurrency(inv.total_amount - (inv.paid_amount || 0)),
+      status: inv.status,
+      dueDate: formatDate(inv.due_date),
+    }))
+
+    const totalAmount = invoices.reduce((sum, inv) => sum + inv.total_amount, 0)
+    const totalPaid = invoices.reduce((sum, inv) => sum + (inv.paid_amount || 0), 0)
+
+    return {
+      title: 'Reporte Financiero',
+      subtitle: `Período: ${selectedPeriod}`,
+      generatedAt: new Date(),
+      columns: [
+        { header: '# Factura', key: 'number', width: 15 },
+        { header: 'Familia', key: 'family', width: 20 },
+        { header: 'Total', key: 'amount', width: 12 },
+        { header: 'Pagado', key: 'paid', width: 12 },
+        { header: 'Balance', key: 'balance', width: 12 },
+        { header: 'Estado', key: 'status', width: 12 },
+        { header: 'Vencimiento', key: 'dueDate', width: 12 },
+      ],
+      rows,
+      summary: {
+        'Total Facturas': rows.length,
+        'Monto Total': formatCurrency(totalAmount),
+        'Total Cobrado': formatCurrency(totalPaid),
+        'Por Cobrar': formatCurrency(totalAmount - totalPaid),
+        'Tasa Cobro': formatPercentage(totalAmount > 0 ? (totalPaid / totalAmount) * 100 : 0),
+      }
+    }
+  }
+
+  const generateEnrollmentReport = async (): Promise<ReportData> => {
+    const children = await childrenService.getAll()
+    const rows = children.map(child => {
+      const birthDate = child.date_of_birth ? new Date(child.date_of_birth) : null
+      const age = birthDate
+        ? Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+        : '-'
+
+      return {
+        name: `${child.first_name} ${child.last_name}`,
+        age: age,
+        classroom: child.classroom_name || '-',
+        status: child.status,
+        enrollDate: formatDate(child.created_at),
+        guardian: child.primary_guardian_name || '-',
+      }
+    })
+
+    const active = rows.filter(r => r.status === 'active').length
+
+    return {
+      title: 'Reporte de Inscripciones',
+      subtitle: `Total: ${rows.length} niños`,
+      generatedAt: new Date(),
+      columns: [
+        { header: 'Nombre', key: 'name', width: 20 },
+        { header: 'Edad', key: 'age', width: 8 },
+        { header: 'Salón', key: 'classroom', width: 15 },
+        { header: 'Estado', key: 'status', width: 10 },
+        { header: 'Inscripción', key: 'enrollDate', width: 12 },
+        { header: 'Tutor', key: 'guardian', width: 20 },
+      ],
+      rows,
+      summary: {
+        'Total Inscritos': rows.length,
+        'Activos': active,
+        'Inactivos': rows.length - active,
+        'Tasa Retención': formatPercentage(rows.length > 0 ? (active / rows.length) * 100 : 0),
+      }
+    }
+  }
+
+  const generateRatiosReport = async (): Promise<ReportData> => {
+    const classrooms = await classroomsService.getWithStats()
+
+    const dcfRatios: Record<string, number> = {
+      infant: 4,
+      toddler: 6,
+      twos: 11,
+      threes: 15,
+      fours: 20,
+      school_age: 25,
+    }
+
+    const rows = classrooms.map(classroom => {
+      const maxRatio = dcfRatios[classroom.age_group || 'threes'] || 15
+      const currentRatio = classroom.current_ratio || 0
+      const compliant = currentRatio <= maxRatio || classroom.staff_count === 0
+
+      return {
+        classroom: classroom.name,
+        ageGroup: classroom.age_group || '-',
+        children: classroom.children_count || 0,
+        staff: classroom.staff_count || 0,
+        currentRatio: currentRatio.toFixed(1),
+        maxRatio: maxRatio,
+        status: compliant ? 'Cumple' : 'No Cumple',
+      }
+    })
+
+    const compliant = rows.filter(r => r.status === 'Cumple').length
+
+    return {
+      title: 'Reporte de Ratios DCF',
+      subtitle: 'Cumplimiento de ratios de Florida DCF',
+      generatedAt: new Date(),
+      columns: [
+        { header: 'Salón', key: 'classroom', width: 18 },
+        { header: 'Grupo Edad', key: 'ageGroup', width: 12 },
+        { header: 'Niños', key: 'children', width: 8 },
+        { header: 'Staff', key: 'staff', width: 8 },
+        { header: 'Ratio Actual', key: 'currentRatio', width: 12 },
+        { header: 'Ratio Máx', key: 'maxRatio', width: 10 },
+        { header: 'Estado', key: 'status', width: 12 },
+      ],
+      rows,
+      summary: {
+        'Total Salones': rows.length,
+        'Cumplen': compliant,
+        'No Cumplen': rows.length - compliant,
+        'Tasa Cumplimiento': formatPercentage(rows.length > 0 ? (compliant / rows.length) * 100 : 100),
+      }
+    }
+  }
+
+  const generateIncidentsReport = async (): Promise<ReportData> => {
+    const incidents = await incidentsService.getAll()
+    const rows = incidents.map(inc => ({
+      date: formatDate(inc.incident_date),
+      child: inc.child_name || '-',
+      type: inc.incident_type || '-',
+      severity: inc.severity || 'low',
+      status: inc.status,
+      description: (inc.description || '-').substring(0, 50) + '...',
+    }))
+
+    const stats = await incidentsService.getStats()
+
+    return {
+      title: 'Reporte de Incidentes',
+      subtitle: `Total: ${rows.length} incidentes`,
+      generatedAt: new Date(),
+      columns: [
+        { header: 'Fecha', key: 'date', width: 12 },
+        { header: 'Niño', key: 'child', width: 18 },
+        { header: 'Tipo', key: 'type', width: 15 },
+        { header: 'Severidad', key: 'severity', width: 12 },
+        { header: 'Estado', key: 'status', width: 10 },
+        { header: 'Descripción', key: 'description', width: 30 },
+      ],
+      rows,
+      summary: {
+        'Total Incidentes': rows.length,
+        'Abiertos': stats.open,
+        'Resueltos': stats.resolved,
+        'Severidad Alta': rows.filter(r => r.severity === 'high').length,
+      }
+    }
+  }
+
+  const generateStaffReport = async (): Promise<ReportData> => {
+    const staff = await staffService.getAll()
+    const rows = staff.map(s => ({
+      name: `${s.first_name} ${s.last_name}`,
+      email: s.email || '-',
+      role: s.role || '-',
+      classroom: s.classroom_name || '-',
+      status: s.status || 'active',
+      hireDate: formatDate(s.created_at),
+    }))
+
+    const active = rows.filter(r => r.status === 'active').length
+
+    return {
+      title: 'Reporte de Personal',
+      subtitle: `Total: ${rows.length} empleados`,
+      generatedAt: new Date(),
+      columns: [
+        { header: 'Nombre', key: 'name', width: 20 },
+        { header: 'Email', key: 'email', width: 25 },
+        { header: 'Rol', key: 'role', width: 15 },
+        { header: 'Salón', key: 'classroom', width: 15 },
+        { header: 'Estado', key: 'status', width: 10 },
+        { header: 'Contratación', key: 'hireDate', width: 12 },
+      ],
+      rows,
+      summary: {
+        'Total Personal': rows.length,
+        'Activos': active,
+        'Inactivos': rows.length - active,
+      }
+    }
+  }
+
+  async function handleDownload(reportId: string, format: string) {
+    setIsGenerating(reportId + format)
+
+    try {
+      let reportData: ReportData
+
+      switch (reportId) {
+        case 'attendance':
+          reportData = await generateAttendanceReport()
+          break
+        case 'financial':
+          reportData = await generateFinancialReport()
+          break
+        case 'enrollment':
+          reportData = await generateEnrollmentReport()
+          break
+        case 'ratios':
+          reportData = await generateRatiosReport()
+          break
+        case 'incidents':
+          reportData = await generateIncidentsReport()
+          break
+        case 'staff':
+          reportData = await generateStaffReport()
+          break
+        default:
+          throw new Error('Tipo de reporte no válido')
+      }
+
+      const filename = `${reportId}_report_${new Date().toISOString().split('T')[0]}`
+
+      // Export based on format
+      if (format === 'Excel') {
+        exportToExcel(reportData, filename)
+      } else {
+        exportToPDF(reportData, filename)
+      }
+    } catch (error) {
+      console.error('Error generating report:', error)
+      alert('Error al generar el reporte. Por favor intente de nuevo.')
+    } finally {
+      setIsGenerating(null)
+    }
   }
 
   if (isLoading) {
@@ -345,8 +637,15 @@ export default function ReportsPage() {
                           variant="secondary"
                           size="sm"
                           onClick={() => handleDownload(report.id, format)}
+                          disabled={isGenerating === report.id + format}
                         >
-                          <Download className="w-3 h-3 mr-1" />
+                          {isGenerating === report.id + format ? (
+                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          ) : format === 'Excel' ? (
+                            <FileSpreadsheet className="w-3 h-3 mr-1" />
+                          ) : (
+                            <Download className="w-3 h-3 mr-1" />
+                          )}
                           {format}
                         </GlassButton>
                       ))}
