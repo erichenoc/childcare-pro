@@ -97,6 +97,16 @@ export default function IncidentDetailPage() {
   }
 
   async function handleMarkResolved() {
+    // Check if parent has signed the incident
+    const incidentData = incident as Record<string, unknown>
+    if (!incidentData.parent_signed_at) {
+      // Redirect to signature page with a message
+      if (confirm('Este incidente requiere la firma del padre/tutor antes de cerrarse.\n\n¿Desea ir a la pagina de firma ahora?')) {
+        router.push(`/dashboard/incidents/${incidentId}/sign`)
+      }
+      return
+    }
+
     try {
       await incidentsService.update(incidentId, { status: 'inactive' })
       loadIncident()
@@ -315,9 +325,17 @@ export default function IncidentDetailPage() {
             Descargar
           </GlassButton>
           {incident.status !== 'inactive' && (
-            <GlassButton variant="primary" onClick={handleMarkResolved}>
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Marcar Resuelto
+            <GlassButton
+              variant={(incident as Record<string, unknown>).parent_signed_at ? "primary" : "secondary"}
+              onClick={handleMarkResolved}
+              title={(incident as Record<string, unknown>).parent_signed_at ? undefined : "Requiere firma del padre para cerrar"}
+            >
+              {(incident as Record<string, unknown>).parent_signed_at ? (
+                <CheckCircle className="w-4 h-4 mr-2" />
+              ) : (
+                <PenTool className="w-4 h-4 mr-2 text-amber-500" />
+              )}
+              {(incident as Record<string, unknown>).parent_signed_at ? "Marcar Resuelto" : "Requiere Firma"}
             </GlassButton>
           )}
           <Link href={`/dashboard/incidents/${incidentId}/edit`}>
