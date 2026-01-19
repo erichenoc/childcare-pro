@@ -2,9 +2,21 @@ import { createClient } from '@/shared/lib/supabase/client'
 import { requireOrgId } from '@/shared/lib/organization-context'
 import type { Invoice, InvoiceWithFamily, Payment } from '@/shared/types/database.types'
 
+import type { ChildProgramType } from '@/shared/types/children-extended'
+
 // Types for enhanced billing
 export type BillingPeriod = 'weekly' | 'biweekly' | 'monthly'
-export type InvoiceLineItemType = 'tuition' | 'registration' | 'materials' | 'meals' | 'late_fee' | 'discount' | 'other'
+export type InvoiceLineItemType =
+  | 'tuition'              // Regular tuition
+  | 'vpk_wraparound'       // VPK wrap-around hours (before/after VPK)
+  | 'sr_copay'             // School Readiness family co-pay
+  | 'sr_excess_hours'      // SR hours beyond authorized weekly
+  | 'registration'
+  | 'materials'
+  | 'meals'
+  | 'late_fee'
+  | 'discount'
+  | 'other'
 
 export interface InvoiceLineItem {
   id?: string
@@ -16,6 +28,7 @@ export interface InvoiceLineItem {
   total: number
   child_id?: string
   child_name?: string
+  program_type?: ChildProgramType // Track billing by program
   period_start?: string
   period_end?: string
 }
