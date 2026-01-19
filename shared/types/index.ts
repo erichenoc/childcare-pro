@@ -20,11 +20,32 @@ export * from './guardians'
 // Expanded attendance
 export * from './attendance-expanded'
 
-// Expanded incidents (with signature)
-export * from './incidents-expanded'
+// Expanded incidents (with signature) - exclude types already in database.types
+export {
+  // Exclude IncidentType and IncidentSeverity (already in database.types)
+  type IncidentStatus,
+  type NotificationMethod,
+  type ParentCopySentMethod,
+  type IncidentExpanded,
+  type IncidentReportView,
+  type IncidentFormData,
+  type SignatureFormData,
+  type RecordSignatureResult,
+} from './incidents-expanded'
 
-// Expanded invoices (multi-week)
-export * from './invoices-expanded'
+// Expanded invoices (multi-week) - exclude types already in database.types
+export {
+  type PaymentPeriodType,
+  // Exclude InvoiceStatus (already in database.types)
+  type InvoiceExpanded,
+  type InvoiceWeek,
+  type InvoiceDetailsView,
+  type InvoiceWeekDetail,
+  type OverdueInvoiceView,
+  type CreateWeeklyInvoiceInput,
+  type InvoiceWeekInput,
+  type CreateInvoiceResult,
+} from './invoices-expanded'
 
 // Food program (CACFP)
 export * from './food-program'

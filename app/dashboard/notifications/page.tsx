@@ -267,25 +267,27 @@ export default function NotificationsPage() {
               value={filterType}
               onChange={(e) => setFilterType(e.target.value as NotificationType | 'all')}
               className="w-32"
-            >
-              <option value="all">Todos</option>
-              <option value="email">Email</option>
-              <option value="push">Push</option>
-              <option value="sms">SMS</option>
-              <option value="in_app">In-App</option>
-            </GlassSelect>
+              options={[
+                { value: 'all', label: 'Todos' },
+                { value: 'email', label: 'Email' },
+                { value: 'push', label: 'Push' },
+                { value: 'sms', label: 'SMS' },
+                { value: 'in_app', label: 'In-App' },
+              ]}
+            />
             <GlassSelect
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as NotificationStatus | 'all')}
               className="w-36"
-            >
-              <option value="all">Todos</option>
-              <option value="pending">Pendiente</option>
-              <option value="sent">Enviado</option>
-              <option value="delivered">Entregado</option>
-              <option value="read">Leído</option>
-              <option value="failed">Fallido</option>
-            </GlassSelect>
+              options={[
+                { value: 'all', label: 'Todos' },
+                { value: 'pending', label: 'Pendiente' },
+                { value: 'sent', label: 'Enviado' },
+                { value: 'delivered', label: 'Entregado' },
+                { value: 'read', label: 'Leído' },
+                { value: 'failed', label: 'Fallido' },
+              ]}
+            />
           </div>
         </div>
       </GlassCard>

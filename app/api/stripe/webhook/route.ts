@@ -4,6 +4,16 @@ import { createClient } from '@supabase/supabase-js'
 import type { SubscriptionPlanType } from '@/shared/types/database.types'
 import { emailService } from '@/features/notifications/services/email.service'
 
+// Extended types for Stripe objects with properties not in the types but present in API
+type ExtendedSubscription = Stripe.Subscription & {
+  current_period_start: number
+  current_period_end: number
+}
+
+type ExtendedInvoice = Stripe.Invoice & {
+  subscription?: string | null
+}
+
 // Plan limits for updating organization
 const PLAN_LIMITS: Record<string, { max_children: number; max_staff: number }> = {
   trial: { max_children: 15, max_staff: 3 },
@@ -65,7 +75,7 @@ export async function POST(request: NextRequest) {
     // ==========================================
     case 'customer.subscription.created':
     case 'customer.subscription.updated': {
-      const subscription = event.data.object as Stripe.Subscription
+      const subscription = event.data.object as ExtendedSubscription
       await handleSubscriptionChange(supabaseAdmin, stripe, subscription)
       break
     }
@@ -87,7 +97,7 @@ export async function POST(request: NextRequest) {
     // INVOICE EVENTS (for subscription payments)
     // ==========================================
     case 'invoice.paid': {
-      const invoice = event.data.object as Stripe.Invoice
+      const invoice = event.data.object as Stripe.Invoice & { subscription?: string | null }
       if (invoice.subscription) {
         await handleInvoicePaid(supabaseAdmin, invoice)
       }
@@ -95,7 +105,7 @@ export async function POST(request: NextRequest) {
     }
 
     case 'invoice.payment_failed': {
-      const invoice = event.data.object as Stripe.Invoice
+      const invoice = event.data.object as Stripe.Invoice & { subscription?: string | null }
       if (invoice.subscription) {
         await handleInvoicePaymentFailed(supabaseAdmin, invoice)
       }
@@ -135,8 +145,8 @@ export async function POST(request: NextRequest) {
 // Handle subscription creation or update
 async function handleSubscriptionChange(
   supabase: ReturnType<typeof getSupabaseAdmin>,
-  stripe: Stripe,
-  subscription: Stripe.Subscription
+  _stripe: Stripe,
+  subscription: ExtendedSubscription
 ) {
   try {
     const organizationId = subscription.metadata.organizationId
@@ -157,14 +167,12 @@ async function handleSubscriptionChange(
       }
     }
 
-    const orgId = organizationId || (subscription.customer as string)
     const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.starter
 
     // Get the subscription item price to determine the plan if not in metadata
     let determinedPlan = plan
     if (!determinedPlan && subscription.items.data.length > 0) {
-      const priceId = subscription.items.data[0].price.id
-      // Could map price IDs to plans here
+      // Could map price IDs to plans here using subscription.items.data[0].price.id
       determinedPlan = 'starter' // Default
     }
 
@@ -295,7 +303,7 @@ async function handleSubscriptionCanceled(
 // Handle successful invoice payment (subscription renewal)
 async function handleInvoicePaid(
   supabase: ReturnType<typeof getSupabaseAdmin>,
-  invoice: Stripe.Invoice
+  invoice: ExtendedInvoice
 ) {
   try {
     const subscriptionId = invoice.subscription as string
@@ -333,7 +341,7 @@ async function handleInvoicePaid(
 // Handle failed invoice payment
 async function handleInvoicePaymentFailed(
   supabase: ReturnType<typeof getSupabaseAdmin>,
-  invoice: Stripe.Invoice
+  invoice: ExtendedInvoice
 ) {
   try {
     const subscriptionId = invoice.subscription as string

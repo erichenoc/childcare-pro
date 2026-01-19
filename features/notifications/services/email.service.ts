@@ -307,17 +307,33 @@ class EmailService {
     }
 
     try {
-      const { data, error } = await client.emails.send({
+      // Build email payload, filtering out undefined values
+      const emailPayload: {
+        from: string
+        to: string[]
+        subject: string
+        html?: string
+        text?: string
+        replyTo?: string
+        cc?: string[]
+        bcc?: string[]
+        tags?: Array<{ name: string; value: string }>
+      } = {
         from: options.from || this.defaultFrom,
         to: Array.isArray(options.to) ? options.to : [options.to],
         subject: options.subject,
-        html: options.html,
-        text: options.text,
-        replyTo: options.replyTo,
-        cc: options.cc,
-        bcc: options.bcc,
-        tags: options.tags,
-      })
+      }
+
+      // Add optional fields only if they have values
+      if (options.html) emailPayload.html = options.html
+      if (options.text) emailPayload.text = options.text
+      if (options.replyTo) emailPayload.replyTo = options.replyTo
+      if (options.cc?.length) emailPayload.cc = options.cc
+      if (options.bcc?.length) emailPayload.bcc = options.bcc
+      if (options.tags?.length) emailPayload.tags = options.tags
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await client.emails.send(emailPayload as any)
 
       if (error) {
         console.error('Resend error:', error)

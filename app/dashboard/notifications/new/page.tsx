@@ -197,14 +197,14 @@ export default function NewNotificationPage() {
                 <GlassSelect
                   value={selectedTemplate}
                   onChange={(e) => handleTemplateSelect(e.target.value)}
-                >
-                  <option value="">Seleccionar plantilla...</option>
-                  {templates.map(template => (
-                    <option key={template.id} value={template.id}>
-                      {template.name} ({template.category})
-                    </option>
-                  ))}
-                </GlassSelect>
+                  options={[
+                    { value: '', label: 'Seleccionar plantilla...' },
+                    ...templates.map(template => ({
+                      value: template.id,
+                      label: `${template.name} (${template.category})`,
+                    })),
+                  ]}
+                />
                 <p className="text-sm text-gray-500 mt-2">
                   Las plantillas contienen variables como {'{{child_name}}'} que serán reemplazadas automáticamente.
                 </p>
@@ -336,13 +336,11 @@ export default function NewNotificationPage() {
                 <GlassSelect
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as NotificationPriority)}
-                >
-                  {PRIORITY_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </GlassSelect>
+                  options={PRIORITY_OPTIONS.map(option => ({
+                    value: option.value,
+                    label: option.label,
+                  }))}
+                />
                 {priority === 'urgent' && (
                   <div className="mt-3 p-3 rounded-lg bg-red-50 border border-red-200">
                     <div className="flex items-start gap-2">

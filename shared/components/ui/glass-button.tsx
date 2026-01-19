@@ -4,7 +4,7 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { clsx } from 'clsx'
 
 // Button variants - Neumorphism style
-type ButtonVariant = 'default' | 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline'
+type ButtonVariant = 'default' | 'primary' | 'secondary' | 'danger' | 'warning' | 'ghost' | 'outline'
 type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'icon'
 
 interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -23,6 +23,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary: 'btn-neu-primary',
   secondary: 'btn-neu-secondary',
   danger: 'btn-neu-danger',
+  warning: 'btn-neu bg-yellow-500 text-white hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700',
   ghost: 'btn-neu-ghost',
   outline: 'btn-neu bg-transparent border-2 border-neu-dark/30 dark:border-neu-light-dark/30',
 }

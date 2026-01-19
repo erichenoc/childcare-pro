@@ -190,17 +190,17 @@ export default function FamilyContactsPage() {
       setEditingId(pickup.id)
       setAuthorizedForm({
         child_id: childId,
-        name: pickup.name,
-        relationship: pickup.relationship,
-        phone: pickup.phone,
-        photo_url: pickup.photo_url,
-        id_document_type: pickup.id_document_type,
-        id_document_number: pickup.id_document_number,
-        id_document_url: pickup.id_document_url,
-        valid_until: pickup.valid_until || '',
-        restrictions: pickup.restrictions || '',
-        allowed_days: pickup.allowed_days || [],
-        notes: pickup.notes || '',
+        name: pickup.name || '',
+        relationship: pickup.relationship || '',
+        phone: pickup.phone || '',
+        photo_url: pickup.photo_url ?? '',
+        id_document_type: pickup.id_document_type ?? '',
+        id_document_number: pickup.id_document_number ?? '',
+        id_document_url: pickup.id_document_url ?? '',
+        valid_until: pickup.valid_until ?? '',
+        restrictions: pickup.restrictions ?? '',
+        allowed_days: pickup.allowed_days ?? [],
+        notes: pickup.notes ?? '',
       })
     } else {
       setEditingId(null)

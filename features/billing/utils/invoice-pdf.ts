@@ -370,7 +370,7 @@ export function generateInvoiceHTML(data: InvoicePDFData): string {
   <div class="dates">
     <div class="date-item">
       <label>Fecha de Emisión</label>
-      <span>${formatDate(invoice.created_at)}</span>
+      <span>${invoice.created_at ? formatDate(invoice.created_at) : 'N/A'}</span>
     </div>
     <div class="date-item">
       <label>Fecha de Vencimiento</label>

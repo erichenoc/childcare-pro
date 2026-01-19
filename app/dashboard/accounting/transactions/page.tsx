@@ -245,11 +245,12 @@ export default function TransactionsPage() {
             value={filterType}
             onChange={(e) => setFilterType(e.target.value as 'all' | 'income' | 'expense')}
             className="w-40"
-          >
-            <option value="all">Todos</option>
-            <option value="income">Ingresos</option>
-            <option value="expense">Gastos</option>
-          </GlassSelect>
+            options={[
+              { value: 'all', label: 'Todos' },
+              { value: 'income', label: 'Ingresos' },
+              { value: 'expense', label: 'Gastos' },
+            ]}
+          />
 
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-gray-400" />

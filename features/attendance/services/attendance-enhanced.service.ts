@@ -171,7 +171,7 @@ export const attendanceEnhancedService = {
         first_name: child.first_name,
         last_name: child.last_name,
         classroom_id: child.classroom_id || '',
-        classroom_name: (child.classroom as { name: string } | null)?.name || 'Sin Asignar',
+        classroom_name: (Array.isArray(child.classroom) ? child.classroom[0]?.name : (child.classroom as { name: string } | null)?.name) || 'Sin Asignar',
         family_id: child.family_id || '',
         photo_url: child.photo_url,
         today_status: todayStatus,
@@ -445,7 +445,8 @@ export const attendanceEnhancedService = {
           .single()
 
         if (!data) return false
-        const guardian = data.guardian as { can_pickup: boolean; status: string } | null
+        const guardianData = data.guardian
+        const guardian = Array.isArray(guardianData) ? guardianData[0] : guardianData
         return guardian?.can_pickup !== false && guardian?.status === 'active'
       }
 

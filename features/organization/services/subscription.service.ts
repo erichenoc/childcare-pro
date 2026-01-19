@@ -13,6 +13,7 @@ export const PLAN_PRICING = {
   starter: { monthly: 7900, annual: 79000 },
   professional: { monthly: 14900, annual: 149000 },
   enterprise: { monthly: 29900, annual: 299000 },
+  cancelled: { monthly: 0, annual: 0 },
 } as const
 
 // Plan limits

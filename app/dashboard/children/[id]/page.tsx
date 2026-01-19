@@ -1,7 +1,8 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { use, useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
@@ -17,6 +18,7 @@ import {
   UserCheck,
   Camera,
   Loader2,
+  Upload,
 } from 'lucide-react'
 import { useTranslations, useI18n } from '@/shared/lib/i18n'
 import {
@@ -76,6 +78,8 @@ export default function ChildDetailPage({ params }: { params: Promise<{ id: stri
   const [child, setChild] = useState<ChildWithFamily | null>(null)
   const [attendanceStatus, setAttendanceStatus] = useState<'present' | 'absent'>('absent')
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([])
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     loadChildData()
@@ -168,6 +172,79 @@ export default function ChildDetailPage({ params }: { params: Promise<{ id: stri
     }
   }
 
+  async function handlePhotoUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file || !child) return
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      alert('Por favor selecciona una imagen JPG, PNG o WebP')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen no debe exceder 5MB')
+      return
+    }
+
+    setIsUploadingPhoto(true)
+
+    try {
+      const supabase = createClient()
+
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${child.id}-${Date.now()}.${fileExt}`
+      const filePath = `children/${fileName}`
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        })
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        alert('Error al subir la imagen. Por favor intenta de nuevo.')
+        return
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      // Update child's photo_url in database
+      const { error: updateError } = await supabase
+        .from('children')
+        .update({ photo_url: publicUrl })
+        .eq('id', child.id)
+
+      if (updateError) {
+        console.error('Update error:', updateError)
+        alert('Error al actualizar la foto. Por favor intenta de nuevo.')
+        return
+      }
+
+      // Update local state
+      setChild({ ...child, photo_url: publicUrl })
+
+    } catch (error) {
+      console.error('Error uploading photo:', error)
+      alert('Error al subir la imagen. Por favor intenta de nuevo.')
+    } finally {
+      setIsUploadingPhoto(false)
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -244,15 +321,56 @@ export default function ChildDetailPage({ params }: { params: Promise<{ id: stri
           <GlassCard>
             <GlassCardContent className="text-center py-6">
               <div className="relative inline-block">
-                <GlassAvatar
-                  name={`${child.first_name} ${child.last_name}`}
-                  size="xl"
-                  className="w-24 h-24 text-2xl"
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                  id="photo-upload"
                 />
-                <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-lg hover:bg-primary-600 transition-colors">
-                  <Camera className="w-4 h-4" />
+
+                {/* Avatar with photo or initials */}
+                {child.photo_url ? (
+                  <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-primary-100 dark:ring-primary-900/30">
+                    <Image
+                      src={child.photo_url}
+                      alt={`${child.first_name} ${child.last_name}`}
+                      width={96}
+                      height={96}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <GlassAvatar
+                    name={`${child.first_name} ${child.last_name}`}
+                    size="xl"
+                    className="w-24 h-24 text-2xl"
+                  />
+                )}
+
+                {/* Camera button to upload/change photo */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingPhoto}
+                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={child.photo_url ? 'Cambiar foto' : 'Subir foto'}
+                >
+                  {isUploadingPhoto ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Camera className="w-4 h-4" />
+                  )}
                 </button>
               </div>
+
+              {/* Photo upload hint */}
+              {!child.photo_url && (
+                <p className="mt-2 text-xs text-gray-400">
+                  Haz clic en el icono de cámara para subir una foto
+                </p>
+              )}
 
               <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">
                 {child.first_name} {child.last_name}
@@ -519,11 +637,11 @@ export default function ChildDetailPage({ params }: { params: Promise<{ id: stri
             <GlassCardHeader>
               <GlassCardTitle>{t.dashboard.quickActions}</GlassCardTitle>
             </GlassCardHeader>
-            <GlassCardContent className="space-y-2">
+            <GlassCardContent className="space-y-4">
               <GlassButton variant="secondary" fullWidth leftIcon={<FileText className="w-4 h-4" />}>
                 {t.children.viewReports}
               </GlassButton>
-              <Link href="/dashboard/attendance">
+              <Link href="/dashboard/attendance" className="block">
                 <GlassButton variant="secondary" fullWidth leftIcon={<Calendar className="w-4 h-4" />}>
                   {t.children.viewAttendance}
                 </GlassButton>

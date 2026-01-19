@@ -139,17 +139,11 @@ export function LogoUpload({ currentLogoUrl, onLogoChange, organizationId }: Log
           id="logo-upload"
           disabled={isUploading}
         />
-        <label htmlFor="logo-upload">
-          <GlassButton
-            as="span"
-            variant="secondary"
-            size="sm"
-            leftIcon={<Upload className="w-4 h-4" />}
-            disabled={isUploading}
-            className="cursor-pointer"
-          >
+        <label htmlFor="logo-upload" className="cursor-pointer inline-block">
+          <span className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl bg-neu-bg shadow-neu hover:shadow-neu-inset transition-shadow duration-200 dark:bg-neu-bg-dark dark:shadow-neu-dark">
+            <Upload className="w-4 h-4" />
             {previewUrl ? 'Cambiar Logo' : 'Subir Logo'}
-          </GlassButton>
+          </span>
         </label>
         <p className="text-xs text-gray-500 text-center">
           JPG, PNG, WebP o SVG. Máximo 2MB.

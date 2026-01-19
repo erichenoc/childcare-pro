@@ -244,7 +244,6 @@ export const stripeService = {
         family_id: invoice.family_id,
         amount: params.amount,
         payment_method: params.paymentMethod,
-        status: 'completed',
         paid_at: new Date().toISOString(),
         notes: params.notes,
         organization_id: orgId,

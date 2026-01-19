@@ -41,7 +41,7 @@ const dcfRatios: Record<string, number> = {
 }
 
 // Age group labels will be loaded from translations
-function getAgeGroupLabels(t: ReturnType<typeof useTranslations>) {
+function getAgeGroupLabels(t: ReturnType<typeof useTranslations>): Record<string, string> {
   return {
     'infants': t.dcfRatios.infant,
     'ones': t.dcfRatios.oneYear,

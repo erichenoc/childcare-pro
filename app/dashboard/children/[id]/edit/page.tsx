@@ -132,10 +132,10 @@ export default function EditChildPage() {
       await childrenService.update(childId, {
         first_name: formData.first_name,
         last_name: formData.last_name,
-        date_of_birth: formData.date_of_birth || null,
-        gender: formData.gender || null,
+        date_of_birth: formData.date_of_birth || undefined,
+        gender: formData.gender || undefined,
         classroom_id: formData.classroom_id || null,
-        family_id: formData.family_id || null,
+        family_id: formData.family_id || undefined,
         status: formData.status as 'active' | 'inactive',
         doctor_name: formData.doctor_name || null,
         doctor_phone: formData.doctor_phone || null,

@@ -48,6 +48,7 @@ export interface Translations {
     allClassrooms: string
     deleteChildConfirm: string
     deleteChildError: string
+    notes: string
   }
   nav: {
     dashboard: string
@@ -105,6 +106,7 @@ export interface Translations {
     addChild: string
     addChildSubtitle: string
     editChild: string
+    editChildSubtitle: string
     childProfile: string
     childDetails: string
     childInfo: string
@@ -188,12 +190,17 @@ export interface Translations {
     subtitle: string
     addFamily: string
     editFamily: string
+    editFamilySubtitle: string
     familyProfile: string
     familyName: string
     guardians: string
     addGuardian: string
     primaryContact: string
+    primaryContactName: string
+    secondaryContact: string
+    secondaryContactName: string
     billingContact: string
+    addressInfo: string
     address: string
     addressLine1: string
     addressLine2: string
@@ -238,6 +245,7 @@ export interface Translations {
     familiesList: string
     viewChildren: string
     deleteFamilyConfirm: string
+    notesPlaceholder: string
   }
   staff: {
     title: string
@@ -475,6 +483,10 @@ export interface Translations {
     amountExceedsBalance: string
     invoicePayment: string
     stripeNotConfigured: string
+    selectFamily: string
+    addLineItems: string
+    sendError: string
+    send: string
   }
   communication: {
     title: string

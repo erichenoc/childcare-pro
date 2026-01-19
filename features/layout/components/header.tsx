@@ -67,10 +67,11 @@ export function Header({ onMenuClick, className }: HeaderProps) {
   }
 
   // Datos del usuario desde el perfil real
+  const userRole = profile?.role || ''
   const user = {
     name: profile ? `${profile.first_name} ${profile.last_name}` : 'Cargando...',
     email: profile?.email || '',
-    role: profile ? (ROLE_NAMES[profile.role] || profile.role) : '',
+    role: userRole ? (ROLE_NAMES[userRole] || userRole) : '',
     avatar: profile?.avatar_url || null,
   }
 

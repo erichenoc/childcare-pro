@@ -209,13 +209,15 @@ export default function ReportsPage() {
 
   // Report generation functions
   const generateAttendanceReport = async (): Promise<ReportData> => {
-    const records = await attendanceService.getAll()
-    const rows = records.slice(0, 100).map(record => ({
-      child: record.child_name || '-',
+    // Get today's attendance records as a starting point
+    const today = new Date().toISOString().split('T')[0]
+    const records = await attendanceService.getByDate(today)
+    const rows = records.slice(0, 100).map((record: { child?: { first_name: string; last_name: string } | null; date: string; check_in_time: string | null; check_out_time: string | null; status: string | null; notes: string | null }) => ({
+      child: record.child ? `${record.child.first_name} ${record.child.last_name}` : '-',
       date: formatDate(record.date),
       checkIn: record.check_in_time || '-',
       checkOut: record.check_out_time || '-',
-      status: record.status,
+      status: record.status || 'unknown',
       notes: record.notes || '-',
     }))
 
@@ -245,19 +247,19 @@ export default function ReportsPage() {
   }
 
   const generateFinancialReport = async (): Promise<ReportData> => {
-    const invoices = await billingService.getAll()
-    const rows = invoices.map(inv => ({
+    const invoices = await billingService.getInvoices()
+    const rows = invoices.map((inv: { invoice_number: string; family?: { primary_contact_name: string } | null; total: number; amount_paid: number | null; status: string | null; due_date: string }) => ({
       number: inv.invoice_number || '-',
-      family: inv.family_name || '-',
-      amount: formatCurrency(inv.total_amount),
-      paid: formatCurrency(inv.paid_amount || 0),
-      balance: formatCurrency(inv.total_amount - (inv.paid_amount || 0)),
-      status: inv.status,
+      family: inv.family?.primary_contact_name || '-',
+      amount: formatCurrency(inv.total),
+      paid: formatCurrency(inv.amount_paid || 0),
+      balance: formatCurrency(inv.total - (inv.amount_paid || 0)),
+      status: inv.status || '-',
       dueDate: formatDate(inv.due_date),
     }))
 
-    const totalAmount = invoices.reduce((sum, inv) => sum + inv.total_amount, 0)
-    const totalPaid = invoices.reduce((sum, inv) => sum + (inv.paid_amount || 0), 0)
+    const totalAmount = invoices.reduce((sum: number, inv: { total: number }) => sum + inv.total, 0)
+    const totalPaid = invoices.reduce((sum: number, inv: { amount_paid: number | null }) => sum + (inv.amount_paid || 0), 0)
 
     return {
       title: 'Reporte Financiero',
@@ -291,13 +293,21 @@ export default function ReportsPage() {
         ? Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
         : '-'
 
+      // Get classroom name from nested object if available
+      const classroomData = child.classroom as { name?: string } | null | undefined
+      const classroomName = classroomData?.name || '-'
+
+      // Get guardian name from nested object if available
+      const familyData = child.family as { primary_contact_name?: string } | null | undefined
+      const guardianName = familyData?.primary_contact_name || '-'
+
       return {
         name: `${child.first_name} ${child.last_name}`,
         age: age,
-        classroom: child.classroom_name || '-',
+        classroom: classroomName,
         status: child.status,
-        enrollDate: formatDate(child.created_at),
-        guardian: child.primary_guardian_name || '-',
+        enrollDate: formatDate(child.created_at || new Date().toISOString()),
+        guardian: guardianName,
       }
     })
 
@@ -380,14 +390,20 @@ export default function ReportsPage() {
 
   const generateIncidentsReport = async (): Promise<ReportData> => {
     const incidents = await incidentsService.getAll()
-    const rows = incidents.map(inc => ({
-      date: formatDate(inc.incident_date),
-      child: inc.child_name || '-',
-      type: inc.incident_type || '-',
-      severity: inc.severity || 'low',
-      status: inc.status,
-      description: (inc.description || '-').substring(0, 50) + '...',
-    }))
+    const rows = incidents.map(inc => {
+      // Get child name from nested child object
+      const childData = inc.child as { first_name?: string; last_name?: string } | null | undefined
+      const childName = childData ? `${childData.first_name || ''} ${childData.last_name || ''}`.trim() : '-'
+
+      return {
+        date: formatDate(inc.occurred_at || new Date().toISOString()),
+        child: childName,
+        type: inc.incident_type || '-',
+        severity: inc.severity || 'low',
+        status: inc.status,
+        description: (inc.description || '-').substring(0, 50) + '...',
+      }
+    })
 
     const stats = await incidentsService.getStats()
 
@@ -415,14 +431,20 @@ export default function ReportsPage() {
 
   const generateStaffReport = async (): Promise<ReportData> => {
     const staff = await staffService.getAll()
-    const rows = staff.map(s => ({
-      name: `${s.first_name} ${s.last_name}`,
-      email: s.email || '-',
-      role: s.role || '-',
-      classroom: s.classroom_name || '-',
-      status: s.status || 'active',
-      hireDate: formatDate(s.created_at),
-    }))
+    const rows = staff.map(s => {
+      // Get classroom name from nested classroom object if available
+      const classroomData = (s as { classroom?: { name?: string } | null }).classroom
+      const classroomName = classroomData?.name || '-'
+
+      return {
+        name: `${s.first_name} ${s.last_name}`,
+        email: s.email || '-',
+        role: s.role || '-',
+        classroom: classroomName,
+        status: s.status || 'active',
+        hireDate: formatDate(s.created_at || new Date().toISOString()),
+      }
+    })
 
     const active = rows.filter(r => r.status === 'active').length
 

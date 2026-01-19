@@ -239,6 +239,7 @@ export const authorizedPickupsService = {
         photo_url: rpcData[0].photo_url,
         restrictions: rpcData[0].restrictions,
         message: rpcData[0].message,
+        requires_id_check: rpcData[0].requires_id_check ?? true,
       }
     }
 
@@ -253,6 +254,7 @@ export const authorizedPickupsService = {
           photo_url: null,
           restrictions: null,
           message: 'Persona autorizada no encontrada',
+          requires_id_check: false,
         }
       }
 
@@ -260,12 +262,13 @@ export const authorizedPickupsService = {
         (!pickup.valid_until || new Date(pickup.valid_until) >= new Date())
 
       return {
-        is_valid: isValid,
-        person_name: pickup.name,
+        is_valid: isValid ?? false,
+        person_name: pickup.name ?? null,
         relationship: pickup.relationship,
         photo_url: pickup.photo_url,
-        restrictions: pickup.restrictions,
+        restrictions: pickup.restrictions ?? null,
         message: isValid ? 'Autorizado para recoger' : 'Autorización expirada o inactiva',
+        requires_id_check: !pickup.id_verified,
       }
     }
 
@@ -276,6 +279,7 @@ export const authorizedPickupsService = {
       photo_url: null,
       restrictions: null,
       message: 'Tipo de persona no válido',
+      requires_id_check: false,
     }
   },
 
@@ -308,13 +312,13 @@ export const authorizedPickupsService = {
       .map(p => ({
         person_id: p.id,
         person_type: 'authorized',
-        name: p.name,
+        name: p.name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Sin nombre',
         relationship: p.relationship,
         phone: p.phone,
         photo_url: p.photo_url,
         has_photo: !!p.photo_url,
         has_id: !!p.id_document_url,
-        restrictions: p.restrictions,
+        restrictions: p.restrictions ?? null,
       }))
   },
 

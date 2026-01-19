@@ -164,7 +164,7 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <GlassInput
                 label={t.profile.firstName}
-                icon={User}
+                leftIcon={<User className="w-5 h-5" />}
                 value={formData.first_name}
                 onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                 placeholder={t.profile.firstName}
@@ -172,7 +172,7 @@ export default function ProfilePage() {
               />
               <GlassInput
                 label={t.profile.lastName}
-                icon={User}
+                leftIcon={<User className="w-5 h-5" />}
                 value={formData.last_name}
                 onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                 placeholder={t.profile.lastName}
@@ -182,7 +182,7 @@ export default function ProfilePage() {
 
             <GlassInput
               label={t.profile.email}
-              icon={Mail}
+              leftIcon={<Mail className="w-5 h-5" />}
               type="email"
               value={profile?.email || ''}
               disabled
@@ -191,7 +191,7 @@ export default function ProfilePage() {
 
             <GlassInput
               label={t.profile.phone}
-              icon={Phone}
+              leftIcon={<Phone className="w-5 h-5" />}
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -200,7 +200,7 @@ export default function ProfilePage() {
 
             <GlassInput
               label={t.profile.organization}
-              icon={Building}
+              leftIcon={<Building className="w-5 h-5" />}
               value="ChildCare Pro"
               disabled
               className="bg-gray-50"

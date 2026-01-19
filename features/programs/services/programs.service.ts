@@ -493,9 +493,10 @@ class ProgramsService {
 
       // Calculate billable amount based on rate type
       let billableAmount = 0
-      if (enrollment.rate_type === 'weekly' && enrollment.weekly_rate) {
+      const rateType = enrollment.rate_type as string
+      if ((rateType === 'weekly' || rateType === 'full_time') && enrollment.weekly_rate) {
         billableAmount = enrollment.weekly_rate * weeksInPeriod
-      } else if (enrollment.rate_type === 'hourly' && enrollment.hourly_rate) {
+      } else if (rateType === 'hourly' && enrollment.hourly_rate) {
         billableAmount = Math.min(actualHours, authorizedHours) * enrollment.hourly_rate
       } else if (enrollment.daily_rate) {
         const daysAttended = attendance.length

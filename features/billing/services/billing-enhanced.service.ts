@@ -22,23 +22,37 @@ export interface InvoiceLineItem {
 
 export interface MultiWeekInvoiceData {
   family_id: string
-  billing_period: BillingPeriod
-  start_date: string
-  end_date: string
-  children: {
+  billing_period?: BillingPeriod
+  start_date?: string
+  end_date?: string
+  children?: {
     child_id: string
     child_name: string
     weekly_rate: number
     days_per_week: number
     weeks_included: number
   }[]
+  // Alternative format used by multi-week page
+  child_rates?: {
+    child_id: string
+    child_name: string
+    weekly_rate: number
+    days_per_week: number
+  }[]
+  billing_periods?: {
+    week_start: string
+    week_end: string
+    days_attended: number
+  }[]
+  due_date?: string
+  discount?: number
   additional_items?: InvoiceLineItem[]
   discount_percent?: number
   discount_amount?: number
   notes?: string
 }
 
-export interface InvoiceWithLineItems extends Invoice {
+export interface InvoiceWithLineItems extends Omit<Invoice, 'line_items'> {
   line_items?: InvoiceLineItem[]
   family?: {
     id: string
@@ -109,7 +123,34 @@ export const RATE_TEMPLATES = {
     age_group: 'school_age',
     days_per_week: 5,
   },
+  twos_fulltime: {
+    name: '2 Años - Tiempo Completo',
+    weekly_rate: 285,
+    age_group: 'twos',
+    days_per_week: 5,
+  },
+  twos_parttime: {
+    name: '2 Años - Medio Tiempo',
+    weekly_rate: 185,
+    age_group: 'twos',
+    days_per_week: 3,
+  },
+  schoolage_fulltime: {
+    name: 'Edad Escolar - Tiempo Completo',
+    weekly_rate: 200,
+    age_group: 'school_age',
+    days_per_week: 5,
+  },
+  schoolage_parttime: {
+    name: 'Edad Escolar - Medio Tiempo',
+    weekly_rate: 125,
+    age_group: 'school_age',
+    days_per_week: 3,
+  },
 }
+
+// Export the type for rate template keys
+export type RateTemplateKey = keyof typeof RATE_TEMPLATES
 
 export const billingEnhancedService = {
   /**
@@ -141,14 +182,17 @@ export const billingEnhancedService = {
     let subtotal = 0
 
     // Add tuition for each child
-    for (const child of data.children) {
-      const total = child.weekly_rate * child.weeks_included
+    const children = data.children || data.child_rates || []
+    const numWeeks = data.billing_periods?.length || 1
+    for (const child of children) {
+      const weeksIncluded: number = 'weeks_included' in child ? (child.weeks_included as number) : numWeeks
+      const total = child.weekly_rate * weeksIncluded
       subtotal += total
 
       lineItems.push({
         item_type: 'tuition',
-        description: `Tuición - ${child.child_name} (${child.weeks_included} semanas)`,
-        quantity: child.weeks_included,
+        description: `Tuición - ${child.child_name} (${weeksIncluded} semanas)`,
+        quantity: weeksIncluded,
         unit_price: child.weekly_rate,
         total,
         child_id: child.child_id,
@@ -191,7 +235,8 @@ export const billingEnhancedService = {
     const grandTotal = subtotal - discountTotal
 
     // Calculate due date based on billing period
-    const dueDate = new Date(data.start_date)
+    const startDateStr = data.start_date || data.billing_periods?.[0]?.week_start || new Date().toISOString()
+    const dueDate = new Date(startDateStr)
     dueDate.setDate(dueDate.getDate() - 3) // Due 3 days before period starts
 
     // Create invoice
@@ -505,7 +550,8 @@ export const billingEnhancedService = {
       if (balance <= 0) continue
 
       const existing = familyBalances.get(inv.family_id)
-      const family = inv.family as { primary_contact_name: string } | null
+      const familyData = inv.family
+      const family = Array.isArray(familyData) ? familyData[0] : familyData
 
       if (existing) {
         existing.total_owed += balance

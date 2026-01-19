@@ -320,13 +320,14 @@ export default function VPKManagementPage() {
               <GlassSelect
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">Todos los Estados</option>
-                <option value="active">Activos</option>
-                <option value="completed">Completados</option>
-                <option value="pending">Pendientes</option>
-                <option value="withdrawn">Retirados</option>
-              </GlassSelect>
+                options={[
+                  { value: 'all', label: 'Todos los Estados' },
+                  { value: 'active', label: 'Activos' },
+                  { value: 'completed', label: 'Completados' },
+                  { value: 'pending', label: 'Pendientes' },
+                  { value: 'withdrawn', label: 'Retirados' },
+                ]}
+              />
             </div>
           </div>
         </GlassCardContent>
@@ -453,19 +454,14 @@ export default function VPKManagementPage() {
                     value={formData.child_id}
                     onChange={(e) => setFormData({ ...formData, child_id: e.target.value })}
                     required
-                  >
-                    <option value="">Seleccionar estudiante...</option>
-                    {eligibleChildren.map(child => (
-                      <option
-                        key={child.id}
-                        value={child.id}
-                        disabled={child.already_enrolled}
-                      >
-                        {child.first_name} {child.last_name}
-                        {child.already_enrolled ? ' (Ya inscrito)' : ''}
-                      </option>
-                    ))}
-                  </GlassSelect>
+                    options={[
+                      { value: '', label: 'Seleccionar estudiante...' },
+                      ...eligibleChildren.map(child => ({
+                        value: child.id,
+                        label: `${child.first_name} ${child.last_name}${child.already_enrolled ? ' (Ya inscrito)' : ''}`,
+                      })),
+                    ]}
+                  />
                 </div>
 
                 <div>
@@ -490,10 +486,11 @@ export default function VPKManagementPage() {
                       ...formData,
                       schedule_type: e.target.value as VPKScheduleType
                     })}
-                  >
-                    <option value="school_year">Año Escolar (540 horas)</option>
-                    <option value="summer">Verano (300 horas)</option>
-                  </GlassSelect>
+                    options={[
+                      { value: 'school_year', label: 'Año Escolar (540 horas)' },
+                      { value: 'summer', label: 'Verano (300 horas)' },
+                    ]}
+                  />
                 </div>
 
                 <div>

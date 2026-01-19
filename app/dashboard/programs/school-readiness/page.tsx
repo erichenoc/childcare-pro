@@ -326,12 +326,13 @@ export default function SchoolReadinessPage() {
               <GlassSelect
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">Todos los Estados</option>
-                <option value="active">Activos</option>
-                <option value="pending">Pendientes</option>
-                <option value="expired">Expirados</option>
-              </GlassSelect>
+                options={[
+                  { value: 'all', label: 'Todos los Estados' },
+                  { value: 'active', label: 'Activos' },
+                  { value: 'pending', label: 'Pendientes' },
+                  { value: 'expired', label: 'Expirados' },
+                ]}
+              />
             </div>
           </div>
         </GlassCardContent>
@@ -570,11 +571,11 @@ export default function SchoolReadinessPage() {
                         ...formData,
                         rate_type: e.target.value as 'full_time' | 'part_time' | 'hourly'
                       })}
-                    >
-                      {SR_RATE_TYPES.map(type => (
-                        <option key={type.value} value={type.value}>{type.label}</option>
-                      ))}
-                    </GlassSelect>
+                      options={SR_RATE_TYPES.map(type => ({
+                        value: type.value,
+                        label: type.label,
+                      }))}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -620,10 +621,11 @@ export default function SchoolReadinessPage() {
                         ...formData,
                         copay_frequency: e.target.value as 'weekly' | 'monthly'
                       })}
-                    >
-                      <option value="weekly">Semanal</option>
-                      <option value="monthly">Mensual</option>
-                    </GlassSelect>
+                      options={[
+                        { value: 'weekly', label: 'Semanal' },
+                        { value: 'monthly', label: 'Mensual' },
+                      ]}
+                    />
                   </div>
                 </div>
 

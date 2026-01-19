@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import { useTranslations, useI18n } from '@/shared/lib/i18n'
 import { billingService } from '@/features/billing/services/billing.service'
-import { billingEnhancedService, RATE_TEMPLATES, type RateTemplate } from '@/features/billing/services/billing-enhanced.service'
+import { billingEnhancedService, RATE_TEMPLATES, type RateTemplateKey } from '@/features/billing/services/billing-enhanced.service'
 import { familiesService } from '@/features/families/services/families.service'
 import type { Family, FamilyWithChildren } from '@/shared/types/database.types'
 import {
@@ -271,6 +271,7 @@ export default function MultiWeekInvoicePage() {
       // Build child rates for service
       const childRatesData = childRates.map(rate => ({
         child_id: rate.childId,
+        child_name: rate.childName,
         weekly_rate: rate.weeklyRate,
         days_per_week: rate.daysPerWeek,
       }))

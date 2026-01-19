@@ -118,13 +118,20 @@ export default function NewChildPage() {
     setError(null)
 
     try {
+      // family_id is required by the database schema
+      if (!formData.family_id) {
+        setError('Por favor selecciona una familia')
+        setIsLoading(false)
+        return
+      }
+
       await childrenService.create({
         first_name: formData.first_name,
         last_name: formData.last_name,
-        date_of_birth: formData.date_of_birth || null,
-        gender: formData.gender || null,
+        date_of_birth: formData.date_of_birth || new Date().toISOString().split('T')[0],
+        gender: formData.gender || undefined,
         classroom_id: formData.classroom_id || null,
-        family_id: formData.family_id || null,
+        family_id: formData.family_id,
         doctor_name: formData.doctor_name || null,
         doctor_phone: formData.doctor_phone || null,
         notes: formData.notes || null,
