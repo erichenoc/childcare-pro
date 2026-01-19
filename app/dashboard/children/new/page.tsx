@@ -195,6 +195,16 @@ export default function NewChildPage() {
     setError(null)
 
     try {
+      // Validate classroom capacity if a classroom is selected
+      if (formData.classroom_id) {
+        const capacityCheck = await classroomsService.canAddChild(formData.classroom_id)
+        if (!capacityCheck.allowed) {
+          setError(`No se puede agregar al salón: ${capacityCheck.message}`)
+          setIsLoading(false)
+          return
+        }
+      }
+
       // Use createWithProgram for automatic enrollment creation
       await childrenService.createWithProgram({
         ...formData,
