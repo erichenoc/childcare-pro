@@ -8,6 +8,7 @@ import type {
   PickupValidationResult,
   AttendanceWithPickup,
 } from '@/shared/types/attendance-extended'
+import { programHoursService, type ProgramHoursResult } from '@/features/programs/services/program-hours.service'
 
 export const attendanceService = {
   async getByDate(date: string): Promise<AttendanceWithChild[]> {
@@ -222,6 +223,7 @@ export const attendanceService = {
 
   /**
    * Check out a child with pickup person verification
+   * Also records program hours (VPK/SR) automatically
    */
   async checkOut(
     childId: string,
@@ -233,10 +235,23 @@ export const attendanceService = {
       verified?: boolean
       verification_method?: string
     }
-  ): Promise<Attendance> {
+  ): Promise<{ attendance: Attendance; programHours?: ProgramHoursResult }> {
     const supabase = createClient()
     const today = new Date().toISOString().split('T')[0]
     const now = new Date().toISOString()
+
+    // First, get the existing attendance record to get check_in_time
+    const { data: existingAttendance, error: fetchError } = await supabase
+      .from('attendance')
+      .select('id, check_in_time')
+      .eq('child_id', childId)
+      .eq('date', today)
+      .single()
+
+    if (fetchError) throw fetchError
+    if (!existingAttendance?.check_in_time) {
+      throw new Error('No se encontró registro de entrada para hoy')
+    }
 
     const checkOutData: TablesUpdate<'attendance'> = {
       check_out_time: now,
@@ -258,13 +273,39 @@ export const attendanceService = {
       .single()
 
     if (error) throw error
-    return data
+
+    // Record program hours (VPK/SR) after successful checkout
+    let programHours: ProgramHoursResult | undefined
+    try {
+      programHours = await programHoursService.recordProgramHours(
+        childId,
+        data.id,
+        existingAttendance.check_in_time,
+        now,
+        today
+      )
+
+      if (programHours.errors.length > 0) {
+        console.warn('Program hours recorded with warnings:', programHours.errors)
+      }
+    } catch (hoursError) {
+      // Don't fail checkout if hours recording fails, just log
+      console.error('Error recording program hours:', hoursError)
+    }
+
+    return { attendance: data, programHours }
   },
 
   /**
    * Check out with full data object and validation
+   * Returns attendance record and program hours (VPK/SR) if applicable
    */
-  async checkOutWithData(data: CheckOutData): Promise<{ success: boolean; attendance?: Attendance; error?: string }> {
+  async checkOutWithData(data: CheckOutData): Promise<{
+    success: boolean
+    attendance?: Attendance
+    programHours?: ProgramHoursResult
+    error?: string
+  }> {
     // If a specific person is selected, validate them
     if (data.pickup_person_id && data.pickup_person_type) {
       const validation = await this.validatePickupPerson(
@@ -286,7 +327,7 @@ export const attendanceService = {
     }
 
     try {
-      const attendance = await this.checkOut(
+      const { attendance, programHours } = await this.checkOut(
         data.child_id,
         undefined,
         {
@@ -298,7 +339,7 @@ export const attendanceService = {
         }
       )
 
-      return { success: true, attendance }
+      return { success: true, attendance, programHours }
     } catch (error) {
       console.error('Error during check-out:', error)
       return {
