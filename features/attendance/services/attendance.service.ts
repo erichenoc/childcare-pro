@@ -1,6 +1,13 @@
 import { createClient } from '@/shared/lib/supabase/client'
 import { requireOrgId } from '@/shared/lib/organization-context'
 import type { Attendance, AttendanceWithChild, TablesInsert, TablesUpdate } from '@/shared/types/database.types'
+import type {
+  CheckInData,
+  CheckOutData,
+  AuthorizedPickupPerson,
+  PickupValidationResult,
+  AttendanceWithPickup,
+} from '@/shared/types/attendance-extended'
 
 export const attendanceService = {
   async getByDate(date: string): Promise<AttendanceWithChild[]> {
@@ -37,7 +44,113 @@ export const attendanceService = {
     return data || []
   },
 
-  async checkIn(childId: string, classroomId: string, checkedInBy?: string): Promise<Attendance> {
+  /**
+   * Get all authorized pickup people for a child
+   * Includes guardians, authorized pickups, and authorized emergency contacts
+   */
+  async getAuthorizedPickups(childId: string): Promise<AuthorizedPickupPerson[]> {
+    const supabase = createClient()
+
+    // Call the database function that aggregates all authorized pickups
+    const { data, error } = await supabase
+      .rpc('get_authorized_pickups_for_child', { p_child_id: childId })
+
+    if (error) {
+      console.error('Error getting authorized pickups:', error)
+      // Fallback: try to get guardians directly
+      const { data: guardians } = await supabase
+        .from('guardians')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          relationship_type,
+          phone,
+          photo_url,
+          id_document_url
+        `)
+        .eq('family_id', (
+          await supabase
+            .from('children')
+            .select('family_id')
+            .eq('id', childId)
+            .single()
+        ).data?.family_id)
+        .eq('status', 'active')
+
+      if (guardians) {
+        return guardians.map(g => ({
+          person_id: g.id,
+          person_type: 'guardian' as const,
+          name: `${g.first_name} ${g.last_name}`,
+          relationship: g.relationship_type,
+          phone: g.phone,
+          photo_url: g.photo_url,
+          has_photo: !!g.photo_url,
+          has_id: !!g.id_document_url,
+          restrictions: null,
+        }))
+      }
+      return []
+    }
+
+    return (data || []) as AuthorizedPickupPerson[]
+  },
+
+  /**
+   * Validate if a person is authorized to pick up a child
+   */
+  async validatePickupPerson(
+    childId: string,
+    personType: string,
+    personId: string
+  ): Promise<PickupValidationResult> {
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .rpc('validate_pickup_person', {
+        p_child_id: childId,
+        p_person_type: personType,
+        p_person_id: personId,
+      })
+
+    if (error) {
+      console.error('Error validating pickup person:', error)
+      return {
+        is_valid: false,
+        person_name: null,
+        relationship: null,
+        photo_url: null,
+        restrictions: null,
+        message: 'Error al validar persona autorizada',
+      }
+    }
+
+    // The function returns a single row
+    const result = data?.[0]
+    return {
+      is_valid: result?.is_valid ?? false,
+      person_name: result?.person_name ?? null,
+      relationship: result?.relationship ?? null,
+      photo_url: result?.photo_url ?? null,
+      restrictions: result?.restrictions ?? null,
+      message: result?.message ?? 'Persona no encontrada',
+    }
+  },
+
+  /**
+   * Check in a child with drop-off person information
+   */
+  async checkIn(
+    childId: string,
+    classroomId: string,
+    checkedInBy?: string,
+    dropOffInfo?: {
+      person_name?: string
+      person_relationship?: string
+      guardian_id?: string
+    }
+  ): Promise<Attendance> {
     const orgId = await requireOrgId()
     const supabase = createClient()
     const today = new Date().toISOString().split('T')[0]
@@ -51,16 +164,22 @@ export const attendanceService = {
       .eq('date', today)
       .single()
 
+    const checkInData: TablesUpdate<'attendance'> = {
+      check_in_time: now,
+      status: 'present',
+      checked_in_by: checkedInBy,
+      classroom_id: classroomId,
+      // Drop-off person info
+      check_in_person_name: dropOffInfo?.person_name || null,
+      check_in_person_relationship: dropOffInfo?.person_relationship || null,
+      check_in_guardian_id: dropOffInfo?.guardian_id || null,
+    }
+
     if (existing) {
       // Update existing record
       const { data, error } = await supabase
         .from('attendance')
-        .update({
-          check_in_time: now,
-          status: 'present',
-          checked_in_by: checkedInBy,
-          classroom_id: classroomId,
-        })
+        .update(checkInData)
         .eq('id', existing.id)
         .select()
         .single()
@@ -74,12 +193,9 @@ export const attendanceService = {
         .insert({
           organization_id: orgId,
           child_id: childId,
-          classroom_id: classroomId,
           date: today,
-          check_in_time: now,
-          status: 'present',
-          checked_in_by: checkedInBy,
-        })
+          ...checkInData,
+        } as TablesInsert<'attendance'>)
         .select()
         .single()
 
@@ -88,17 +204,54 @@ export const attendanceService = {
     }
   },
 
-  async checkOut(childId: string, checkedOutBy?: string): Promise<Attendance> {
+  /**
+   * Check in with full data object
+   */
+  async checkInWithData(data: CheckInData): Promise<Attendance> {
+    return this.checkIn(
+      data.child_id,
+      data.classroom_id,
+      undefined,
+      {
+        person_name: data.drop_off_person_name,
+        person_relationship: data.drop_off_person_relationship,
+        guardian_id: data.drop_off_person_id,
+      }
+    )
+  },
+
+  /**
+   * Check out a child with pickup person verification
+   */
+  async checkOut(
+    childId: string,
+    checkedOutBy?: string,
+    pickupInfo?: {
+      person_name?: string
+      person_relationship?: string
+      guardian_id?: string
+      verified?: boolean
+      verification_method?: string
+    }
+  ): Promise<Attendance> {
     const supabase = createClient()
     const today = new Date().toISOString().split('T')[0]
     const now = new Date().toISOString()
 
+    const checkOutData: TablesUpdate<'attendance'> = {
+      check_out_time: now,
+      checked_out_by: checkedOutBy,
+      // Pickup person info
+      check_out_person_name: pickupInfo?.person_name || null,
+      check_out_person_relationship: pickupInfo?.person_relationship || null,
+      check_out_guardian_id: pickupInfo?.guardian_id || null,
+      check_out_verified: pickupInfo?.verified ?? false,
+      check_out_verification_method: pickupInfo?.verification_method || null,
+    }
+
     const { data, error } = await supabase
       .from('attendance')
-      .update({
-        check_out_time: now,
-        checked_out_by: checkedOutBy,
-      })
+      .update(checkOutData)
       .eq('child_id', childId)
       .eq('date', today)
       .select()
@@ -106,6 +259,53 @@ export const attendanceService = {
 
     if (error) throw error
     return data
+  },
+
+  /**
+   * Check out with full data object and validation
+   */
+  async checkOutWithData(data: CheckOutData): Promise<{ success: boolean; attendance?: Attendance; error?: string }> {
+    // If a specific person is selected, validate them
+    if (data.pickup_person_id && data.pickup_person_type) {
+      const validation = await this.validatePickupPerson(
+        data.child_id,
+        data.pickup_person_type,
+        data.pickup_person_id
+      )
+
+      if (!validation.is_valid) {
+        return {
+          success: false,
+          error: validation.message || 'Persona no autorizada para recoger al niño',
+        }
+      }
+
+      // Use validated person info
+      data.pickup_person_name = validation.person_name || data.pickup_person_name
+      data.pickup_person_relationship = validation.relationship || data.pickup_person_relationship
+    }
+
+    try {
+      const attendance = await this.checkOut(
+        data.child_id,
+        undefined,
+        {
+          person_name: data.pickup_person_name,
+          person_relationship: data.pickup_person_relationship,
+          guardian_id: data.pickup_person_id,
+          verified: data.verified,
+          verification_method: data.verification_method,
+        }
+      )
+
+      return { success: true, attendance }
+    } catch (error) {
+      console.error('Error during check-out:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error al registrar salida',
+      }
+    }
   },
 
   async markAbsent(childId: string, date: string, notes?: string): Promise<Attendance> {
@@ -154,7 +354,7 @@ export const attendanceService = {
     // Get attendance for the date
     const { data: attendance, error: attendanceError } = await supabase
       .from('attendance')
-      .select('child_id, status, classroom_id')
+      .select('child_id, status, classroom_id, check_out_time, check_out_verified')
       .eq('organization_id', orgId)
       .eq('date', date)
 
@@ -165,6 +365,11 @@ export const attendanceService = {
     const absent = total - present
     const late = attendance?.filter(a => a.status === 'late').length || 0
     const sick = attendance?.filter(a => a.status === 'sick').length || 0
+
+    // Pickup stats
+    const checkedOut = attendance?.filter(a => a.check_out_time).length || 0
+    const pendingCheckout = present - checkedOut
+    const verifiedPickups = attendance?.filter(a => a.check_out_verified === true).length || 0
 
     // Group by classroom
     const byClassroom = new Map<string, { present: number; total: number }>()
@@ -189,6 +394,9 @@ export const attendanceService = {
       absent,
       late,
       sick,
+      checked_out: checkedOut,
+      pending_checkout: pendingCheckout,
+      verified_pickups: verifiedPickups,
       byClassroom: Object.fromEntries(byClassroom),
     }
   },

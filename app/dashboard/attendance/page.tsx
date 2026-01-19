@@ -17,12 +17,17 @@ import {
   LogOut,
   Monitor,
   ShieldCheck,
+  X,
+  User,
+  AlertTriangle,
+  Shield,
 } from 'lucide-react'
 import { useTranslations, useI18n } from '@/shared/lib/i18n'
 import { attendanceService } from '@/features/attendance/services/attendance.service'
 import { childrenService } from '@/features/children/services/children.service'
 import { classroomsService } from '@/features/classrooms/services/classrooms.service'
 import type { AttendanceWithChild, Child, Classroom } from '@/shared/types/database.types'
+import type { AuthorizedPickupPerson, PickupPersonType } from '@/shared/types/attendance-extended'
 import {
   GlassCard,
   GlassCardHeader,
@@ -33,6 +38,7 @@ import {
   GlassSelect,
   GlassAvatar,
   GlassBadge,
+  GlassModal,
 } from '@/shared/components/ui'
 
 type AttendanceRecord = {
@@ -43,7 +49,253 @@ type AttendanceRecord = {
   status: 'not_recorded' | 'present' | 'absent' | 'checked_out'
   checkInTime: string | null
   checkOutTime: string | null
+  checkInPersonName: string | null
+  checkOutPersonName: string | null
+  checkOutVerified: boolean | null
   notes: string | null
+}
+
+// Modal for selecting drop-off/pickup person
+interface PickupModalProps {
+  isOpen: boolean
+  onClose: () => void
+  childId: string
+  childName: string
+  mode: 'check_in' | 'check_out'
+  onConfirm: (
+    personId: string | undefined,
+    personType: PickupPersonType | undefined,
+    personName: string,
+    relationship: string,
+    verified: boolean,
+    verificationMethod?: string
+  ) => void
+}
+
+function PickupPersonModal({ isOpen, onClose, childId, childName, mode, onConfirm }: PickupModalProps) {
+  const [authorizedPeople, setAuthorizedPeople] = useState<AuthorizedPickupPerson[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedPerson, setSelectedPerson] = useState<AuthorizedPickupPerson | null>(null)
+  const [customName, setCustomName] = useState('')
+  const [customRelationship, setCustomRelationship] = useState('')
+  const [useCustom, setUseCustom] = useState(false)
+  const [verificationMethod, setVerificationMethod] = useState<string>('known_person')
+
+  useEffect(() => {
+    if (isOpen && childId) {
+      loadAuthorizedPeople()
+    }
+  }, [isOpen, childId])
+
+  async function loadAuthorizedPeople() {
+    try {
+      setIsLoading(true)
+      const people = await attendanceService.getAuthorizedPickups(childId)
+      setAuthorizedPeople(people)
+    } catch (error) {
+      console.error('Error loading authorized pickups:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  function handleSelectPerson(person: AuthorizedPickupPerson) {
+    setSelectedPerson(person)
+    setUseCustom(false)
+  }
+
+  function handleConfirm() {
+    if (useCustom) {
+      if (!customName.trim()) {
+        alert('Por favor ingrese el nombre de la persona')
+        return
+      }
+      // For custom entries, not verified unless staff override
+      onConfirm(
+        undefined,
+        undefined,
+        customName,
+        customRelationship || 'Otro',
+        verificationMethod === 'staff_override',
+        verificationMethod
+      )
+    } else if (selectedPerson) {
+      onConfirm(
+        selectedPerson.person_id,
+        selectedPerson.person_type,
+        selectedPerson.name,
+        selectedPerson.relationship,
+        true,
+        selectedPerson.has_photo ? 'photo_match' : 'known_person'
+      )
+    } else {
+      // Quick action - no specific person selected
+      onConfirm(undefined, undefined, '', '', false, undefined)
+    }
+
+    // Reset state
+    setSelectedPerson(null)
+    setCustomName('')
+    setCustomRelationship('')
+    setUseCustom(false)
+    onClose()
+  }
+
+  const title = mode === 'check_in' ? 'Registrar Entrada' : 'Registrar Salida'
+  const subtitle = mode === 'check_in'
+    ? '¿Quién trae al niño?'
+    : '¿Quién recoge al niño?'
+
+  return (
+    <GlassModal isOpen={isOpen} onClose={onClose} title={title}>
+      <div className="space-y-4">
+        <div className="text-center pb-2 border-b border-gray-200">
+          <p className="text-lg font-semibold text-gray-900">{childName}</p>
+          <p className="text-sm text-gray-500">{subtitle}</p>
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
+          </div>
+        ) : (
+          <>
+            {/* Authorized People List */}
+            {authorizedPeople.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-green-600" />
+                  Personas Autorizadas
+                </p>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {authorizedPeople.map((person) => (
+                    <button
+                      key={`${person.person_type}-${person.person_id}`}
+                      onClick={() => handleSelectPerson(person)}
+                      className={`w-full p-3 rounded-xl border transition-all flex items-center gap-3 text-left ${
+                        selectedPerson?.person_id === person.person_id && !useCustom
+                          ? 'border-primary-500 bg-primary-50'
+                          : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                        {person.photo_url ? (
+                          <img src={person.photo_url} alt={person.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="w-5 h-5 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{person.name}</p>
+                        <p className="text-sm text-gray-500">{person.relationship}</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {person.has_photo && (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                            Foto
+                          </span>
+                        )}
+                        {person.has_id && (
+                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                            ID
+                          </span>
+                        )}
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          person.person_type === 'guardian'
+                            ? 'bg-purple-100 text-purple-700'
+                            : person.person_type === 'authorized'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {person.person_type === 'guardian' ? 'Padre/Tutor' :
+                           person.person_type === 'authorized' ? 'Autorizado' : 'Emergencia'}
+                        </span>
+                      </div>
+                      {selectedPerson?.person_id === person.person_id && !useCustom && (
+                        <CheckCircle className="w-5 h-5 text-primary-600 flex-shrink-0" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Custom Entry Section */}
+            <div className="border-t border-gray-200 pt-4">
+              <button
+                onClick={() => {
+                  setUseCustom(!useCustom)
+                  setSelectedPerson(null)
+                }}
+                className={`w-full p-3 rounded-xl border transition-all flex items-center gap-3 ${
+                  useCustom
+                    ? 'border-orange-500 bg-orange-50'
+                    : 'border-gray-200 hover:border-orange-300 hover:bg-gray-50'
+                }`}
+              >
+                <AlertTriangle className="w-5 h-5 text-orange-500" />
+                <span className="font-medium text-gray-900">Otra Persona (No en lista)</span>
+                {useCustom && <CheckCircle className="w-5 h-5 text-orange-600 ml-auto" />}
+              </button>
+
+              {useCustom && (
+                <div className="mt-3 p-3 bg-orange-50 rounded-xl space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-orange-700">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Esta persona no está en la lista de autorizados</span>
+                  </div>
+                  <GlassInput
+                    label="Nombre Completo"
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    placeholder="Nombre de quien trae/recoge"
+                    required
+                  />
+                  <GlassInput
+                    label="Relación"
+                    value={customRelationship}
+                    onChange={(e) => setCustomRelationship(e.target.value)}
+                    placeholder="Ej: Tío, Vecino, Amigo"
+                  />
+                  {mode === 'check_out' && (
+                    <GlassSelect
+                      label="Método de Verificación"
+                      options={[
+                        { value: 'staff_override', label: 'Aprobación del Staff (Emergencia)' },
+                        { value: 'id_check', label: 'Verificación de ID' },
+                        { value: 'phone_verification', label: 'Verificación por Teléfono' },
+                      ]}
+                      value={verificationMethod}
+                      onChange={(e) => setVerificationMethod(e.target.value)}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-3 pt-4 border-t border-gray-200">
+          <GlassButton
+            variant="ghost"
+            onClick={onClose}
+            className="flex-1"
+          >
+            Cancelar
+          </GlassButton>
+          <GlassButton
+            variant="primary"
+            onClick={handleConfirm}
+            className="flex-1"
+            disabled={isLoading}
+          >
+            {mode === 'check_in' ? 'Registrar Entrada' : 'Registrar Salida'}
+          </GlassButton>
+        </div>
+      </div>
+    </GlassModal>
+  )
 }
 
 export default function AttendancePage() {
@@ -58,6 +310,15 @@ export default function AttendancePage() {
   const [selectedClassroom, setSelectedClassroom] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('')
   const [loadingAction, setLoadingAction] = useState<string | null>(null)
+
+  // Modal state
+  const [pickupModalOpen, setPickupModalOpen] = useState(false)
+  const [pickupModalMode, setPickupModalMode] = useState<'check_in' | 'check_out'>('check_in')
+  const [selectedChildForModal, setSelectedChildForModal] = useState<{
+    id: string
+    name: string
+    classroomId: string
+  } | null>(null)
 
   const today = new Date()
   const todayStr = today.toISOString().split('T')[0]
@@ -83,7 +344,11 @@ export default function AttendancePage() {
       const records: AttendanceRecord[] = childrenData
         .filter(child => child.status === 'active')
         .map(child => {
-          const attendance = attendanceData.find(a => a.child_id === child.id)
+          const attendance = attendanceData.find(a => a.child_id === child.id) as AttendanceWithChild & {
+            check_in_person_name?: string | null
+            check_out_person_name?: string | null
+            check_out_verified?: boolean | null
+          } | undefined
           const classroom = classroomsData.find(c => c.id === child.classroom_id)
 
           let status: AttendanceRecord['status'] = 'not_recorded'
@@ -105,6 +370,9 @@ export default function AttendancePage() {
             status,
             checkInTime: attendance?.check_in_time || null,
             checkOutTime: attendance?.check_out_time || null,
+            checkInPersonName: attendance?.check_in_person_name || null,
+            checkOutPersonName: attendance?.check_out_person_name || null,
+            checkOutVerified: attendance?.check_out_verified || null,
             notes: attendance?.notes || null,
           }
         })
@@ -117,15 +385,44 @@ export default function AttendancePage() {
     }
   }
 
-  async function handleCheckIn(childId: string, classroomId: string) {
+  function openCheckInModal(childId: string, childName: string, classroomId: string) {
     if (!classroomId) {
       alert(t.attendance.noClassroomAssigned)
       return
     }
+    setSelectedChildForModal({ id: childId, name: childName, classroomId })
+    setPickupModalMode('check_in')
+    setPickupModalOpen(true)
+  }
+
+  function openCheckOutModal(childId: string, childName: string, classroomId: string) {
+    setSelectedChildForModal({ id: childId, name: childName, classroomId })
+    setPickupModalMode('check_out')
+    setPickupModalOpen(true)
+  }
+
+  async function handleCheckInConfirm(
+    personId: string | undefined,
+    personType: PickupPersonType | undefined,
+    personName: string,
+    relationship: string,
+    _verified: boolean,
+    _verificationMethod?: string
+  ) {
+    if (!selectedChildForModal) return
 
     try {
-      setLoadingAction(childId)
-      await attendanceService.checkIn(childId, classroomId)
+      setLoadingAction(selectedChildForModal.id)
+      await attendanceService.checkIn(
+        selectedChildForModal.id,
+        selectedChildForModal.classroomId,
+        undefined,
+        {
+          person_name: personName || undefined,
+          person_relationship: relationship || undefined,
+          guardian_id: personId,
+        }
+      )
       await loadData()
     } catch (error) {
       console.error('Error checking in:', error)
@@ -135,10 +432,34 @@ export default function AttendancePage() {
     }
   }
 
-  async function handleCheckOut(childId: string) {
+  async function handleCheckOutConfirm(
+    personId: string | undefined,
+    personType: PickupPersonType | undefined,
+    personName: string,
+    relationship: string,
+    verified: boolean,
+    verificationMethod?: string
+  ) {
+    if (!selectedChildForModal) return
+
     try {
-      setLoadingAction(childId)
-      await attendanceService.checkOut(childId)
+      setLoadingAction(selectedChildForModal.id)
+
+      const result = await attendanceService.checkOutWithData({
+        child_id: selectedChildForModal.id,
+        pickup_person_id: personId,
+        pickup_person_type: personType,
+        pickup_person_name: personName,
+        pickup_person_relationship: relationship,
+        verified,
+        verification_method: verificationMethod as 'id_check' | 'photo_match' | 'known_person' | 'staff_override' | undefined,
+      })
+
+      if (!result.success) {
+        alert(result.error || t.attendance.checkOutError)
+        return
+      }
+
       await loadData()
     } catch (error) {
       console.error('Error checking out:', error)
@@ -379,30 +700,38 @@ export default function AttendancePage() {
 
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
                   {record.status !== 'absent' && record.status !== 'not_recorded' && (
-                    <div className="flex items-center gap-4 text-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm">
                       {record.checkInTime && (
-                        <div>
+                        <div className="flex items-center gap-1">
+                          <LogIn className="w-4 h-4 text-green-600" />
                           <span className="text-gray-500">{t.attendance.entryTime}:</span>
-                          <span className="ml-1 font-medium text-gray-900">
+                          <span className="font-medium text-gray-900">
                             {formatTime(record.checkInTime)}
                           </span>
+                          {record.checkInPersonName && (
+                            <span className="text-xs text-gray-400">
+                              ({record.checkInPersonName})
+                            </span>
+                          )}
                         </div>
                       )}
                       {record.checkOutTime && (
-                        <div>
+                        <div className="flex items-center gap-1">
+                          <LogOut className="w-4 h-4 text-blue-600" />
                           <span className="text-gray-500">{t.attendance.exitTime}:</span>
-                          <span className="ml-1 font-medium text-gray-900">
+                          <span className="font-medium text-gray-900">
                             {formatTime(record.checkOutTime)}
                           </span>
+                          {record.checkOutPersonName && (
+                            <span className="text-xs text-gray-400">
+                              ({record.checkOutPersonName})
+                            </span>
+                          )}
+                          {record.checkOutVerified && (
+                            <Shield className="w-3 h-3 text-green-500" title="Verificado" />
+                          )}
                         </div>
                       )}
-                    </div>
-                  )}
-
-                  {record.notes && (
-                    <div className="text-sm">
-                      <span className="text-gray-500">{t.attendance.note}:</span>
-                      <span className="ml-1 font-medium text-gray-900">{record.notes}</span>
                     </div>
                   )}
 
@@ -424,7 +753,7 @@ export default function AttendancePage() {
                           variant="primary"
                           size="sm"
                           leftIcon={<LogIn className="w-4 h-4" />}
-                          onClick={() => handleCheckIn(record.childId, record.classroomId)}
+                          onClick={() => openCheckInModal(record.childId, record.childName, record.classroomId)}
                         >
                           {t.attendance.checkIn}
                         </GlassButton>
@@ -447,7 +776,7 @@ export default function AttendancePage() {
                         variant="secondary"
                         size="sm"
                         leftIcon={<LogOut className="w-4 h-4" />}
-                        onClick={() => handleCheckOut(record.childId)}
+                        onClick={() => openCheckOutModal(record.childId, record.childName, record.classroomId)}
                       >
                         {t.attendance.checkOut}
                       </GlassButton>
@@ -459,6 +788,21 @@ export default function AttendancePage() {
           ))
         )}
       </div>
+
+      {/* Pickup Person Modal */}
+      {selectedChildForModal && (
+        <PickupPersonModal
+          isOpen={pickupModalOpen}
+          onClose={() => {
+            setPickupModalOpen(false)
+            setSelectedChildForModal(null)
+          }}
+          childId={selectedChildForModal.id}
+          childName={selectedChildForModal.name}
+          mode={pickupModalMode}
+          onConfirm={pickupModalMode === 'check_in' ? handleCheckInConfirm : handleCheckOutConfirm}
+        />
+      )}
     </div>
   )
 }
