@@ -1,5 +1,20 @@
 import { createClient } from '@/shared/lib/supabase/client'
 import { requireOrgId } from '@/shared/lib/organization-context'
+import type {
+  FoodInventoryItem,
+  FoodInventoryFormData,
+  InventoryTransaction,
+  InventoryTransactionFormData,
+  FoodBudget,
+  FoodBudgetFormData,
+  FoodBudgetSummary,
+  FoodExpense,
+  FoodExpenseFormData,
+  FoodExpenseCategory,
+  MilkInventory,
+  MilkInventoryFormData,
+  MilkType,
+} from '@/shared/types/food-program'
 
 // ================== TYPES ==================
 
@@ -559,5 +574,615 @@ export const foodProgramService = {
         allergies: c.allergies || [],
         dietary_restrictions: c.dietary_restrictions,
       }))
+  },
+
+  // ==================== FOOD INVENTORY ====================
+
+  async getInventoryItems(): Promise<FoodInventoryItem[]> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('food_inventory')
+      .select('*')
+      .eq('organization_id', orgId)
+      .eq('is_active', true)
+      .order('item_name')
+
+    if (error) {
+      if (error.code === '42P01') return []
+      throw error
+    }
+    return data || []
+  },
+
+  async getInventoryItem(id: string): Promise<FoodInventoryItem | null> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('food_inventory')
+      .select('*')
+      .eq('organization_id', orgId)
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') return null
+      throw error
+    }
+    return data
+  },
+
+  async createInventoryItem(item: FoodInventoryFormData): Promise<FoodInventoryItem> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('food_inventory')
+      .insert({
+        organization_id: orgId,
+        item_name: item.item_name,
+        category: item.category,
+        unit: item.unit,
+        quantity_on_hand: item.quantity_on_hand || 0,
+        minimum_quantity: item.minimum_quantity || 0,
+        reorder_point: item.reorder_point || 0,
+        unit_cost: item.unit_cost,
+        supplier: item.supplier,
+        expiration_date: item.expiration_date,
+        storage_location: item.storage_location,
+        notes: item.notes,
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async updateInventoryItem(id: string, item: Partial<FoodInventoryFormData>): Promise<FoodInventoryItem> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('food_inventory')
+      .update({
+        ...item,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('organization_id', orgId)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async deleteInventoryItem(id: string): Promise<void> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    const { error } = await supabase
+      .from('food_inventory')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq('organization_id', orgId)
+      .eq('id', id)
+
+    if (error) throw error
+  },
+
+  async getLowStockItems(): Promise<FoodInventoryItem[]> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    // Get all active items and filter in JS since Supabase doesn't support column-to-column comparison
+    const { data, error } = await supabase
+      .from('food_inventory')
+      .select('*')
+      .eq('organization_id', orgId)
+      .eq('is_active', true)
+      .order('quantity_on_hand')
+
+    if (error) {
+      if (error.code === '42P01') return []
+      throw error
+    }
+
+    // Filter items where quantity is at or below reorder point
+    return (data || []).filter(item => item.quantity_on_hand <= item.reorder_point)
+  },
+
+  async getExpiringItems(daysAhead: number = 7): Promise<FoodInventoryItem[]> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    const futureDate = new Date()
+    futureDate.setDate(futureDate.getDate() + daysAhead)
+    const futureDateStr = futureDate.toISOString().split('T')[0]
+
+    const { data, error } = await supabase
+      .from('food_inventory')
+      .select('*')
+      .eq('organization_id', orgId)
+      .eq('is_active', true)
+      .not('expiration_date', 'is', null)
+      .lte('expiration_date', futureDateStr)
+      .order('expiration_date')
+
+    if (error) {
+      if (error.code === '42P01') return []
+      throw error
+    }
+    return data || []
+  },
+
+  // ==================== INVENTORY TRANSACTIONS ====================
+
+  async recordInventoryTransaction(transaction: InventoryTransactionFormData): Promise<InventoryTransaction> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // Start a transaction-like operation
+    const { data: txn, error: txnError } = await supabase
+      .from('inventory_transactions')
+      .insert({
+        organization_id: orgId,
+        inventory_item_id: transaction.inventory_item_id,
+        transaction_type: transaction.transaction_type,
+        quantity: transaction.quantity,
+        transaction_date: transaction.transaction_date || new Date().toISOString().split('T')[0],
+        reference_id: transaction.reference_id,
+        notes: transaction.notes,
+        recorded_by: user?.id,
+      })
+      .select()
+      .single()
+
+    if (txnError) throw txnError
+
+    // Update inventory quantity
+    const quantityChange = transaction.transaction_type === 'received'
+      ? transaction.quantity
+      : -transaction.quantity
+
+    const { error: updateError } = await supabase.rpc('update_inventory_quantity', {
+      p_item_id: transaction.inventory_item_id,
+      p_quantity_change: quantityChange,
+    }).catch(() => {
+      // Fallback if RPC doesn't exist
+      return supabase
+        .from('food_inventory')
+        .update({
+          quantity_on_hand: supabase.rpc('add_to_quantity', {
+            current: 'quantity_on_hand',
+            delta: quantityChange,
+          }),
+        })
+        .eq('id', transaction.inventory_item_id)
+    })
+
+    // Manual update as fallback
+    if (!updateError) {
+      const { data: item } = await supabase
+        .from('food_inventory')
+        .select('quantity_on_hand')
+        .eq('id', transaction.inventory_item_id)
+        .single()
+
+      if (item) {
+        await supabase
+          .from('food_inventory')
+          .update({
+            quantity_on_hand: Math.max(0, (item.quantity_on_hand || 0) + quantityChange),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', transaction.inventory_item_id)
+      }
+    }
+
+    return txn
+  },
+
+  async getInventoryTransactions(itemId?: string, startDate?: string, endDate?: string): Promise<InventoryTransaction[]> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    let query = supabase
+      .from('inventory_transactions')
+      .select(`
+        *,
+        inventory_item:food_inventory (
+          id,
+          item_name,
+          category,
+          unit
+        )
+      `)
+      .eq('organization_id', orgId)
+      .order('transaction_date', { ascending: false })
+
+    if (itemId) {
+      query = query.eq('inventory_item_id', itemId)
+    }
+    if (startDate) {
+      query = query.gte('transaction_date', startDate)
+    }
+    if (endDate) {
+      query = query.lte('transaction_date', endDate)
+    }
+
+    const { data, error } = await query.limit(100)
+
+    if (error) {
+      if (error.code === '42P01') return []
+      throw error
+    }
+    return data || []
+  },
+
+  // ==================== FOOD BUDGET ====================
+
+  async getBudget(year: number, month: number): Promise<FoodBudget | null> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('food_budgets')
+      .select('*')
+      .eq('organization_id', orgId)
+      .eq('year', year)
+      .eq('month', month)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '42P01') return null
+      throw error
+    }
+    return data
+  },
+
+  async setBudget(data: FoodBudgetFormData): Promise<FoodBudget> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const { data: budget, error } = await supabase
+      .from('food_budgets')
+      .upsert({
+        organization_id: orgId,
+        year: data.year,
+        month: data.month,
+        budgeted_amount: data.budgeted_amount,
+        notes: data.notes,
+        created_by: user?.id,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'organization_id,year,month',
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    return budget
+  },
+
+  async getBudgetSummary(year: number, month: number): Promise<FoodBudgetSummary> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    // Get budget
+    const budget = await this.getBudget(year, month)
+
+    // Get expenses for the month
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`
+    const endDate = new Date(year, month, 0).toISOString().split('T')[0]
+
+    const { data: expenses, error } = await supabase
+      .from('food_expenses')
+      .select('*')
+      .eq('organization_id', orgId)
+      .gte('expense_date', startDate)
+      .lte('expense_date', endDate)
+
+    if (error && error.code !== '42P01') throw error
+
+    const expensesList = expenses || []
+    const totalSpent = expensesList.reduce((sum, e) => sum + (e.total_amount || 0), 0)
+
+    // Calculate category breakdown
+    const categoryTotals = new Map<string, number>()
+    for (const expense of expensesList) {
+      const current = categoryTotals.get(expense.category) || 0
+      categoryTotals.set(expense.category, current + (expense.total_amount || 0))
+    }
+
+    const categories_breakdown = Array.from(categoryTotals).map(([category, amount]) => ({
+      category: category as FoodExpenseCategory,
+      amount,
+      percentage: totalSpent > 0 ? (amount / totalSpent) * 100 : 0,
+    }))
+
+    return {
+      budget,
+      total_spent: totalSpent,
+      remaining: budget ? budget.budgeted_amount - totalSpent : -totalSpent,
+      expenses_count: expensesList.length,
+      categories_breakdown,
+    }
+  },
+
+  // ==================== FOOD EXPENSES ====================
+
+  async getExpenses(year: number, month: number): Promise<FoodExpense[]> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`
+    const endDate = new Date(year, month, 0).toISOString().split('T')[0]
+
+    const { data, error } = await supabase
+      .from('food_expenses')
+      .select('*')
+      .eq('organization_id', orgId)
+      .gte('expense_date', startDate)
+      .lte('expense_date', endDate)
+      .order('expense_date', { ascending: false })
+
+    if (error) {
+      if (error.code === '42P01') return []
+      throw error
+    }
+    return data || []
+  },
+
+  async createExpense(expense: FoodExpenseFormData): Promise<FoodExpense> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // Get the budget for this month
+    const expenseDate = new Date(expense.expense_date)
+    const budget = await this.getBudget(expenseDate.getFullYear(), expenseDate.getMonth() + 1)
+
+    const totalAmount = expense.amount + (expense.tax_amount || 0)
+
+    const { data, error } = await supabase
+      .from('food_expenses')
+      .insert({
+        organization_id: orgId,
+        food_budget_id: budget?.id,
+        expense_date: expense.expense_date,
+        vendor: expense.vendor,
+        description: expense.description,
+        category: expense.category,
+        amount: expense.amount,
+        tax_amount: expense.tax_amount || 0,
+        total_amount: totalAmount,
+        payment_method: expense.payment_method,
+        receipt_url: expense.receipt_url,
+        recorded_by: user?.id,
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async updateExpense(id: string, expense: Partial<FoodExpenseFormData>): Promise<FoodExpense> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    const updateData: Record<string, unknown> = { ...expense }
+    if (expense.amount !== undefined || expense.tax_amount !== undefined) {
+      // Need to recalculate total
+      const { data: current } = await supabase
+        .from('food_expenses')
+        .select('amount, tax_amount')
+        .eq('id', id)
+        .single()
+
+      if (current) {
+        const newAmount = expense.amount ?? current.amount
+        const newTax = expense.tax_amount ?? current.tax_amount
+        updateData.total_amount = newAmount + newTax
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('food_expenses')
+      .update(updateData)
+      .eq('organization_id', orgId)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async deleteExpense(id: string): Promise<void> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    const { error } = await supabase
+      .from('food_expenses')
+      .delete()
+      .eq('organization_id', orgId)
+      .eq('id', id)
+
+    if (error) throw error
+  },
+
+  // ==================== MILK INVENTORY ====================
+
+  async getMilkInventory(date: string): Promise<MilkInventory[]> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('milk_inventory')
+      .select('*')
+      .eq('organization_id', orgId)
+      .eq('inventory_date', date)
+      .order('milk_type')
+
+    if (error) {
+      if (error.code === '42P01') return []
+      throw error
+    }
+    return data || []
+  },
+
+  async recordMilkInventory(milk: MilkInventoryFormData): Promise<MilkInventory> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const { data, error } = await supabase
+      .from('milk_inventory')
+      .upsert({
+        organization_id: orgId,
+        inventory_date: milk.inventory_date,
+        milk_type: milk.milk_type,
+        opening_quantity: milk.opening_quantity,
+        received_quantity: milk.received_quantity || 0,
+        used_quantity: milk.used_quantity || 0,
+        spoiled_quantity: milk.spoiled_quantity || 0,
+        expiration_date: milk.expiration_date,
+        recorded_by: user?.id,
+        notes: milk.notes,
+      }, {
+        onConflict: 'organization_id,inventory_date,milk_type',
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async getMilkUsageReport(startDate: string, endDate: string): Promise<{
+    milk_type: MilkType
+    total_received: number
+    total_used: number
+    total_spoiled: number
+    usage_rate: number
+  }[]> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('milk_inventory')
+      .select('*')
+      .eq('organization_id', orgId)
+      .gte('inventory_date', startDate)
+      .lte('inventory_date', endDate)
+
+    if (error) {
+      if (error.code === '42P01') return []
+      throw error
+    }
+
+    // Aggregate by milk type
+    const milkTotals = new Map<MilkType, { received: number; used: number; spoiled: number }>()
+
+    for (const record of data || []) {
+      const current = milkTotals.get(record.milk_type as MilkType) || { received: 0, used: 0, spoiled: 0 }
+      current.received += record.received_quantity || 0
+      current.used += record.used_quantity || 0
+      current.spoiled += record.spoiled_quantity || 0
+      milkTotals.set(record.milk_type as MilkType, current)
+    }
+
+    return Array.from(milkTotals).map(([milk_type, totals]) => ({
+      milk_type,
+      total_received: totals.received,
+      total_used: totals.used,
+      total_spoiled: totals.spoiled,
+      usage_rate: totals.received > 0
+        ? ((totals.used + totals.spoiled) / totals.received) * 100
+        : 0,
+    }))
+  },
+
+  // ==================== INVENTORY REPORT ====================
+
+  async getInventoryReport(): Promise<{
+    total_items: number
+    total_value: number
+    low_stock_items: FoodInventoryItem[]
+    expiring_soon: FoodInventoryItem[]
+    items_by_category: { category: string; count: number; value: number }[]
+  }> {
+    const orgId = await requireOrgId()
+    const supabase = createClient()
+
+    const { data: items, error } = await supabase
+      .from('food_inventory')
+      .select('*')
+      .eq('organization_id', orgId)
+      .eq('is_active', true)
+
+    if (error) {
+      if (error.code === '42P01') {
+        return {
+          total_items: 0,
+          total_value: 0,
+          low_stock_items: [],
+          expiring_soon: [],
+          items_by_category: [],
+        }
+      }
+      throw error
+    }
+
+    const allItems = items || []
+    const today = new Date().toISOString().split('T')[0]
+    const weekFromNow = new Date()
+    weekFromNow.setDate(weekFromNow.getDate() + 7)
+    const weekFromNowStr = weekFromNow.toISOString().split('T')[0]
+
+    // Calculate totals
+    let totalValue = 0
+    const categoryData = new Map<string, { count: number; value: number }>()
+    const lowStockItems: FoodInventoryItem[] = []
+    const expiringItems: FoodInventoryItem[] = []
+
+    for (const item of allItems) {
+      const itemValue = (item.quantity_on_hand || 0) * (item.unit_cost || 0)
+      totalValue += itemValue
+
+      // Category aggregation
+      const cat = categoryData.get(item.category) || { count: 0, value: 0 }
+      cat.count++
+      cat.value += itemValue
+      categoryData.set(item.category, cat)
+
+      // Low stock check
+      if (item.quantity_on_hand <= item.reorder_point) {
+        lowStockItems.push(item)
+      }
+
+      // Expiring check
+      if (item.expiration_date && item.expiration_date <= weekFromNowStr && item.expiration_date >= today) {
+        expiringItems.push(item)
+      }
+    }
+
+    return {
+      total_items: allItems.length,
+      total_value: totalValue,
+      low_stock_items: lowStockItems,
+      expiring_soon: expiringItems,
+      items_by_category: Array.from(categoryData).map(([category, data]) => ({
+        category,
+        count: data.count,
+        value: data.value,
+      })),
+    }
   },
 }

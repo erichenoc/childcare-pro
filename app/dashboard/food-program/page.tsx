@@ -20,6 +20,8 @@ import {
   Moon,
   AlertCircle,
   Milk,
+  Package,
+  DollarSign,
 } from 'lucide-react'
 import {
   foodProgramService,
@@ -318,6 +320,16 @@ export default function FoodProgramPage() {
                 <Link href="/dashboard/food-program/reports">
                   <GlassButton variant="secondary" fullWidth leftIcon={<FileText className="w-4 h-4" />}>
                     Reportes CACFP
+                  </GlassButton>
+                </Link>
+                <Link href="/dashboard/food-program/inventory">
+                  <GlassButton variant="secondary" fullWidth leftIcon={<Package className="w-4 h-4" />}>
+                    Inventario
+                  </GlassButton>
+                </Link>
+                <Link href="/dashboard/food-program/budget">
+                  <GlassButton variant="secondary" fullWidth leftIcon={<DollarSign className="w-4 h-4" />}>
+                    Presupuesto
                   </GlassButton>
                 </Link>
                 <Link href="/dashboard/food-program/milk-calculator" className="col-span-2">

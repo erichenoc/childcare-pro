@@ -12,6 +12,9 @@ import {
   Edit,
   Baby,
   Loader2,
+  AlertTriangle,
+  XCircle,
+  AlertCircle,
 } from 'lucide-react'
 import { useTranslations } from '@/shared/lib/i18n'
 import { classroomsService, type ClassroomWithStats } from '@/features/classrooms/services/classrooms.service'
@@ -79,6 +82,13 @@ export default function ClassroomsPage() {
   const totalChildren = classrooms.reduce((sum, c) => sum + c.children_count, 0)
   const totalStaff = classrooms.reduce((sum, c) => sum + c.staff_count, 0)
   const activeClassrooms = classrooms.filter(c => c.status === 'active').length
+
+  // Capacity alerts - classrooms at or over capacity
+  const capacityAlerts = classrooms.filter(c =>
+    c.capacity_status?.isError || c.capacity_status?.isWarning
+  )
+  const exceededCapacity = classrooms.filter(c => c.capacity_status?.status === 'exceeded')
+  const atCapacity = classrooms.filter(c => c.capacity_status?.status === 'at_capacity')
 
   function getRatioStatus(classroom: ClassroomWithStats): 'compliant' | 'warning' | 'non-compliant' {
     const requiredRatio = dcfRatios[classroom.age_group || 'threes'] || 15
@@ -179,6 +189,82 @@ export default function ClassroomsPage() {
         </GlassCardContent>
       </GlassCard>
 
+      {/* Capacity Alerts Banner */}
+      {exceededCapacity.length > 0 && (
+        <div className="p-4 rounded-xl bg-red-50 border-2 border-red-300 animate-pulse-slow">
+          <div className="flex items-start gap-3">
+            <XCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="font-bold text-red-800 text-lg">
+                ⛔ ERROR: Capacidad Excedida
+              </h3>
+              <p className="text-red-700 mt-1">
+                Los siguientes salones han excedido su capacidad máxima y requieren atención inmediata:
+              </p>
+              <div className="mt-3 space-y-2">
+                {exceededCapacity.map(classroom => (
+                  <div key={classroom.id} className="flex items-center justify-between p-3 bg-red-100 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: classroom.color || '#EF4444' }}
+                      />
+                      <span className="font-semibold text-red-900">{classroom.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-red-800 font-bold">
+                        {classroom.children_count}/{classroom.capacity} niños
+                      </span>
+                      <span className="text-red-600 text-sm ml-2">
+                        (+{classroom.children_count - (classroom.capacity || 0)} excedidos)
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* At Capacity Warning */}
+      {atCapacity.length > 0 && (
+        <div className="p-4 rounded-xl bg-yellow-50 border-2 border-yellow-300">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="font-bold text-yellow-800 text-lg">
+                ⚠️ ALERTA: Capacidad Máxima Alcanzada
+              </h3>
+              <p className="text-yellow-700 mt-1">
+                Los siguientes salones están en su capacidad máxima. No se pueden agregar más niños.
+              </p>
+              <div className="mt-3 space-y-2">
+                {atCapacity.map(classroom => (
+                  <div key={classroom.id} className="flex items-center justify-between p-3 bg-yellow-100 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: classroom.color || '#F59E0B' }}
+                      />
+                      <span className="font-semibold text-yellow-900">{classroom.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-yellow-800 font-bold">
+                        {classroom.children_count}/{classroom.capacity} niños
+                      </span>
+                      <GlassBadge variant="warning" size="sm" className="ml-2">
+                        LLENO
+                      </GlassBadge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Ratio Monitor */}
       {classrooms.length > 0 && (
         <GlassCard>
@@ -259,6 +345,24 @@ export default function ClassroomsPage() {
                     </div>
                   </div>
 
+                  {/* Capacity Status Alert */}
+                  {classroom.capacity_status?.isError && (
+                    <div className="p-2 rounded-lg bg-red-100 border border-red-300 flex items-center gap-2">
+                      <XCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                      <span className="text-xs font-medium text-red-700">
+                        {classroom.capacity_status.message}
+                      </span>
+                    </div>
+                  )}
+                  {classroom.capacity_status?.status === 'at_capacity' && (
+                    <div className="p-2 rounded-lg bg-yellow-100 border border-yellow-300 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-yellow-600 flex-shrink-0" />
+                      <span className="text-xs font-medium text-yellow-700">
+                        {classroom.capacity_status.message}
+                      </span>
+                    </div>
+                  )}
+
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div className="p-2 rounded-lg bg-blue-50">
@@ -269,9 +373,34 @@ export default function ClassroomsPage() {
                       <p className="text-lg font-bold text-purple-600">{classroom.staff_count}</p>
                       <p className="text-xs text-gray-500">{t.classrooms.staff}</p>
                     </div>
-                    <div className="p-2 rounded-lg bg-gray-50">
-                      <p className="text-lg font-bold text-gray-600">{classroom.capacity || '-'}</p>
+                    <div className={`p-2 rounded-lg ${
+                      classroom.capacity_status?.status === 'exceeded' ? 'bg-red-50' :
+                      classroom.capacity_status?.status === 'at_capacity' ? 'bg-yellow-50' :
+                      classroom.capacity_status?.status === 'warning' ? 'bg-orange-50' :
+                      'bg-gray-50'
+                    }`}>
+                      <p className={`text-lg font-bold ${
+                        classroom.capacity_status?.status === 'exceeded' ? 'text-red-600' :
+                        classroom.capacity_status?.status === 'at_capacity' ? 'text-yellow-600' :
+                        classroom.capacity_status?.status === 'warning' ? 'text-orange-600' :
+                        'text-gray-600'
+                      }`}>
+                        {classroom.capacity || '-'}
+                      </p>
                       <p className="text-xs text-gray-500">{t.classrooms.capacity}</p>
+                      {classroom.capacity_status && classroom.capacity && (
+                        <div className="mt-1 w-full bg-gray-200 rounded-full h-1">
+                          <div
+                            className={`h-1 rounded-full transition-all ${
+                              classroom.capacity_status.status === 'exceeded' ? 'bg-red-500' :
+                              classroom.capacity_status.status === 'at_capacity' ? 'bg-yellow-500' :
+                              classroom.capacity_status.status === 'warning' ? 'bg-orange-500' :
+                              'bg-green-500'
+                            }`}
+                            style={{ width: `${Math.min(classroom.capacity_status.percentage_full, 100)}%` }}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
 
