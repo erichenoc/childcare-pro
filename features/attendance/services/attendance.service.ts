@@ -141,6 +141,7 @@ export const attendanceService = {
 
   /**
    * Check in a child with drop-off person information
+   * Note: Drop-off info is stored in notes as JSON since extended columns not in production
    */
   async checkIn(
     childId: string,
@@ -160,20 +161,30 @@ export const attendanceService = {
     // Check if already has attendance record for today
     const { data: existing } = await supabase
       .from('attendance')
-      .select('id')
+      .select('id, notes')
       .eq('child_id', childId)
       .eq('date', today)
       .single()
+
+    // Store drop-off info in notes as JSON since extended columns not available
+    let notes: string | null = null
+    if (dropOffInfo?.person_name) {
+      const dropOffData = {
+        drop_off: {
+          name: dropOffInfo.person_name,
+          relationship: dropOffInfo.person_relationship || 'N/A',
+          time: now,
+        }
+      }
+      notes = JSON.stringify(dropOffData)
+    }
 
     const checkInData: TablesUpdate<'attendance'> = {
       check_in_time: now,
       status: 'present',
       checked_in_by: checkedInBy,
       classroom_id: classroomId,
-      // Drop-off person info
-      check_in_person_name: dropOffInfo?.person_name || null,
-      check_in_person_relationship: dropOffInfo?.person_relationship || null,
-      check_in_guardian_id: dropOffInfo?.guardian_id || null,
+      notes: notes || existing?.notes || null,
     }
 
     if (existing) {
@@ -224,6 +235,7 @@ export const attendanceService = {
   /**
    * Check out a child with pickup person verification
    * Also records program hours (VPK/SR) automatically
+   * Note: Pickup info is stored in notes as JSON since extended columns not in production
    */
   async checkOut(
     childId: string,
@@ -240,10 +252,10 @@ export const attendanceService = {
     const today = new Date().toISOString().split('T')[0]
     const now = new Date().toISOString()
 
-    // First, get the existing attendance record to get check_in_time
+    // First, get the existing attendance record to get check_in_time and notes
     const { data: existingAttendance, error: fetchError } = await supabase
       .from('attendance')
-      .select('id, check_in_time')
+      .select('id, check_in_time, notes')
       .eq('child_id', childId)
       .eq('date', today)
       .single()
@@ -253,15 +265,35 @@ export const attendanceService = {
       throw new Error('No se encontró registro de entrada para hoy')
     }
 
+    // Merge pickup info into notes JSON
+    let notes: string | null = existingAttendance.notes
+    if (pickupInfo?.person_name) {
+      const pickupData = {
+        pickup: {
+          name: pickupInfo.person_name,
+          relationship: pickupInfo.person_relationship || 'N/A',
+          verified: pickupInfo.verified ?? false,
+          verification_method: pickupInfo.verification_method || null,
+          time: now,
+        }
+      }
+      // Merge with existing notes
+      if (notes) {
+        try {
+          const existingNotes = JSON.parse(notes)
+          notes = JSON.stringify({ ...existingNotes, ...pickupData })
+        } catch {
+          notes = JSON.stringify(pickupData)
+        }
+      } else {
+        notes = JSON.stringify(pickupData)
+      }
+    }
+
     const checkOutData: TablesUpdate<'attendance'> = {
       check_out_time: now,
       checked_out_by: checkedOutBy,
-      // Pickup person info
-      check_out_person_name: pickupInfo?.person_name || null,
-      check_out_person_relationship: pickupInfo?.person_relationship || null,
-      check_out_guardian_id: pickupInfo?.guardian_id || null,
-      check_out_verified: pickupInfo?.verified ?? false,
-      check_out_verification_method: pickupInfo?.verification_method || null,
+      notes,
     }
 
     const { data, error } = await supabase
@@ -395,7 +427,7 @@ export const attendanceService = {
     // Get attendance for the date
     const { data: attendance, error: attendanceError } = await supabase
       .from('attendance')
-      .select('child_id, status, classroom_id, check_out_time, check_out_verified')
+      .select('child_id, status, classroom_id, check_out_time, notes')
       .eq('organization_id', orgId)
       .eq('date', date)
 
@@ -410,7 +442,16 @@ export const attendanceService = {
     // Pickup stats
     const checkedOut = attendance?.filter(a => a.check_out_time).length || 0
     const pendingCheckout = present - checkedOut
-    const verifiedPickups = attendance?.filter(a => a.check_out_verified === true).length || 0
+    // Check verified from notes JSON
+    const verifiedPickups = attendance?.filter(a => {
+      if (!a.notes) return false
+      try {
+        const notes = JSON.parse(a.notes)
+        return notes?.pickup?.verified === true
+      } catch {
+        return false
+      }
+    }).length || 0
 
     // Group by classroom
     const byClassroom = new Map<string, { present: number; total: number }>()

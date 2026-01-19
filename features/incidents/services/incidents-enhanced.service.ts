@@ -126,6 +126,36 @@ export interface IncidentWithDetails extends IncidentExpanded {
   }
 }
 
+// Helper to fetch teacher info separately (avoids foreign key issues)
+async function fetchTeachersMap(
+  supabase: ReturnType<typeof createClient>,
+  teacherIds: string[]
+): Promise<Record<string, { id: string; first_name: string; last_name: string }>> {
+  if (teacherIds.length === 0) return {}
+
+  // Try profiles table first, then staff
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, first_name, last_name')
+    .in('id', teacherIds)
+
+  if (profiles && profiles.length > 0) {
+    return Object.fromEntries(profiles.map(p => [p.id, p]))
+  }
+
+  // Fallback to staff table
+  const { data: staff } = await supabase
+    .from('staff')
+    .select('id, first_name, last_name')
+    .in('id', teacherIds)
+
+  if (staff) {
+    return Object.fromEntries(staff.map(s => [s.id, s]))
+  }
+
+  return {}
+}
+
 export const incidentsEnhancedService = {
   /**
    * Get all incidents with full details
@@ -139,14 +169,23 @@ export const incidentsEnhancedService = {
       .select(`
         *,
         child:children(id, first_name, last_name, date_of_birth, photo_url),
-        classroom:classrooms(id, name),
-        reporting_teacher:profiles!incidents_reporting_teacher_id_fkey(id, first_name, last_name)
+        classroom:classrooms(id, name)
       `)
       .eq('organization_id', orgId)
       .order('occurred_at', { ascending: false })
 
     if (error) throw error
-    return (data || []) as IncidentWithDetails[]
+
+    const incidents = data || []
+    const teacherIds = [...new Set(incidents.map(i => i.reporting_teacher_id).filter(Boolean))]
+    const teachersMap = await fetchTeachersMap(supabase, teacherIds as string[])
+
+    return incidents.map(incident => ({
+      ...incident,
+      reporting_teacher: incident.reporting_teacher_id
+        ? teachersMap[incident.reporting_teacher_id] || null
+        : null,
+    })) as IncidentWithDetails[]
   },
 
   /**
@@ -161,15 +200,24 @@ export const incidentsEnhancedService = {
       .select(`
         *,
         child:children(id, first_name, last_name, date_of_birth, photo_url),
-        classroom:classrooms(id, name),
-        reporting_teacher:profiles!incidents_reporting_teacher_id_fkey(id, first_name, last_name)
+        classroom:classrooms(id, name)
       `)
       .eq('organization_id', orgId)
       .eq('status', 'pending_signature')
       .order('occurred_at', { ascending: false })
 
     if (error) throw error
-    return (data || []) as IncidentWithDetails[]
+
+    const incidents = data || []
+    const teacherIds = [...new Set(incidents.map(i => i.reporting_teacher_id).filter(Boolean))]
+    const teachersMap = await fetchTeachersMap(supabase, teacherIds as string[])
+
+    return incidents.map(incident => ({
+      ...incident,
+      reporting_teacher: incident.reporting_teacher_id
+        ? teachersMap[incident.reporting_teacher_id] || null
+        : null,
+    })) as IncidentWithDetails[]
   },
 
   /**
@@ -183,8 +231,7 @@ export const incidentsEnhancedService = {
       .select(`
         *,
         child:children(id, first_name, last_name, date_of_birth, photo_url),
-        classroom:classrooms(id, name),
-        reporting_teacher:profiles!incidents_reporting_teacher_id_fkey(id, first_name, last_name)
+        classroom:classrooms(id, name)
       `)
       .eq('id', id)
       .single()
@@ -193,7 +240,15 @@ export const incidentsEnhancedService = {
       if (error.code === 'PGRST116') return null
       throw error
     }
-    return data as IncidentWithDetails
+
+    // Fetch teacher info separately
+    let reporting_teacher = null
+    if (data.reporting_teacher_id) {
+      const teachersMap = await fetchTeachersMap(supabase, [data.reporting_teacher_id])
+      reporting_teacher = teachersMap[data.reporting_teacher_id] || null
+    }
+
+    return { ...data, reporting_teacher } as IncidentWithDetails
   },
 
   /**
@@ -272,13 +327,20 @@ export const incidentsEnhancedService = {
       .select(`
         *,
         child:children(id, first_name, last_name, date_of_birth, photo_url),
-        classroom:classrooms(id, name),
-        reporting_teacher:profiles!incidents_reporting_teacher_id_fkey(id, first_name, last_name)
+        classroom:classrooms(id, name)
       `)
       .single()
 
     if (error) throw error
-    return data as IncidentWithDetails
+
+    // Fetch teacher info separately
+    let reporting_teacher = null
+    if (data.reporting_teacher_id) {
+      const teachersMap = await fetchTeachersMap(supabase, [data.reporting_teacher_id])
+      reporting_teacher = teachersMap[data.reporting_teacher_id] || null
+    }
+
+    return { ...data, reporting_teacher } as IncidentWithDetails
   },
 
   /**
@@ -320,13 +382,20 @@ export const incidentsEnhancedService = {
       .select(`
         *,
         child:children(id, first_name, last_name, date_of_birth, photo_url),
-        classroom:classrooms(id, name),
-        reporting_teacher:profiles!incidents_reporting_teacher_id_fkey(id, first_name, last_name)
+        classroom:classrooms(id, name)
       `)
       .single()
 
     if (error) throw error
-    return data as IncidentWithDetails
+
+    // Fetch teacher info separately
+    let reporting_teacher = null
+    if (data.reporting_teacher_id) {
+      const teachersMap = await fetchTeachersMap(supabase, [data.reporting_teacher_id])
+      reporting_teacher = teachersMap[data.reporting_teacher_id] || null
+    }
+
+    return { ...data, reporting_teacher } as IncidentWithDetails
   },
 
   /**
@@ -451,8 +520,7 @@ export const incidentsEnhancedService = {
       .select(`
         *,
         child:children(id, first_name, last_name, date_of_birth, photo_url),
-        classroom:classrooms(id, name),
-        reporting_teacher:profiles!incidents_reporting_teacher_id_fkey(id, first_name, last_name)
+        classroom:classrooms(id, name)
       `)
       .eq('organization_id', orgId)
       .eq('follow_up_required', true)
@@ -461,7 +529,18 @@ export const incidentsEnhancedService = {
       .order('follow_up_date', { ascending: true })
 
     if (error) throw error
-    return (data || []) as IncidentWithDetails[]
+
+    // Fetch teacher info separately
+    const incidents = data || []
+    const teacherIds = [...new Set(incidents.map(i => i.reporting_teacher_id).filter(Boolean))] as string[]
+    const teachersMap = await fetchTeachersMap(supabase, teacherIds)
+
+    return incidents.map(incident => ({
+      ...incident,
+      reporting_teacher: incident.reporting_teacher_id
+        ? teachersMap[incident.reporting_teacher_id] || null
+        : null,
+    })) as IncidentWithDetails[]
   },
 
   /**
