@@ -272,6 +272,51 @@ function RecordMealContent() {
         </GlassCardContent>
       </GlassCard>
 
+      {/* Allergy Warning Banner */}
+      {(() => {
+        const childrenWithAllergies = presentChildren.filter(c =>
+          (c.allergies && c.allergies.length > 0) || c.dietary_restrictions
+        )
+        if (childrenWithAllergies.length === 0) return null
+
+        return (
+          <GlassCard className="border-l-4 border-l-orange-500 bg-orange-50">
+            <GlassCardContent className="py-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-orange-800">
+                    Alerta de Alergias y Restricciones
+                  </p>
+                  <p className="text-sm text-orange-700 mb-3">
+                    {childrenWithAllergies.length} niño{childrenWithAllergies.length > 1 ? 's' : ''} presente{childrenWithAllergies.length > 1 ? 's' : ''} con alergias o restricciones alimentarias:
+                  </p>
+                  <div className="space-y-2">
+                    {childrenWithAllergies.map(child => (
+                      <div key={child.id} className="flex flex-wrap items-center gap-2 p-2 bg-white/60 rounded-lg">
+                        <span className="font-medium text-gray-900">
+                          {child.first_name} {child.last_name}:
+                        </span>
+                        {child.allergies?.map(allergy => (
+                          <span key={allergy} className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded-full border border-red-200">
+                            {allergy}
+                          </span>
+                        ))}
+                        {child.dietary_restrictions && (
+                          <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full border border-yellow-200">
+                            {child.dietary_restrictions}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </GlassCardContent>
+          </GlassCard>
+        )
+      })()}
+
       {/* Summary & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
