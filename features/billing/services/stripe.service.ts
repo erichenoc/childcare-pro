@@ -220,7 +220,7 @@ export const stripeService = {
   async recordManualPayment(params: {
     invoiceId: string
     amount: number
-    paymentMethod: 'cash' | 'check' | 'bank_transfer' | 'other'
+    paymentMethod: 'card' | 'cash' | 'check' | 'bank_transfer' | 'other'
     notes?: string
   }) {
     const supabase = createClient()
