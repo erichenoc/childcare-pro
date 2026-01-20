@@ -1,6 +1,7 @@
 import { createClient } from '@/shared/lib/supabase/client'
 import { requireOrgId } from '@/shared/lib/organization-context'
 import type { Invoice, InvoiceWithFamily, Payment, TablesInsert, TablesUpdate } from '@/shared/types/database.types'
+import { emailService } from '@/features/notifications/services/email.service'
 
 export const billingService = {
   // Invoices
@@ -238,9 +239,34 @@ export const billingService = {
         .eq('id', invoiceId)
     }
 
-    // In production, this would integrate with an email service
-    // like Resend, SendGrid, or AWS SES to actually send the email
-    // For now, we just log the action and return success
+    // Send the actual email using Resend
+    if (emailService.isConfigured()) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcarepro.app'
+      const paymentUrl = `${appUrl}/dashboard/billing?pay=${invoiceId}`
+
+      const dueDate = invoice.due_date
+        ? new Date(invoice.due_date).toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+        : 'No especificada'
+
+      const emailResult = await emailService.sendInvoiceDue(family.primary_email, {
+        familyName: family.primary_contact_name || 'Cliente',
+        amount: `$${(invoice.total || 0).toFixed(2)}`,
+        dueDate,
+        invoiceNumber: invoice.invoice_number || invoiceId.slice(0, 8),
+        paymentUrl,
+      })
+
+      if (!emailResult.success) {
+        console.warn('Email delivery failed:', emailResult.error)
+        // Still return success since invoice was logged
+      }
+    } else {
+      console.warn('Email service not configured - invoice logged but not sent')
+    }
 
     return {
       success: true,

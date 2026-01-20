@@ -6,6 +6,7 @@
 import { createClient } from '@/shared/lib/supabase/server'
 import { requiresConfirmation, getToolInfo } from './definitions'
 import type { ToolCall, ToolResult, PendingConfirmation } from '../types'
+import { emailService } from '@/features/notifications/services/email.service'
 
 // =====================================================
 // EXECUTION CONTEXT - passed from API route
@@ -905,6 +906,154 @@ function generateAlerts(
 }
 
 // =====================================================
+// EMAIL FUNCTIONS (for AI Assistant actions)
+// =====================================================
+
+async function sendBillingReminder(params: Record<string, unknown>): Promise<{ success: boolean; message: string }> {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  const invoiceId = params.invoice_id as string
+  if (!invoiceId) {
+    return { success: false, message: 'ID de factura no proporcionado' }
+  }
+
+  // Get invoice with family info
+  const { data: invoice, error: invoiceError } = await supabase
+    .from('invoices')
+    .select(`
+      *,
+      family:families(id, primary_contact_name, primary_contact_email)
+    `)
+    .eq('id', invoiceId)
+    .eq('organization_id', organizationId)
+    .single()
+
+  if (invoiceError || !invoice) {
+    return { success: false, message: 'Factura no encontrada' }
+  }
+
+  const family = invoice.family as {
+    id: string
+    primary_contact_name: string | null
+    primary_contact_email: string | null
+  } | null
+
+  if (!family?.primary_contact_email) {
+    return { success: false, message: 'La familia no tiene email registrado' }
+  }
+
+  // Check if email service is configured
+  if (!emailService.isConfigured()) {
+    return { success: false, message: 'Servicio de email no configurado. Configure RESEND_API_KEY.' }
+  }
+
+  // Format due date
+  const dueDate = invoice.due_date
+    ? new Date(invoice.due_date).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    : 'No especificada'
+
+  // Send the reminder email
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcarepro.app'
+  const paymentUrl = `${appUrl}/dashboard/billing?pay=${invoiceId}`
+
+  const result = await emailService.sendInvoiceDue(family.primary_contact_email, {
+    familyName: family.primary_contact_name || 'Cliente',
+    amount: `$${(invoice.total || 0).toFixed(2)}`,
+    dueDate,
+    invoiceNumber: invoice.invoice_number || invoiceId.slice(0, 8),
+    paymentUrl,
+  })
+
+  if (result.success) {
+    // Log the action
+    await supabase.from('activity_log').insert({
+      action: 'billing_reminder_sent',
+      entity_type: 'invoice',
+      entity_id: invoiceId,
+      organization_id: organizationId,
+      new_values: {
+        sent_to: family.primary_contact_email,
+        sent_at: new Date().toISOString(),
+        sent_via: 'ai_assistant',
+      },
+    })
+
+    return {
+      success: true,
+      message: `Recordatorio enviado a ${family.primary_contact_email}`
+    }
+  }
+
+  return {
+    success: false,
+    message: result.error || 'Error al enviar el recordatorio'
+  }
+}
+
+async function sendCommunicationEmail(params: Record<string, unknown>): Promise<{ success: boolean; message: string }> {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  const to = params.to as string | string[]
+  const subject = params.subject as string
+  const body = params.body as string
+
+  if (!to || !subject || !body) {
+    return { success: false, message: 'Faltan parámetros: to, subject, body son requeridos' }
+  }
+
+  // Check if email service is configured
+  if (!emailService.isConfigured()) {
+    return { success: false, message: 'Servicio de email no configurado. Configure RESEND_API_KEY.' }
+  }
+
+  // Get organization name for the email footer
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('name')
+    .eq('id', organizationId)
+    .single()
+
+  const result = await emailService.sendGenericNotification(to, {
+    subject,
+    body,
+    centerName: org?.name || 'ChildCare Pro',
+  })
+
+  if (result.success) {
+    // Log the action
+    await supabase.from('activity_log').insert({
+      action: 'email_sent',
+      entity_type: 'communication',
+      entity_id: result.id || `email_${Date.now()}`,
+      organization_id: organizationId,
+      new_values: {
+        sent_to: Array.isArray(to) ? to : [to],
+        subject,
+        sent_at: new Date().toISOString(),
+        sent_via: 'ai_assistant',
+      },
+    })
+
+    const recipientCount = Array.isArray(to) ? to.length : 1
+    return {
+      success: true,
+      message: `Email enviado exitosamente a ${recipientCount} destinatario(s)`
+    }
+  }
+
+  return {
+    success: false,
+    message: result.error || 'Error al enviar el email'
+  }
+}
+
+// =====================================================
 // MAIN EXECUTOR
 // =====================================================
 
@@ -1030,12 +1179,10 @@ export async function executeConfirmedAction(
       })
 
     case 'billing_send_reminder':
-      // TODO: Implement email sending
-      return { success: true, message: 'Recordatorio enviado' }
+      return sendBillingReminder(params)
 
     case 'communication_send_email':
-      // TODO: Implement email sending with Resend
-      return { success: true, message: 'Email enviado' }
+      return sendCommunicationEmail(params)
 
     default:
       throw new Error(`Acción no soportada: ${actionType}`)
