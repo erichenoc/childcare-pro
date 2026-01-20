@@ -95,8 +95,7 @@ async function getFamilyById(familyId: string) {
     .from('families')
     .select(`
       *,
-      children(id, first_name, last_name),
-      contacts:family_contacts(*)
+      children(id, first_name, last_name)
     `)
     .eq('id', familyId)
     .eq('organization_id', organizationId)
@@ -115,7 +114,10 @@ async function getClassrooms() {
     .select(`
       *,
       children(id),
-      staff(id, first_name, last_name)
+      staff_assignments(
+        id,
+        profile:profiles(id, first_name, last_name)
+      )
     `)
     .eq('organization_id', organizationId)
 
@@ -127,13 +129,19 @@ async function getStaff(filters?: { role?: string; status?: string }) {
   if (!currentContext) throw new Error('No execution context available')
   const { supabase, organizationId } = currentContext
 
+  // Staff are stored in profiles table, filtered by role
   let query = supabase
-    .from('staff')
+    .from('profiles')
     .select(`
       *,
-      classroom:classrooms(id, name)
+      staff_assignments(
+        id,
+        classroom:classrooms(id, name),
+        is_lead
+      )
     `)
     .eq('organization_id', organizationId)
+    .in('role', ['owner', 'director', 'lead_teacher', 'teacher', 'assistant'])
 
   if (filters?.role) {
     query = query.eq('role', filters.role)
@@ -152,10 +160,14 @@ async function getStaffById(staffId: string) {
   const { supabase, organizationId } = currentContext
 
   const { data, error } = await supabase
-    .from('staff')
+    .from('profiles')
     .select(`
       *,
-      classroom:classrooms(id, name)
+      staff_assignments(
+        id,
+        classroom:classrooms(id, name),
+        is_lead
+      )
     `)
     .eq('id', staffId)
     .eq('organization_id', organizationId)
@@ -180,9 +192,9 @@ async function getAttendanceStats() {
 
   // Get today's attendance records
   const { data: attendance } = await supabase
-    .from('attendance_records')
-    .select('*, child:children!inner(organization_id)')
-    .eq('child.organization_id', organizationId)
+    .from('attendance')
+    .select('*')
+    .eq('organization_id', organizationId)
     .eq('date', today)
 
   const present = attendance?.filter(a => a.check_in_time && !a.check_out_time).length || 0
@@ -205,9 +217,9 @@ async function getIncidents(filters?: { status?: string; severity?: string; chil
     .from('incidents')
     .select(`
       *,
-      child:children!inner(id, first_name, last_name, organization_id)
+      child:children(id, first_name, last_name)
     `)
-    .eq('child.organization_id', organizationId)
+    .eq('organization_id', organizationId)
     .order('occurred_at', { ascending: false })
 
   if (filters?.status) {
@@ -231,13 +243,11 @@ async function getIncidentStats() {
 
   const { data: incidents } = await supabase
     .from('incidents')
-    .select(`
-      status,
-      child:children!inner(organization_id)
-    `)
-    .eq('child.organization_id', organizationId)
+    .select('status')
+    .eq('organization_id', organizationId)
 
-  const open = incidents?.filter(i => i.status === 'open' || i.status === 'in_progress').length || 0
+  // Note: incidents use 'active' status, not 'open'
+  const open = incidents?.filter(i => i.status === 'active' || i.status === 'pending').length || 0
 
   return { open, total: incidents?.length || 0 }
 }
@@ -250,9 +260,9 @@ async function getInvoices(filters?: { family_id?: string; status?: string }) {
     .from('invoices')
     .select(`
       *,
-      family:families!inner(id, primary_contact_name, organization_id)
+      family:families(id, primary_contact_name)
     `)
-    .eq('family.organization_id', organizationId)
+    .eq('organization_id', organizationId)
     .order('created_at', { ascending: false })
 
   if (filters?.family_id) {
@@ -373,14 +383,15 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
         id: c.id,
         name: `${c.first_name} ${c.last_name}`,
       })) || [],
-      contacts: family.contacts || [],
+      emergencyContacts: family.emergency_contacts || [],
+      authorizedPickups: family.authorized_pickups || [],
     }
   },
 
   async families_get_balance(args) {
     const invoices = await getInvoices({ family_id: args.family_id as string })
     const unpaid = invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled')
-    const totalOwed = unpaid.reduce((sum, i) => sum + (i.total_amount || 0), 0)
+    const totalOwed = unpaid.reduce((sum, i) => sum + (i.total || 0), 0)
 
     return {
       family_id: args.family_id,
@@ -388,7 +399,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
       unpaid_invoices: unpaid.length,
       invoices: unpaid.map(i => ({
         id: i.id,
-        amount: i.total_amount,
+        amount: i.total,
         dueDate: i.due_date,
         status: i.status,
         daysOverdue: i.due_date ? Math.max(0, Math.floor((Date.now() - new Date(i.due_date).getTime()) / (1000 * 60 * 60 * 24))) : 0,
@@ -446,9 +457,9 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
         ageGroup: c.age_group,
         capacity: c.capacity,
         currentCount: c.children?.length || 0,
-        teachers: c.staff?.map((s: { first_name: string; last_name: string }) =>
-          `${s.first_name} ${s.last_name}`
-        ) || [],
+        teachers: c.staff_assignments?.map((sa: { profile?: { first_name: string; last_name: string } }) =>
+          sa.profile ? `${sa.profile.first_name} ${sa.profile.last_name}` : 'Unknown'
+        ).filter(Boolean) || [],
       })),
     }
   },
@@ -462,7 +473,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
     return {
       classrooms: filtered.map(c => {
         const childCount = c.children?.length || 0
-        const staffCount = c.staff?.length || 0
+        const staffCount = c.staff_assignments?.length || 0
         const maxRatio = getDCFRatio(c.age_group)
         const currentRatio = staffCount > 0 ? childCount / staffCount : childCount
         const isCompliant = currentRatio <= maxRatio
@@ -509,14 +520,19 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
 
     return {
       total: staff.length,
-      staff: staff.map(s => ({
-        id: s.id,
-        name: `${s.first_name} ${s.last_name}`,
-        role: s.role,
-        email: s.email,
-        classroom: s.classroom?.name || 'Sin asignar',
-        status: s.status,
-      })),
+      staff: staff.map(s => {
+        // Get classroom from staff_assignments
+        const assignment = s.staff_assignments?.[0]
+        const classroomName = assignment?.classroom?.name || 'Sin asignar'
+        return {
+          id: s.id,
+          name: `${s.first_name} ${s.last_name}`,
+          role: s.role,
+          email: s.email,
+          classroom: classroomName,
+          status: s.status,
+        }
+      }),
     }
   },
 
@@ -524,13 +540,17 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
     const staff = await getStaffById(args.staff_id as string)
     if (!staff) return { error: 'Empleado no encontrado' }
 
+    // Get classroom from staff_assignments
+    const assignment = staff.staff_assignments?.[0]
+    const classroomName = assignment?.classroom?.name || 'Sin asignar'
+
     return {
       id: staff.id,
       name: `${staff.first_name} ${staff.last_name}`,
       role: staff.role,
       email: staff.email,
       phone: staff.phone,
-      classroom: staff.classroom?.name || 'Sin asignar',
+      classroom: classroomName,
       hireDate: staff.hire_date,
       status: staff.status,
     }
@@ -588,7 +608,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
       invoices: invoices.slice(0, 20).map(i => ({
         id: i.id,
         family: i.family?.primary_contact_name || 'N/A',
-        amount: i.total_amount,
+        amount: i.total,
         status: i.status,
         dueDate: i.due_date,
         createdAt: i.created_at,
@@ -608,17 +628,17 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
       return daysOverdue >= minDays
     })
 
-    const totalOwed = overdue.reduce((sum, i) => sum + (i.total_amount || 0), 0)
+    const totalOwed = overdue.reduce((sum, i) => sum + (i.total || 0), 0)
 
     return {
       total_overdue: overdue.length,
-      total_amount_owed: totalOwed,
+      total_owed: totalOwed,
       invoices: overdue.map(i => {
         const daysOverdue = Math.floor((today.getTime() - new Date(i.due_date!).getTime()) / (1000 * 60 * 60 * 24))
         return {
           id: i.id,
           family: i.family?.primary_contact_name || 'N/A',
-          amount: i.total_amount,
+          amount: i.total,
           dueDate: i.due_date,
           daysOverdue,
         }
@@ -642,8 +662,8 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
     const paid = invoices.filter(i => i.status === 'paid')
     const pending = invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled')
 
-    const totalRevenue = paid.reduce((sum, i) => sum + (i.total_amount || 0), 0)
-    const totalPending = pending.reduce((sum, i) => sum + (i.total_amount || 0), 0)
+    const totalRevenue = paid.reduce((sum, i) => sum + (i.total || 0), 0)
+    const totalPending = pending.reduce((sum, i) => sum + (i.total || 0), 0)
 
     return {
       period,
@@ -697,7 +717,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
       },
       billing: {
         overdue_count: overdue.length,
-        overdue_amount: overdue.reduce((sum, i) => sum + (i.total_amount || 0), 0),
+        overdue_amount: overdue.reduce((sum, i) => sum + (i.total || 0), 0),
       },
       compliance: {
         all_ratios_ok: violations.length === 0,
@@ -843,7 +863,7 @@ function getDCFRatio(ageGroup: string): number {
 function generateAlerts(
   attendance: { total: number; present: number },
   incidents: { open: number },
-  overdue: Array<{ total_amount?: number }>,
+  overdue: Array<{ total?: number }>,
   violations: Array<{ name: string }>
 ): Array<{ type: string; message: string; severity: string }> {
   const alerts: Array<{ type: string; message: string; severity: string }> = []
@@ -857,7 +877,7 @@ function generateAlerts(
   }
 
   if (overdue.length > 0) {
-    const total = overdue.reduce((sum, i) => sum + (i.total_amount || 0), 0)
+    const total = overdue.reduce((sum, i) => sum + (i.total || 0), 0)
     alerts.push({
       type: 'billing',
       severity: 'medium',
@@ -1003,7 +1023,7 @@ export async function executeConfirmedAction(
     case 'billing_create_invoice':
       return billingService.create({
         family_id: params.family_id as string,
-        total_amount: params.amount as number,
+        total: params.amount as number,
         description: params.description as string,
         due_date: params.due_date as string,
         status: 'sent',
