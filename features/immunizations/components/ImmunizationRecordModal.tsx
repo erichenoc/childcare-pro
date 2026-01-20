@@ -107,15 +107,15 @@ export function ImmunizationRecordModal({
               value={formData.vaccine_code || ''}
               onChange={(e) => handleVaccineChange(e.target.value)}
               error={errors.vaccine_name}
-            >
-              <option value="">Select a vaccine</option>
-              {vaccineRequirements.map((vaccine) => (
-                <option key={vaccine.vaccine_code} value={vaccine.vaccine_code}>
-                  {vaccine.vaccine_name}
-                </option>
-              ))}
-              <option value="other">Other (specify)</option>
-            </GlassSelect>
+              placeholder="Select a vaccine"
+              options={[
+                ...vaccineRequirements.map((vaccine) => ({
+                  value: vaccine.vaccine_code,
+                  label: vaccine.vaccine_name,
+                })),
+                { value: 'other', label: 'Other (specify)' },
+              ]}
+            />
           </div>
 
           {/* Custom Vaccine Name (if Other selected) */}
@@ -188,12 +188,13 @@ export function ImmunizationRecordModal({
             <GlassSelect
               value={formData.document_type || ''}
               onChange={(e) => setFormData({ ...formData, document_type: e.target.value as DocumentType })}
-            >
-              <option value="">Select document type</option>
-              <option value="certificate">Certificate</option>
-              <option value="record">Medical Record</option>
-              <option value="exemption">Exemption Form</option>
-            </GlassSelect>
+              placeholder="Select document type"
+              options={[
+                { value: 'certificate', label: 'Certificate' },
+                { value: 'record', label: 'Medical Record' },
+                { value: 'exemption', label: 'Exemption Form' },
+              ]}
+            />
           </div>
 
           {/* Document Upload Placeholder */}

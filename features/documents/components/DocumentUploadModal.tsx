@@ -160,15 +160,12 @@ export function DocumentUploadModal({
           <GlassSelect
             value={selectedTemplate}
             onChange={(e) => handleTemplateChange(e.target.value)}
-          >
-            <option value="">-- Select a template --</option>
-            {templates.map((template) => (
-              <option key={template.id} value={template.id}>
-                {template.name}
-                {template.is_dcf_required && ' (DCF Required)'}
-              </option>
-            ))}
-          </GlassSelect>
+            placeholder="-- Select a template --"
+            options={templates.map((template) => ({
+              value: template.id,
+              label: template.name + (template.is_dcf_required ? ' (DCF Required)' : ''),
+            }))}
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -202,13 +199,8 @@ export function DocumentUploadModal({
                   })
                 }
                 required
-              >
-                {entityTypeOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </GlassSelect>
+                options={entityTypeOptions}
+              />
             </div>
           )}
 
@@ -223,13 +215,8 @@ export function DocumentUploadModal({
                 setFormData({ ...formData, category: e.target.value as DocumentCategory })
               }
               required
-            >
-              {categoryOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </GlassSelect>
+              options={categoryOptions}
+            />
           </div>
 
           {/* Effective Date */}

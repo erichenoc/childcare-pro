@@ -157,13 +157,8 @@ export function QuickActionButtons({ childId, childName, onSuccess }: QuickActio
               <GlassSelect
                 value={mealType}
                 onChange={(e) => setMealType(e.target.value as MealType)}
-              >
-                {Object.entries(MEAL_TYPE_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </GlassSelect>
+                options={Object.entries(MEAL_TYPE_LABELS).map(([value, label]) => ({ value, label }))}
+              />
             </div>
             <div>
               <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
@@ -172,13 +167,8 @@ export function QuickActionButtons({ childId, childName, onSuccess }: QuickActio
               <GlassSelect
                 value={amountEaten}
                 onChange={(e) => setAmountEaten(e.target.value as AmountEaten)}
-              >
-                {Object.entries(AMOUNT_EATEN_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </GlassSelect>
+                options={Object.entries(AMOUNT_EATEN_LABELS).map(([value, label]) => ({ value, label }))}
+              />
             </div>
           </div>
           <GlassButton

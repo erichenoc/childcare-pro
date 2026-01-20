@@ -241,35 +241,20 @@ export default function DocumentsPage() {
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value as DocumentCategory | '')}
                 className="w-40"
-              >
-                {categoryOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </GlassSelect>
+                options={categoryOptions}
+              />
               <GlassSelect
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as DocumentStatus | '')}
                 className="w-36"
-              >
-                {statusOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </GlassSelect>
+                options={statusOptions}
+              />
               <GlassSelect
                 value={entityTypeFilter}
                 onChange={(e) => setEntityTypeFilter(e.target.value as EntityType | '')}
                 className="w-32"
-              >
-                {entityTypeOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </GlassSelect>
+                options={entityTypeOptions}
+              />
             </div>
           </div>
         </GlassCardHeader>

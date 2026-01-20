@@ -201,13 +201,14 @@ export default function ImmunizationsPage() {
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as ComplianceStatus | 'all')}
                 className="w-40"
-              >
-                <option value="all">All Status</option>
-                <option value="compliant">Compliant</option>
-                <option value="incomplete">Incomplete</option>
-                <option value="overdue">Overdue</option>
-                <option value="exempt">Exempt</option>
-              </GlassSelect>
+                options={[
+                  { value: 'all', label: 'All Status' },
+                  { value: 'compliant', label: 'Compliant' },
+                  { value: 'incomplete', label: 'Incomplete' },
+                  { value: 'overdue', label: 'Overdue' },
+                  { value: 'exempt', label: 'Exempt' },
+                ]}
+              />
             </div>
           </div>
         </GlassCardHeader>
