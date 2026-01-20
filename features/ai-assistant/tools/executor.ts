@@ -31,7 +31,7 @@ async function getChildren(filters?: { classroom_id?: string; status?: string })
     .select(`
       *,
       classroom:classrooms(id, name),
-      family:families(id, name)
+      family:families(id, primary_contact_name)
     `)
     .eq('organization_id', organizationId)
 
@@ -56,7 +56,7 @@ async function getChildById(childId: string) {
     .select(`
       *,
       classroom:classrooms(id, name),
-      family:families(id, name)
+      family:families(id, primary_contact_name)
     `)
     .eq('id', childId)
     .eq('organization_id', organizationId)
@@ -250,7 +250,7 @@ async function getInvoices(filters?: { family_id?: string; status?: string }) {
     .from('invoices')
     .select(`
       *,
-      family:families!inner(id, name, organization_id)
+      family:families!inner(id, primary_contact_name, organization_id)
     `)
     .eq('family.organization_id', organizationId)
     .order('created_at', { ascending: false })
@@ -311,7 +311,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
       dateOfBirth: child.date_of_birth,
       age: calculateAge(child.date_of_birth),
       classroom: child.classroom?.name || 'Sin asignar',
-      family: child.family ? `${child.family.name}` : 'Sin familia',
+      family: child.family ? `${child.family.primary_contact_name}` : 'Sin familia',
       status: child.status,
       enrollmentDate: child.enrollment_date,
       allergies: child.allergies || [],
@@ -349,9 +349,9 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
       total: families.length,
       families: families.map(f => ({
         id: f.id,
-        name: f.name,
-        primaryContact: f.primary_email,
-        phone: f.primary_phone,
+        name: f.primary_contact_name,
+        primaryContact: f.primary_contact_email,
+        phone: f.primary_contact_phone,
         status: f.status,
         childrenCount: f.children?.length || 0,
       })),
@@ -364,9 +364,9 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
 
     return {
       id: family.id,
-      name: family.name,
-      email: family.primary_email,
-      phone: family.primary_phone,
+      name: family.primary_contact_name,
+      email: family.primary_contact_email,
+      phone: family.primary_contact_phone,
       address: family.address,
       status: family.status,
       children: family.children?.map((c: { id: string; first_name: string; last_name: string }) => ({
@@ -587,7 +587,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
       total: invoices.length,
       invoices: invoices.slice(0, 20).map(i => ({
         id: i.id,
-        family: i.family?.name || 'N/A',
+        family: i.family?.primary_contact_name || 'N/A',
         amount: i.total_amount,
         status: i.status,
         dueDate: i.due_date,
@@ -617,7 +617,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
         const daysOverdue = Math.floor((today.getTime() - new Date(i.due_date!).getTime()) / (1000 * 60 * 60 * 24))
         return {
           id: i.id,
-          family: i.family?.name || 'N/A',
+          family: i.family?.primary_contact_name || 'N/A',
           amount: i.total_amount,
           dueDate: i.due_date,
           daysOverdue,
