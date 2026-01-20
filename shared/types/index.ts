@@ -58,3 +58,21 @@ export * from './accounting'
 
 // Notifications
 export * from './notifications'
+
+// Immunization tracking (DCF compliance)
+export * from './immunizations'
+
+// Documents & Forms (DCF compliance)
+export * from './documents'
+
+// Daily Activities (meals, naps, activities, etc.)
+export * from './daily-activities'
+
+// Learning & Milestones (child development tracking)
+export * from './learning-milestones'
+
+// Billing Plans & Rates
+export * from './billing-plans'
+
+// Admissions & Waitlist
+export * from './admissions'

@@ -57,6 +57,10 @@ export interface Translations {
     staff: string
     classrooms: string
     attendance: string
+    dailyActivities: string
+    learning: string
+    immunizations: string
+    documents: string
     billing: string
     foodProgram: string
     programs: string
@@ -65,6 +69,7 @@ export interface Translations {
     communication: string
     reports: string
     incidents: string
+    admissions: string
     meals: string
     curriculum: string
     settings: string

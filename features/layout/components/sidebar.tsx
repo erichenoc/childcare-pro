@@ -24,6 +24,11 @@ import {
   Award,
   Calculator,
   Bell,
+  Syringe,
+  FolderOpen,
+  CalendarClock,
+  BookOpen,
+  UserPlus,
 } from 'lucide-react'
 import { useTranslations } from '@/shared/lib/i18n'
 
@@ -42,6 +47,10 @@ const mainNavItems: NavItem[] = [
   { key: 'staff', href: '/dashboard/staff', icon: UserCircle },
   { key: 'classrooms', href: '/dashboard/classrooms', icon: GraduationCap },
   { key: 'attendance', href: '/dashboard/attendance', icon: ClipboardCheck },
+  { key: 'dailyActivities', href: '/dashboard/daily-activities', icon: CalendarClock },
+  { key: 'learning', href: '/dashboard/learning', icon: BookOpen },
+  { key: 'immunizations', href: '/dashboard/immunizations', icon: Syringe },
+  { key: 'documents', href: '/dashboard/documents', icon: FolderOpen },
   { key: 'billing', href: '/dashboard/billing', icon: CreditCard },
   { key: 'foodProgram', href: '/dashboard/food-program', icon: UtensilsCrossed },
   { key: 'programs', href: '/dashboard/programs', icon: Award },
@@ -50,6 +59,7 @@ const mainNavItems: NavItem[] = [
   { key: 'communication', href: '/dashboard/communication', icon: MessageSquare },
   { key: 'reports', href: '/dashboard/reports', icon: FileText },
   { key: 'incidents', href: '/dashboard/incidents', icon: AlertTriangle },
+  { key: 'admissions', href: '/dashboard/admissions', icon: UserPlus },
 ]
 
 const bottomNavItems: NavItem[] = [

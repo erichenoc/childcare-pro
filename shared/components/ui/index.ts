@@ -1,4 +1,4 @@
-// Shared UI Components - Liquid Glass Design System
+// Shared UI Components - Neumorphism Design System
 // ChildCare Pro
 
 // Cards
