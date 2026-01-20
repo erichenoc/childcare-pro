@@ -174,9 +174,10 @@ async function getConversationHistory(
 // =====================================================
 
 async function* streamAssistantResponse(
-  messages: Array<{ role: string; content: string }>,
+  messages: Array<{ role: string; content: string; tool_calls?: unknown[]; tool_call_id?: string }>,
   systemPrompt: string,
-  onToolCall?: (toolCall: ToolCall) => Promise<unknown>
+  onToolCall?: (toolCall: ToolCall) => Promise<unknown>,
+  maxToolIterations = 3
 ): AsyncGenerator<string> {
   const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) {
@@ -190,134 +191,188 @@ async function* streamAssistantResponse(
     function: t.function,
   }))
 
-  const requestBody = {
-    model: MODEL,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      ...messages,
-    ],
-    tools,
-    tool_choice: 'auto',
-    stream: true,
-    temperature: 0.7,
-    max_tokens: 2000,
-  }
+  // Keep track of all messages including tool calls/results
+  const conversationMessages = [...messages]
+  let iteration = 0
 
-  try {
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-        'X-Title': 'ChildCare Pro AI Assistant',
-      },
-      body: JSON.stringify(requestBody),
-    })
+  while (iteration < maxToolIterations) {
+    iteration++
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('[AI Assistant] OpenRouter error:', response.status, errorText)
-      yield `data: ${JSON.stringify({ type: 'error', error: `Error del servicio AI: ${response.status}` })}\n\n`
-      return
+    const requestBody = {
+      model: MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...conversationMessages,
+      ],
+      tools,
+      tool_choice: 'auto',
+      stream: true,
+      temperature: 0.7,
+      max_tokens: 2000,
     }
 
-    if (!response.body) {
-      yield `data: ${JSON.stringify({ type: 'error', error: 'Sin respuesta del servicio' })}\n\n`
-      return
-    }
+    try {
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+          'X-Title': 'ChildCare Pro AI Assistant',
+        },
+        body: JSON.stringify(requestBody),
+      })
 
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ''
-    let fullContent = ''
-    const toolCalls: ToolCall[] = []
-    let currentToolCall: { id: string; name: string; arguments: string } | null = null
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('[AI Assistant] OpenRouter error:', response.status, errorText)
+        yield `data: ${JSON.stringify({ type: 'error', error: `Error del servicio AI: ${response.status}` })}\n\n`
+        return
+      }
 
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
+      if (!response.body) {
+        yield `data: ${JSON.stringify({ type: 'error', error: 'Sin respuesta del servicio' })}\n\n`
+        return
+      }
 
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() || ''
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let fullContent = ''
+      let currentToolCall: { id: string; name: string; arguments: string } | null = null
+      let hasToolCalls = false
+      const pendingToolCalls: Array<{ id: string; name: string; arguments: Record<string, unknown> }> = []
 
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue
-        const jsonStr = line.slice(6).trim()
-        if (jsonStr === '[DONE]') continue
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
 
-        try {
-          const data = JSON.parse(jsonStr)
-          const delta = data.choices?.[0]?.delta
-          const finishReason = data.choices?.[0]?.finish_reason
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
 
-          if (!delta) continue
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const jsonStr = line.slice(6).trim()
+          if (jsonStr === '[DONE]') continue
 
-          // Content delta
-          if (delta.content) {
-            fullContent += delta.content
-            yield `data: ${JSON.stringify({ type: 'content', delta: delta.content })}\n\n`
-          }
+          try {
+            const data = JSON.parse(jsonStr)
+            const delta = data.choices?.[0]?.delta
+            const finishReason = data.choices?.[0]?.finish_reason
 
-          // Tool call handling
-          if (delta.tool_calls) {
-            for (const tc of delta.tool_calls) {
-              if (tc.index !== undefined) {
-                // New tool call or update existing
-                if (tc.id) {
-                  currentToolCall = {
-                    id: tc.id,
-                    name: tc.function?.name || '',
-                    arguments: '',
+            if (!delta) continue
+
+            // Content delta
+            if (delta.content) {
+              fullContent += delta.content
+              yield `data: ${JSON.stringify({ type: 'content', delta: delta.content })}\n\n`
+            }
+
+            // Tool call handling
+            if (delta.tool_calls) {
+              hasToolCalls = true
+              for (const tc of delta.tool_calls) {
+                if (tc.index !== undefined) {
+                  // New tool call or update existing
+                  if (tc.id) {
+                    currentToolCall = {
+                      id: tc.id,
+                      name: tc.function?.name || '',
+                      arguments: '',
+                    }
                   }
-                }
-                if (tc.function?.name && currentToolCall) {
-                  currentToolCall.name = tc.function.name
-                }
-                if (tc.function?.arguments && currentToolCall) {
-                  currentToolCall.arguments += tc.function.arguments
+                  if (tc.function?.name && currentToolCall) {
+                    currentToolCall.name = tc.function.name
+                  }
+                  if (tc.function?.arguments && currentToolCall) {
+                    currentToolCall.arguments += tc.function.arguments
+                  }
                 }
               }
             }
-          }
 
-          // Check for finish with tool calls
-          if (finishReason === 'tool_calls' && currentToolCall) {
-            // Parse accumulated arguments
-            const parsedToolCall: ToolCall = {
-              id: currentToolCall.id || `tool_${Date.now()}`,
-              name: currentToolCall.name || '',
-              arguments: JSON.parse(currentToolCall.arguments || '{}'),
-            }
-            toolCalls.push(parsedToolCall)
-
-            // Notify about tool call
-            yield `data: ${JSON.stringify({ type: 'tool_call', tool: parsedToolCall })}\n\n`
-
-            // Execute tool if handler provided
-            if (onToolCall) {
-              const result = await onToolCall(parsedToolCall)
-              yield `data: ${JSON.stringify({ type: 'tool_result', tool_call_id: parsedToolCall.id, result })}\n\n`
+            // Check for finish with tool calls
+            if (finishReason === 'tool_calls' && currentToolCall) {
+              // Parse accumulated arguments
+              const parsedToolCall = {
+                id: currentToolCall.id || `tool_${Date.now()}`,
+                name: currentToolCall.name || '',
+                arguments: JSON.parse(currentToolCall.arguments || '{}'),
+              }
+              pendingToolCalls.push(parsedToolCall)
+              currentToolCall = null
             }
 
-            currentToolCall = null
+          } catch (parseError) {
+            // Skip invalid JSON chunks
+            continue
           }
-
-        } catch (parseError) {
-          // Skip invalid JSON chunks
-          continue
         }
       }
+
+      // If there were tool calls, execute them and continue the loop
+      if (hasToolCalls && pendingToolCalls.length > 0) {
+        // Build assistant message with tool calls
+        const assistantToolCallsMessage = {
+          role: 'assistant',
+          content: fullContent || null,
+          tool_calls: pendingToolCalls.map(tc => ({
+            id: tc.id,
+            type: 'function',
+            function: {
+              name: tc.name,
+              arguments: JSON.stringify(tc.arguments),
+            },
+          })),
+        }
+        conversationMessages.push(assistantToolCallsMessage)
+
+        // Execute each tool call and add results
+        for (const toolCall of pendingToolCalls) {
+          // Notify about tool call
+          yield `data: ${JSON.stringify({ type: 'tool_call', tool: toolCall })}\n\n`
+
+          let result: unknown = { error: 'No handler provided' }
+
+          if (onToolCall) {
+            result = await onToolCall(toolCall as ToolCall)
+          }
+
+          // Check if this requires confirmation (don't continue conversation, wait for user)
+          if (result && typeof result === 'object' && 'requiresConfirmation' in result) {
+            yield `data: ${JSON.stringify({ type: 'tool_result', tool_call_id: toolCall.id, result })}\n\n`
+            yield `data: ${JSON.stringify({ type: 'done', fullContent, needsConfirmation: true })}\n\n`
+            return
+          }
+
+          yield `data: ${JSON.stringify({ type: 'tool_result', tool_call_id: toolCall.id, result })}\n\n`
+
+          // Add tool result message
+          conversationMessages.push({
+            role: 'tool',
+            content: JSON.stringify(result),
+            tool_call_id: toolCall.id,
+          })
+        }
+
+        // Continue the loop to get the model's response after tool execution
+        continue
+      }
+
+      // No tool calls, we're done
+      yield `data: ${JSON.stringify({ type: 'done', fullContent })}\n\n`
+      return
+
+    } catch (error) {
+      console.error('[AI Assistant] Stream error:', error)
+      yield `data: ${JSON.stringify({ type: 'error', error: error instanceof Error ? error.message : 'Error de conexión' })}\n\n`
+      return
     }
-
-    // Final event
-    yield `data: ${JSON.stringify({ type: 'done', fullContent, toolCalls })}\n\n`
-
-  } catch (error) {
-    console.error('[AI Assistant] Stream error:', error)
-    yield `data: ${JSON.stringify({ type: 'error', error: error instanceof Error ? error.message : 'Error de conexión' })}\n\n`
   }
+
+  // Max iterations reached
+  yield `data: ${JSON.stringify({ type: 'done', fullContent: 'Se alcanzó el límite de iteraciones de herramientas.' })}\n\n`
 }
 
 // =====================================================

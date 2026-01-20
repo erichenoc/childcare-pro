@@ -178,9 +178,8 @@ export function AIAssistantWidget() {
             </div>
             <div className="flex-1">
               <h3 className="text-white font-semibold">Asistente ChildCare</h3>
-              <p className="text-blue-100 text-sm flex items-center gap-1">
-                <Zap className="w-3 h-3" />
-                GPT-4o • {getPageContext(pathname)}
+              <p className="text-blue-100 text-sm">
+                Siempre listo para ayudarte
               </p>
             </div>
             <button
