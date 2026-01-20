@@ -1,20 +1,271 @@
 // =====================================================
 // AI Assistant Tool Executor
 // =====================================================
-// Executes tools and returns results
+// Executes tools and returns results (server-side)
 
 import { createClient } from '@/shared/lib/supabase/server'
 import { requiresConfirmation, getToolInfo } from './definitions'
 import type { ToolCall, ToolResult, PendingConfirmation } from '../types'
 
-// Import existing services
-import { childrenService } from '@/features/children/services/children.service'
-import { familiesService } from '@/features/families/services/families.service'
-import { attendanceService } from '@/features/attendance/services/attendance.service'
-import { classroomsService } from '@/features/classrooms/services/classrooms.service'
-import { staffService } from '@/features/staff/services/staff.service'
-import { incidentsService } from '@/features/incidents/services/incidents.service'
-import { billingService } from '@/features/billing/services/billing.service'
+// =====================================================
+// EXECUTION CONTEXT - passed from API route
+// =====================================================
+
+interface ExecutionContext {
+  organizationId: string
+  supabase: Awaited<ReturnType<typeof createClient>>
+}
+
+let currentContext: ExecutionContext | null = null
+
+// =====================================================
+// SERVER-SIDE DATA ACCESS FUNCTIONS
+// =====================================================
+
+async function getChildren(filters?: { classroom_id?: string; status?: string }) {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  let query = supabase
+    .from('children')
+    .select(`
+      *,
+      classroom:classrooms(id, name),
+      family:families(id, name)
+    `)
+    .eq('organization_id', organizationId)
+
+  if (filters?.classroom_id) {
+    query = query.eq('classroom_id', filters.classroom_id)
+  }
+  if (filters?.status) {
+    query = query.eq('status', filters.status)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data || []
+}
+
+async function getChildById(childId: string) {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  const { data, error } = await supabase
+    .from('children')
+    .select(`
+      *,
+      classroom:classrooms(id, name),
+      family:families(id, name)
+    `)
+    .eq('id', childId)
+    .eq('organization_id', organizationId)
+    .single()
+
+  if (error) return null
+  return data
+}
+
+async function getFamilies(filters?: { status?: string }) {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  let query = supabase
+    .from('families')
+    .select(`
+      *,
+      children(id, first_name, last_name)
+    `)
+    .eq('organization_id', organizationId)
+
+  if (filters?.status) {
+    query = query.eq('status', filters.status)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data || []
+}
+
+async function getFamilyById(familyId: string) {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  const { data, error } = await supabase
+    .from('families')
+    .select(`
+      *,
+      children(id, first_name, last_name),
+      contacts:family_contacts(*)
+    `)
+    .eq('id', familyId)
+    .eq('organization_id', organizationId)
+    .single()
+
+  if (error) return null
+  return data
+}
+
+async function getClassrooms() {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  const { data, error } = await supabase
+    .from('classrooms')
+    .select(`
+      *,
+      children(id),
+      staff(id, first_name, last_name)
+    `)
+    .eq('organization_id', organizationId)
+
+  if (error) throw error
+  return data || []
+}
+
+async function getStaff(filters?: { role?: string; status?: string }) {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  let query = supabase
+    .from('staff')
+    .select(`
+      *,
+      classroom:classrooms(id, name)
+    `)
+    .eq('organization_id', organizationId)
+
+  if (filters?.role) {
+    query = query.eq('role', filters.role)
+  }
+  if (filters?.status) {
+    query = query.eq('status', filters.status)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data || []
+}
+
+async function getStaffById(staffId: string) {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  const { data, error } = await supabase
+    .from('staff')
+    .select(`
+      *,
+      classroom:classrooms(id, name)
+    `)
+    .eq('id', staffId)
+    .eq('organization_id', organizationId)
+    .single()
+
+  if (error) return null
+  return data
+}
+
+async function getAttendanceStats() {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  const today = new Date().toISOString().split('T')[0]
+
+  // Get total enrolled children
+  const { count: totalChildren } = await supabase
+    .from('children')
+    .select('*', { count: 'exact', head: true })
+    .eq('organization_id', organizationId)
+    .eq('status', 'active')
+
+  // Get today's attendance records
+  const { data: attendance } = await supabase
+    .from('attendance_records')
+    .select('*, child:children!inner(organization_id)')
+    .eq('child.organization_id', organizationId)
+    .eq('date', today)
+
+  const present = attendance?.filter(a => a.check_in_time && !a.check_out_time).length || 0
+  const checkedOut = attendance?.filter(a => a.check_in_time && a.check_out_time).length || 0
+  const total = totalChildren || 0
+
+  return {
+    total,
+    present,
+    absent: total - (present + checkedOut),
+    late: attendance?.filter(a => a.status === 'late').length || 0,
+  }
+}
+
+async function getIncidents(filters?: { status?: string; severity?: string; child_id?: string }) {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  let query = supabase
+    .from('incidents')
+    .select(`
+      *,
+      child:children!inner(id, first_name, last_name, organization_id)
+    `)
+    .eq('child.organization_id', organizationId)
+    .order('occurred_at', { ascending: false })
+
+  if (filters?.status) {
+    query = query.eq('status', filters.status)
+  }
+  if (filters?.severity) {
+    query = query.eq('severity', filters.severity)
+  }
+  if (filters?.child_id) {
+    query = query.eq('child_id', filters.child_id)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data || []
+}
+
+async function getIncidentStats() {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  const { data: incidents } = await supabase
+    .from('incidents')
+    .select(`
+      status,
+      child:children!inner(organization_id)
+    `)
+    .eq('child.organization_id', organizationId)
+
+  const open = incidents?.filter(i => i.status === 'open' || i.status === 'in_progress').length || 0
+
+  return { open, total: incidents?.length || 0 }
+}
+
+async function getInvoices(filters?: { family_id?: string; status?: string }) {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  let query = supabase
+    .from('invoices')
+    .select(`
+      *,
+      family:families!inner(id, name, organization_id)
+    `)
+    .eq('family.organization_id', organizationId)
+    .order('created_at', { ascending: false })
+
+  if (filters?.family_id) {
+    query = query.eq('family_id', filters.family_id)
+  }
+  if (filters?.status) {
+    query = query.eq('status', filters.status)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data || []
+}
 
 // =====================================================
 // TOOL IMPLEMENTATIONS
@@ -25,17 +276,13 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   // CHILDREN
   // =====================================================
   async children_list(args) {
-    const children = await childrenService.getAll()
+    const children = await getChildren({
+      classroom_id: args.classroom_id as string | undefined,
+      status: args.status as string | undefined,
+    })
     let filtered = children
 
-    if (args.classroom_id) {
-      filtered = filtered.filter(c => c.classroom_id === args.classroom_id)
-    }
-    if (args.status) {
-      filtered = filtered.filter(c => c.status === args.status)
-    }
     if (args.program_type) {
-      // Filter by program type from notes or metadata
       filtered = filtered.filter(c => {
         const notes = c.notes as Record<string, unknown> | null
         return notes?.program_type === args.program_type
@@ -55,7 +302,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   },
 
   async children_get(args) {
-    const child = await childrenService.getById(args.child_id as string)
+    const child = await getChildById(args.child_id as string)
     if (!child) return { error: 'Niño no encontrado' }
 
     return {
@@ -75,7 +322,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
 
   async children_search(args) {
     const query = (args.query as string).toLowerCase()
-    const children = await childrenService.getAll()
+    const children = await getChildren()
     const matches = children.filter(c =>
       `${c.first_name} ${c.last_name}`.toLowerCase().includes(query)
     )
@@ -94,16 +341,13 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   // FAMILIES
   // =====================================================
   async families_list(args) {
-    const families = await familiesService.getAll()
-    let filtered = families
-
-    if (args.status) {
-      filtered = filtered.filter(f => f.status === args.status)
-    }
+    const families = await getFamilies({
+      status: args.status as string | undefined,
+    })
 
     return {
-      total: filtered.length,
-      families: filtered.map(f => ({
+      total: families.length,
+      families: families.map(f => ({
         id: f.id,
         name: f.name,
         primaryContact: f.primary_email,
@@ -115,7 +359,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   },
 
   async families_get(args) {
-    const family = await familiesService.getById(args.family_id as string)
+    const family = await getFamilyById(args.family_id as string)
     if (!family) return { error: 'Familia no encontrada' }
 
     return {
@@ -125,7 +369,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
       phone: family.primary_phone,
       address: family.address,
       status: family.status,
-      children: family.children?.map(c => ({
+      children: family.children?.map((c: { id: string; first_name: string; last_name: string }) => ({
         id: c.id,
         name: `${c.first_name} ${c.last_name}`,
       })) || [],
@@ -134,7 +378,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   },
 
   async families_get_balance(args) {
-    const invoices = await billingService.getInvoicesByFamily(args.family_id as string)
+    const invoices = await getInvoices({ family_id: args.family_id as string })
     const unpaid = invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled')
     const totalOwed = unpaid.reduce((sum, i) => sum + (i.total_amount || 0), 0)
 
@@ -155,8 +399,8 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   // =====================================================
   // ATTENDANCE
   // =====================================================
-  async attendance_get_today(args) {
-    const stats = await attendanceService.getStats()
+  async attendance_get_today() {
+    const stats = await getAttendanceStats()
 
     return {
       date: new Date().toISOString().split('T')[0],
@@ -171,7 +415,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   },
 
   async attendance_get_stats(args) {
-    const stats = await attendanceService.getStats()
+    const stats = await getAttendanceStats()
     return {
       period: args.period,
       ...stats,
@@ -192,7 +436,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   // CLASSROOMS
   // =====================================================
   async classrooms_list() {
-    const classrooms = await classroomsService.getAll()
+    const classrooms = await getClassrooms()
 
     return {
       total: classrooms.length,
@@ -210,7 +454,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   },
 
   async classrooms_get_ratios(args) {
-    const classrooms = await classroomsService.getAll()
+    const classrooms = await getClassrooms()
     const filtered = args.classroom_id
       ? classrooms.filter(c => c.id === args.classroom_id)
       : classrooms
@@ -258,19 +502,14 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   // STAFF
   // =====================================================
   async staff_list(args) {
-    const staff = await staffService.getAll()
-    let filtered = staff
-
-    if (args.role) {
-      filtered = filtered.filter(s => s.role === args.role)
-    }
-    if (args.status) {
-      filtered = filtered.filter(s => s.status === args.status)
-    }
+    const staff = await getStaff({
+      role: args.role as string | undefined,
+      status: args.status as string | undefined,
+    })
 
     return {
-      total: filtered.length,
-      staff: filtered.map(s => ({
+      total: staff.length,
+      staff: staff.map(s => ({
         id: s.id,
         name: `${s.first_name} ${s.last_name}`,
         role: s.role,
@@ -282,7 +521,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   },
 
   async staff_get(args) {
-    const staff = await staffService.getById(args.staff_id as string)
+    const staff = await getStaffById(args.staff_id as string)
     if (!staff) return { error: 'Empleado no encontrado' }
 
     return {
@@ -301,22 +540,15 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   // INCIDENTS
   // =====================================================
   async incidents_list(args) {
-    const incidents = await incidentsService.getAll()
-    let filtered = incidents
-
-    if (args.status) {
-      filtered = filtered.filter(i => i.status === args.status)
-    }
-    if (args.severity) {
-      filtered = filtered.filter(i => i.severity === args.severity)
-    }
-    if (args.child_id) {
-      filtered = filtered.filter(i => i.child_id === args.child_id)
-    }
+    const incidents = await getIncidents({
+      status: args.status as string | undefined,
+      severity: args.severity as string | undefined,
+      child_id: args.child_id as string | undefined,
+    })
 
     return {
-      total: filtered.length,
-      incidents: filtered.slice(0, 20).map(i => ({
+      total: incidents.length,
+      incidents: incidents.slice(0, 20).map(i => ({
         id: i.id,
         child: i.child ? `${i.child.first_name} ${i.child.last_name}` : 'N/A',
         type: i.incident_type,
@@ -333,7 +565,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   },
 
   async incidents_get_requiring_followup() {
-    const stats = await incidentsService.getStats()
+    const stats = await getIncidentStats()
     return {
       requiring_followup: stats.open,
       message: stats.open > 0
@@ -346,18 +578,14 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   // BILLING
   // =====================================================
   async billing_get_invoices(args) {
-    const invoices = args.family_id
-      ? await billingService.getInvoicesByFamily(args.family_id as string)
-      : await billingService.getAll()
-
-    let filtered = invoices
-    if (args.status) {
-      filtered = filtered.filter(i => i.status === args.status)
-    }
+    const invoices = await getInvoices({
+      family_id: args.family_id as string | undefined,
+      status: args.status as string | undefined,
+    })
 
     return {
-      total: filtered.length,
-      invoices: filtered.slice(0, 20).map(i => ({
+      total: invoices.length,
+      invoices: invoices.slice(0, 20).map(i => ({
         id: i.id,
         family: i.family?.name || 'N/A',
         amount: i.total_amount,
@@ -369,7 +597,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   },
 
   async billing_get_overdue(args) {
-    const invoices = await billingService.getAll()
+    const invoices = await getInvoices()
     const today = new Date()
     const minDays = (args.days_overdue as number) || 1
 
@@ -407,7 +635,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   },
 
   async billing_get_stats(args) {
-    const invoices = await billingService.getAll()
+    const invoices = await getInvoices()
     const period = args.period as string
 
     // Simple stats calculation
@@ -437,13 +665,13 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
     const date = (args.date as string) || new Date().toISOString().split('T')[0]
 
     // Get attendance
-    const attendanceStats = await attendanceService.getStats()
+    const attendanceStats = await getAttendanceStats()
 
     // Get incidents
-    const incidentStats = await incidentsService.getStats()
+    const incidentStats = await getIncidentStats()
 
     // Get billing
-    const invoices = await billingService.getAll()
+    const invoices = await getInvoices()
     const overdue = invoices.filter(i => {
       if (i.status === 'paid' || i.status === 'cancelled' || !i.due_date) return false
       return new Date(i.due_date) < new Date()
@@ -464,7 +692,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
       },
       incidents: {
         open: incidentStats.open,
-        total_today: 0, // Would need date filter
+        total_today: 0,
         requiring_followup: incidentStats.open,
       },
       billing: {
@@ -505,12 +733,12 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
     }
 
     // Check incidents
-    const incidents = await incidentsService.getStats()
-    if (incidents.open > 0) {
+    const incidentStats = await getIncidentStats()
+    if (incidentStats.open > 0) {
       alerts.push({
         type: 'incidents',
         severity: 'medium',
-        message: `📋 ${incidents.open} incidente(s) abiertos requieren atención`,
+        message: `📋 ${incidentStats.open} incidente(s) abiertos requieren atención`,
       })
     }
 
@@ -522,8 +750,8 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
   },
 
   async analytics_enrollment_stats() {
-    const children = await childrenService.getAll()
-    const classrooms = await classroomsService.getAll()
+    const children = await getChildren()
+    const classrooms = await getClassrooms()
 
     const byClassroom: Record<string, number> = {}
     classrooms.forEach(c => {
@@ -660,7 +888,10 @@ function generateAlerts(
 // MAIN EXECUTOR
 // =====================================================
 
-export async function executeTool(toolCall: ToolCall): Promise<{
+export async function executeTool(
+  toolCall: ToolCall,
+  context?: { organizationId: string; supabase: Awaited<ReturnType<typeof createClient>> }
+): Promise<{
   result?: ToolResult
   pendingConfirmation?: PendingConfirmation
 }> {
@@ -687,6 +918,14 @@ export async function executeTool(toolCall: ToolCall): Promise<{
         result: null,
         error: `Tool no implementado: ${name}`,
       },
+    }
+  }
+
+  // Set execution context for data access functions
+  if (context) {
+    currentContext = {
+      organizationId: context.organizationId,
+      supabase: context.supabase,
     }
   }
 
@@ -723,6 +962,9 @@ export async function executeTool(toolCall: ToolCall): Promise<{
         error: error instanceof Error ? error.message : 'Error desconocido',
       },
     }
+  } finally {
+    // Clear context after execution
+    currentContext = null
   }
 }
 

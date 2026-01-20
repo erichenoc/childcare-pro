@@ -447,9 +447,12 @@ export async function POST(request: NextRequest) {
     // Build system prompt
     const systemPrompt = buildSystemPrompt(context)
 
-    // Tool execution handler
+    // Tool execution handler - passes organization context for data access
     const handleToolCall = async (toolCall: ToolCall): Promise<unknown> => {
-      const { result, pendingConfirmation } = await executeTool(toolCall)
+      const { result, pendingConfirmation } = await executeTool(toolCall, {
+        organizationId: profile.organization_id,
+        supabase,
+      })
 
       if (pendingConfirmation) {
         // Save pending action to database
