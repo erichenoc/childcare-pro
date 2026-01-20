@@ -166,7 +166,7 @@ What would you like help with?`,
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://childcarepro.com',
+        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://childcareproai.com',
         'X-Title': 'ChildCare Pro Support Chat',
       },
       body: JSON.stringify({

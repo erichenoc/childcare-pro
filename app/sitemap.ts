@@ -16,7 +16,7 @@ const CITIES = [
 ]
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcarepro.com'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcareproai.com'
 
   // Main pages
   const mainPages: MetadataRoute.Sitemap = [

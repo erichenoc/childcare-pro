@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://childcarepro.com',
+    url: 'https://childcareproai.com',
     siteName: 'ChildCare Pro',
     title: 'ChildCare Pro | #1 Daycare Management Software in Florida',
     description: 'Streamline your childcare center with automated billing, attendance tracking, parent communication, and DCF compliance monitoring.',
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     images: ['/og-image.png'],
   },
   alternates: {
-    canonical: 'https://childcarepro.com',
+    canonical: 'https://childcareproai.com',
   },
   verification: {
     google: 'google-site-verification-code',
@@ -149,7 +149,7 @@ export default function MarketingLayout({
             '@type': 'LocalBusiness',
             name: 'ChildCare Pro',
             description: 'Childcare management software provider serving daycare centers in Central Florida',
-            url: 'https://childcarepro.com',
+            url: 'https://childcareproai.com',
             telephone: '+1-321-246-8614',
             email: 'info@childcareai.com',
             address: {

@@ -241,7 +241,7 @@ export const billingService = {
 
     // Send the actual email using Resend
     if (emailService.isConfigured()) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcarepro.app'
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcareproai.com'
       const paymentUrl = `${appUrl}/dashboard/billing?pay=${invoiceId}`
 
       const dueDate = invoice.due_date

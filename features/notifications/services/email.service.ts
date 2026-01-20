@@ -280,7 +280,7 @@ export const EMAIL_TEMPLATES = {
 
 class EmailService {
   private resend: Resend | null = null
-  private defaultFrom: string = 'ChildCare Pro <notifications@childcarepro.app>'
+  private defaultFrom: string = 'ChildCare Pro <info@childcareproai.com>'
 
   constructor() {
     if (process.env.RESEND_API_KEY) {

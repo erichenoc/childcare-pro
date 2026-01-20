@@ -133,7 +133,7 @@ export function SupportChatWidget({ userRole = 'staff' }: SupportChatWidgetProps
 
 - Refreshing the page
 - Checking your internet connection
-- Emailing support@childcarepro.com
+- Emailing support@childcareproai.com
 
 I'll be back shortly!`,
         timestamp: new Date(),

@@ -231,10 +231,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: `Childcare Software for ${cityData.name} Daycare Centers | ChildCare Pro`,
       description: `Streamline your ${cityData.name} childcare center with automated billing, DCF compliance, and parent communication.`,
-      url: `https://childcarepro.com/${city}`,
+      url: `https://childcareproai.com/${city}`,
     },
     alternates: {
-      canonical: `https://childcarepro.com/${city}`,
+      canonical: `https://childcareproai.com/${city}`,
     },
   }
 }
@@ -896,7 +896,7 @@ export default async function CityPage({ params }: PageProps) {
             '@type': 'LocalBusiness',
             name: `ChildCare Pro - ${cityData.name}`,
             description: `Childcare management software for daycare centers in ${cityData.name}, ${cityData.county}, Florida`,
-            url: `https://childcarepro.com/${city}`,
+            url: `https://childcareproai.com/${city}`,
             telephone: '+1-407-555-0123',
             address: {
               '@type': 'PostalAddress',

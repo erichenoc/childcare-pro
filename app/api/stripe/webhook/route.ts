@@ -390,7 +390,7 @@ async function handleInvoicePaymentFailed(
         currency: invoice.currency.toUpperCase(),
       }).format(invoice.amount_due / 100)
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcarepro.app'
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcareproai.com'
       const retryUrl = `${appUrl}/dashboard/settings?tab=billing`
 
       await emailService.sendPaymentFailed(owner.email, {

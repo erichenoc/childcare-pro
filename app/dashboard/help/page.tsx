@@ -196,7 +196,7 @@ export default function HelpPage() {
             </div>
           </a>
           <a
-            href="https://docs.childcarepro.com"
+            href="https://docs.childcareproai.com"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:bg-blue-50 transition-colors"

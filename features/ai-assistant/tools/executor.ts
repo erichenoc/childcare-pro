@@ -958,7 +958,7 @@ async function sendBillingReminder(params: Record<string, unknown>): Promise<{ s
     : 'No especificada'
 
   // Send the reminder email
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcarepro.app'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcareproai.com'
   const paymentUrl = `${appUrl}/dashboard/billing?pay=${invoiceId}`
 
   const result = await emailService.sendInvoiceDue(family.primary_contact_email, {
