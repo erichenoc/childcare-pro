@@ -28,43 +28,45 @@ function detectLanguage(text: string): 'es' | 'en' {
   return spanishMatches >= 1 ? 'es' : 'en'
 }
 
-// Split text into natural chunks (paragraphs, then sentences if needed)
-function splitIntoChunks(text: string, maxChunkLength: number = 300): string[] {
-  // First, split by double newlines (paragraphs)
-  const paragraphs = text.split(/\n\n+/).filter(p => p.trim())
-
+// Split text into chunks of max 3 lines each
+function splitIntoChunks(text: string, maxLines: number = 3): string[] {
+  // Split by single newlines to get all lines
+  const allLines = text.split('\n')
   const chunks: string[] = []
 
-  for (const paragraph of paragraphs) {
-    if (paragraph.length <= maxChunkLength) {
-      chunks.push(paragraph)
-    } else {
-      // Split long paragraphs by sentences
-      const sentences = paragraph.split(/(?<=[.!?])\s+/)
-      let currentChunk = ''
+  let currentChunk: string[] = []
 
-      for (const sentence of sentences) {
-        if ((currentChunk + ' ' + sentence).length <= maxChunkLength) {
-          currentChunk = currentChunk ? currentChunk + ' ' + sentence : sentence
-        } else {
-          if (currentChunk) chunks.push(currentChunk)
-          currentChunk = sentence
-        }
-      }
-      if (currentChunk) chunks.push(currentChunk)
+  for (const line of allLines) {
+    // Skip empty lines at the start of a chunk
+    if (currentChunk.length === 0 && line.trim() === '') {
+      continue
+    }
+
+    currentChunk.push(line)
+
+    // If we have maxLines non-empty lines or hit a natural break, create chunk
+    const nonEmptyLines = currentChunk.filter(l => l.trim() !== '').length
+
+    if (nonEmptyLines >= maxLines) {
+      chunks.push(currentChunk.join('\n').trim())
+      currentChunk = []
+    }
+  }
+
+  // Add remaining lines as final chunk
+  if (currentChunk.length > 0) {
+    const finalChunk = currentChunk.join('\n').trim()
+    if (finalChunk) {
+      chunks.push(finalChunk)
     }
   }
 
   return chunks.length > 0 ? chunks : [text]
 }
 
-// Calculate typing delay based on chunk length (simulate human reading/typing speed)
-function calculateTypingDelay(chunkLength: number): number {
-  // Base delay + variable based on length
-  // Roughly 50ms per character, but capped
-  const baseDelay = 800
-  const variableDelay = Math.min(chunkLength * 15, 2000)
-  return baseDelay + variableDelay
+// Fixed 2 second delay between chunks
+function calculateTypingDelay(): number {
+  return 2000 // 2 seconds
 }
 
 export function useAIAssistant(options: UseAIAssistantOptions = {}) {
@@ -116,7 +118,7 @@ export function useAIAssistant(options: UseAIAssistantOptions = {}) {
       if (i > 0) {
         setIsTyping(true)
         await new Promise(resolve => {
-          typingTimeoutRef.current = setTimeout(resolve, calculateTypingDelay(chunk.length))
+          typingTimeoutRef.current = setTimeout(resolve, calculateTypingDelay())
         })
       }
 
