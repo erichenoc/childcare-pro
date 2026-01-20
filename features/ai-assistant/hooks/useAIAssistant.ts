@@ -4,6 +4,7 @@
 // AI Assistant Hook
 // =====================================================
 // Manages chat state, streaming, and tool execution
+// Features: Human-like typing effect with chunked messages
 
 import { useState, useCallback, useRef } from 'react'
 import type { AIMessage, AIChatState, PendingConfirmation, ToolCall } from '../types'
@@ -11,6 +12,59 @@ import type { AIMessage, AIChatState, PendingConfirmation, ToolCall } from '../t
 interface UseAIAssistantOptions {
   onConfirmationRequired?: (confirmation: PendingConfirmation) => void
   onToolExecuted?: (toolName: string, result: unknown) => void
+}
+
+// Language detection - checks if message is primarily Spanish
+function detectLanguage(text: string): 'es' | 'en' {
+  const spanishIndicators = [
+    /¿/, /¡/, /ñ/i,
+    /\b(hola|gracias|por favor|cómo|qué|cuántos|cuántas|dónde|cuál|quién)\b/i,
+    /\b(está|están|tengo|tienes|tiene|hay|son|soy|eres|es)\b/i,
+    /\b(buenos|buenas|días|noches|tardes)\b/i,
+    /\b(niños|niñas|familia|factura|asistencia|salón|personal)\b/i,
+  ]
+
+  const spanishMatches = spanishIndicators.filter(pattern => pattern.test(text)).length
+  return spanishMatches >= 1 ? 'es' : 'en'
+}
+
+// Split text into natural chunks (paragraphs, then sentences if needed)
+function splitIntoChunks(text: string, maxChunkLength: number = 300): string[] {
+  // First, split by double newlines (paragraphs)
+  const paragraphs = text.split(/\n\n+/).filter(p => p.trim())
+
+  const chunks: string[] = []
+
+  for (const paragraph of paragraphs) {
+    if (paragraph.length <= maxChunkLength) {
+      chunks.push(paragraph)
+    } else {
+      // Split long paragraphs by sentences
+      const sentences = paragraph.split(/(?<=[.!?])\s+/)
+      let currentChunk = ''
+
+      for (const sentence of sentences) {
+        if ((currentChunk + ' ' + sentence).length <= maxChunkLength) {
+          currentChunk = currentChunk ? currentChunk + ' ' + sentence : sentence
+        } else {
+          if (currentChunk) chunks.push(currentChunk)
+          currentChunk = sentence
+        }
+      }
+      if (currentChunk) chunks.push(currentChunk)
+    }
+  }
+
+  return chunks.length > 0 ? chunks : [text]
+}
+
+// Calculate typing delay based on chunk length (simulate human reading/typing speed)
+function calculateTypingDelay(chunkLength: number): number {
+  // Base delay + variable based on length
+  // Roughly 50ms per character, but capped
+  const baseDelay = 800
+  const variableDelay = Math.min(chunkLength * 15, 2000)
+  return baseDelay + variableDelay
 }
 
 export function useAIAssistant(options: UseAIAssistantOptions = {}) {
@@ -23,8 +77,70 @@ export function useAIAssistant(options: UseAIAssistantOptions = {}) {
     pendingAction: null,
   })
 
+  // Additional state for typing indicator
+  const [isTyping, setIsTyping] = useState(false)
+  const [typingLanguage, setTypingLanguage] = useState<'es' | 'en'>('es')
+
   const abortControllerRef = useRef<AbortController | null>(null)
   const streamingContentRef = useRef<string>('')
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Reveal content in chunks with typing effect
+  const revealContentInChunks = useCallback(async (
+    fullContent: string,
+    messageId: string,
+    userLanguage: 'es' | 'en'
+  ) => {
+    const chunks = splitIntoChunks(fullContent)
+
+    // If only one small chunk, show immediately
+    if (chunks.length === 1 && fullContent.length < 200) {
+      setState(prev => ({
+        ...prev,
+        messages: prev.messages.map(m =>
+          m.id === messageId ? { ...m, content: fullContent } : m
+        ),
+      }))
+      setIsTyping(false)
+      return
+    }
+
+    let revealedContent = ''
+    setTypingLanguage(userLanguage)
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i]
+      const isLastChunk = i === chunks.length - 1
+
+      // Show typing indicator before each chunk (except the first which already shows it)
+      if (i > 0) {
+        setIsTyping(true)
+        await new Promise(resolve => {
+          typingTimeoutRef.current = setTimeout(resolve, calculateTypingDelay(chunk.length))
+        })
+      }
+
+      // Add the chunk to revealed content
+      revealedContent = revealedContent
+        ? revealedContent + '\n\n' + chunk
+        : chunk
+
+      // Update the message with revealed content
+      setState(prev => ({
+        ...prev,
+        messages: prev.messages.map(m =>
+          m.id === messageId ? { ...m, content: revealedContent } : m
+        ),
+      }))
+
+      // Brief pause between chunks to simulate natural typing
+      if (!isLastChunk) {
+        await new Promise(resolve => setTimeout(resolve, 300))
+      }
+    }
+
+    setIsTyping(false)
+  }, [])
 
   // Send message with streaming
   const sendMessage = useCallback(async (
@@ -32,6 +148,10 @@ export function useAIAssistant(options: UseAIAssistantOptions = {}) {
     context?: { currentPage: string; selectedEntity?: { type: string; id: string } }
   ) => {
     if (!content.trim() || state.isLoading) return
+
+    // Detect language from user's message
+    const detectedLanguage = detectLanguage(content)
+    setTypingLanguage(detectedLanguage)
 
     // Create user message
     const userMessage: AIMessage = {
@@ -66,8 +186,9 @@ export function useAIAssistant(options: UseAIAssistantOptions = {}) {
       messages: [...prev.messages, assistantMessage],
     }))
 
-    // Reset streaming content
+    // Reset streaming content and show typing indicator
     streamingContentRef.current = ''
+    setIsTyping(true)
 
     // Create abort controller
     abortControllerRef.current = new AbortController()
@@ -115,16 +236,8 @@ export function useAIAssistant(options: UseAIAssistantOptions = {}) {
 
             switch (event.type) {
               case 'content':
-                // Update streaming content
+                // Accumulate streaming content
                 streamingContentRef.current += event.delta
-                setState(prev => ({
-                  ...prev,
-                  messages: prev.messages.map(m =>
-                    m.id === assistantMessageId
-                      ? { ...m, content: streamingContentRef.current }
-                      : m
-                  ),
-                }))
                 break
 
               case 'tool_call':
@@ -178,7 +291,15 @@ export function useAIAssistant(options: UseAIAssistantOptions = {}) {
                 throw new Error(event.error)
 
               case 'done':
-                // Streaming complete
+                // Streaming complete - now reveal content in chunks
+                if (streamingContentRef.current) {
+                  setState(prev => ({ ...prev, isStreaming: false }))
+                  await revealContentInChunks(
+                    streamingContentRef.current,
+                    assistantMessageId,
+                    detectedLanguage
+                  )
+                }
                 break
             }
           } catch (parseError) {
@@ -191,6 +312,7 @@ export function useAIAssistant(options: UseAIAssistantOptions = {}) {
     } catch (error) {
       if ((error as Error).name === 'AbortError') {
         // Request was cancelled
+        setIsTyping(false)
         return
       }
 
@@ -204,11 +326,15 @@ export function useAIAssistant(options: UseAIAssistantOptions = {}) {
           m.id === assistantMessageId
             ? {
                 ...m,
-                content: streamingContentRef.current || 'Lo siento, hubo un error. Por favor intenta de nuevo.',
+                content: streamingContentRef.current ||
+                  (detectedLanguage === 'es'
+                    ? 'Lo siento, hubo un error. Por favor intenta de nuevo.'
+                    : 'Sorry, there was an error. Please try again.'),
               }
             : m
         ),
       }))
+      setIsTyping(false)
     } finally {
       setState(prev => ({
         ...prev,
@@ -217,13 +343,17 @@ export function useAIAssistant(options: UseAIAssistantOptions = {}) {
       }))
       abortControllerRef.current = null
     }
-  }, [state.conversationId, state.isLoading, options])
+  }, [state.conversationId, state.isLoading, options, revealContentInChunks])
 
   // Cancel current request
   const cancelRequest = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
     }
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+    }
+    setIsTyping(false)
   }, [])
 
   // Confirm pending action
@@ -285,6 +415,10 @@ export function useAIAssistant(options: UseAIAssistantOptions = {}) {
 
   // Clear chat history
   const clearChat = useCallback(() => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+    }
+    setIsTyping(false)
     setState({
       messages: [],
       isLoading: false,
@@ -299,12 +433,12 @@ export function useAIAssistant(options: UseAIAssistantOptions = {}) {
   const initializeChat = useCallback((welcomeMessage?: string) => {
     const defaultWelcome = `¡Hola! Soy tu asistente de ChildCare Pro. Puedo ayudarte con:
 
-- **Asistencia**: Ver quién está presente, registrar entradas/salidas
-- **Familias y Niños**: Buscar información, ver balances
-- **Facturación**: Facturas pendientes, recordatorios de pago
-- **Ratios DCF**: Verificar cumplimiento de ratios
-- **Incidentes**: Reportar y dar seguimiento
-- **Análisis**: Resumen del día, alertas activas
+• **Asistencia**: Ver quién está presente, registrar entradas/salidas
+• **Familias y Niños**: Buscar información, ver balances
+• **Facturación**: Facturas pendientes, recordatorios de pago
+• **Ratios DCF**: Verificar cumplimiento de ratios
+• **Incidentes**: Reportar y dar seguimiento
+• **Análisis**: Resumen del día, alertas activas
 
 ¿En qué puedo ayudarte hoy?`
 
@@ -327,6 +461,8 @@ export function useAIAssistant(options: UseAIAssistantOptions = {}) {
     messages: state.messages,
     isLoading: state.isLoading,
     isStreaming: state.isStreaming,
+    isTyping,
+    typingLanguage,
     error: state.error,
     conversationId: state.conversationId,
     pendingAction: state.pendingAction,

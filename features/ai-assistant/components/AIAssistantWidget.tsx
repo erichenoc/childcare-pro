@@ -42,6 +42,8 @@ export function AIAssistantWidget() {
     messages,
     isLoading,
     isStreaming,
+    isTyping,
+    typingLanguage,
     error,
     pendingAction,
     sendMessage,
@@ -54,6 +56,9 @@ export function AIAssistantWidget() {
     },
   })
 
+  // Typing indicator text based on language
+  const typingText = typingLanguage === 'es' ? 'Escribiendo...' : 'Typing...'
+
   // Initialize chat with welcome message
   useEffect(() => {
     if (messages.length === 0) {
@@ -61,10 +66,10 @@ export function AIAssistantWidget() {
     }
   }, [messages.length, initializeChat])
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom when messages change or typing
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isStreaming])
+  }, [messages, isStreaming, isTyping])
 
   // Focus input when opened
   useEffect(() => {
@@ -233,26 +238,31 @@ export function AIAssistantWidget() {
               </div>
             ))}
 
-            {/* Streaming indicator */}
-            {isStreaming && (
+            {/* Typing indicator - shows when assistant is "typing" */}
+            {(isStreaming || isTyping) && (
               <div className="flex gap-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
                   <Bot className="w-4 h-4 text-white" />
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm border border-gray-100 dark:border-gray-700">
-                  <div className="flex gap-1">
-                    <div
-                      className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                      style={{ animationDelay: '0ms' }}
-                    />
-                    <div
-                      className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                      style={{ animationDelay: '150ms' }}
-                    />
-                    <div
-                      className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                      style={{ animationDelay: '300ms' }}
-                    />
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 dark:text-gray-400 italic">
+                      {typingText}
+                    </span>
+                    <div className="flex gap-1">
+                      <div
+                        className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '0ms' }}
+                      />
+                      <div
+                        className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '150ms' }}
+                      />
+                      <div
+                        className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '300ms' }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
