@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { Sidebar } from './sidebar'
 import { Header } from './header'
 import { MobileNav } from './mobile-nav'
-import { SupportChatWidget } from '@/features/chat'
+import { AIAssistantWidget } from '@/features/ai-assistant'
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -39,8 +39,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </div>
 
-      {/* AI Support Assistant */}
-      <SupportChatWidget />
+      {/* AI Assistant Widget */}
+      <AIAssistantWidget />
     </div>
   )
 }
