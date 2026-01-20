@@ -17,9 +17,6 @@ import {
   Sparkles,
   Trash2,
   AlertCircle,
-  CheckCircle,
-  XCircle,
-  Zap,
 } from 'lucide-react'
 import { useAIAssistant } from '../hooks/useAIAssistant'
 import { ActionConfirmationModal } from './ActionConfirmationModal'
@@ -232,20 +229,6 @@ export function AIAssistantWidget() {
                     {formatContent(message.content)}
                   </div>
 
-                  {/* Tool calls indicator */}
-                  {message.tool_calls && message.tool_calls.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                      {message.tool_calls.map((tc, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"
-                        >
-                          <Zap className="w-3 h-3" />
-                          <span>Ejecutando: {tc.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
