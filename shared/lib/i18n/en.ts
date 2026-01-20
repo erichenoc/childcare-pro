@@ -79,6 +79,7 @@ export const en: Translations = {
     profile: 'My Profile',
     logout: 'Logout',
     help: 'Help',
+    aiAssistant: 'AI Assistant',
   },
 
   // ============================================

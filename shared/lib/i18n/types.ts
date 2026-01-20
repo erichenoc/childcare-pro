@@ -71,6 +71,7 @@ export interface Translations {
     profile: string
     logout: string
     help: string
+    aiAssistant: string
   }
   dashboard: {
     title: string

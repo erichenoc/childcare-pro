@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useAIAssistant } from '../hooks/useAIAssistant'
 import { ActionConfirmationModal } from './ActionConfirmationModal'
+import { useTranslations } from '@/shared/lib/i18n'
 import type { PendingConfirmation } from '../types'
 
 // Quick action suggestions
@@ -37,6 +38,7 @@ export function AIAssistantWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const pathname = usePathname()
+  const t = useTranslations()
 
   const {
     messages,
@@ -155,7 +157,7 @@ export function AIAssistantWidget() {
             ? 'bg-gray-700 dark:bg-gray-600 rotate-90'
             : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-2xl hover:scale-110'
         }`}
-        title="Asistente IA"
+        title={t.nav.aiAssistant}
       >
         {isOpen ? (
           <X className="w-6 h-6 text-white" />
