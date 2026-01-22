@@ -273,7 +273,11 @@ export const billingEnhancedService = {
       dueDateStr = dueDate.toISOString().split('T')[0]
     }
 
-    // Create invoice
+    // Ensure period dates are not null (required fields in database)
+    const finalPeriodStart = periodStart || new Date().toISOString().split('T')[0]
+    const finalPeriodEnd = periodEnd || new Date().toISOString().split('T')[0]
+
+    // Create invoice (note: billing_period column doesn't exist in table)
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .insert({
@@ -286,9 +290,8 @@ export const billingEnhancedService = {
         amount_paid: 0,
         status: 'draft',
         due_date: dueDateStr,
-        period_start: periodStart,
-        period_end: periodEnd,
-        billing_period: data.billing_period || null,
+        period_start: finalPeriodStart,
+        period_end: finalPeriodEnd,
         notes: data.notes || null,
         line_items: lineItems,
       })
