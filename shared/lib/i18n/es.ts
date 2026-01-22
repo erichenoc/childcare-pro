@@ -1307,6 +1307,24 @@ export const es: Translations = {
     // Time labels
     today: 'Hoy',
     yesterday: 'Ayer',
+    // Page-specific
+    present: 'presentes',
+    noAttendanceRecorded: 'Sin Asistencia Registrada',
+    noChildrenCheckedIn: 'No hay niños con check-in para',
+    goToAttendance: 'Ir a Asistencia',
+    viewAllChildren: 'Ver todos los niños',
+    noChildrenRegistered: 'Sin niños registrados',
+    registerChildrenToStart: 'Registra niños para comenzar',
+    addChild: 'Agregar Niño',
+    noCheckIn: 'Sin check-in',
+    noChildrenWithFilters: 'No hay niños con estos filtros',
+    clearFilters: 'Limpiar filtros',
+    noClassroomAssigned: 'Sin salón asignado',
+    registerAttendance: 'Registrar Asistencia',
+    noChildren: 'Sin Niños',
+    noChildrenWithCurrentFilters: 'No se encontraron niños con los filtros actuales',
+    selectChildToViewActivities: 'Elige un niño de la lista para ver y registrar sus actividades diarias',
+    onlyPresent: 'Solo presentes',
   },
 
   // ============================================
@@ -1437,6 +1455,77 @@ export const es: Translations = {
     noChildrenRegistered: 'No hay niños registrados',
     next: 'Próxima',
     yearsMonths: 'a/m',
+  },
+
+  // ============================================
+  // LEARNING
+  // ============================================
+  learning: {
+    title: 'Aprendizaje y Desarrollo',
+    subtitle: 'Seguimiento del desarrollo y los hitos de aprendizaje',
+    children: 'Niños',
+    searchChildren: 'Buscar niños...',
+    noChildrenFound: 'No se encontraron niños',
+    age: 'Edad:',
+    overview: 'Resumen',
+    allMilestones: 'Todos los Hitos',
+    progressByArea: 'Progreso por Área de Desarrollo',
+    selectChildPrompt: 'Selecciona un niño para ver su progreso de desarrollo',
+    allCategories: 'Todas las Categorías',
+    months: 'meses',
+    years: 'años',
+    yearsMonths: 'a/m',
+    recentAchievements: 'Logros Recientes',
+    milestoneProgress: 'Progreso de Hitos',
+    notStarted: 'No iniciado',
+    inProgress: 'En progreso',
+    achieved: 'Logrado',
+    needsSupport: 'Necesita apoyo',
+  },
+
+  // ============================================
+  // DOCUMENTS
+  // ============================================
+  documents: {
+    title: 'Formularios y Documentos',
+    subtitle: 'Gestiona todos los documentos y formularios para cumplimiento DCF',
+    uploadDocument: 'Subir Documento',
+    documentsExpiringSoon: 'Documentos por Vencer',
+    daysRemaining: 'días restantes',
+    expires: 'Vence:',
+    andMoreExpiring: 'Y {count} documentos más por vencer...',
+    allDocuments: 'Todos los Documentos',
+    searchDocuments: 'Buscar documentos...',
+    document: 'Documento',
+    category: 'Categoría',
+    entity: 'Entidad',
+    noDocumentsFound: 'No se encontraron documentos',
+    uploadToGetStarted: 'Sube un documento para comenzar',
+    view: 'Ver',
+    approve: 'Aprobar',
+    reject: 'Rechazar',
+    enterRejectionReason: 'Ingresa la razón del rechazo:',
+    // Categories
+    allCategories: 'Todas las Categorías',
+    enrollment: 'Inscripción',
+    medical: 'Médico',
+    dcfRequired: 'Requerido DCF',
+    permission: 'Permiso',
+    emergency: 'Emergencia',
+    financial: 'Financiero',
+    other: 'Otro',
+    // Statuses
+    allStatuses: 'Todos los Estados',
+    pending: 'Pendiente',
+    submitted: 'Enviado',
+    approved: 'Aprobado',
+    rejected: 'Rechazado',
+    expired: 'Vencido',
+    // Entity types
+    allTypes: 'Todos los Tipos',
+    childrenType: 'Niños',
+    familiesType: 'Familias',
+    staffType: 'Personal',
   },
 
   // ============================================

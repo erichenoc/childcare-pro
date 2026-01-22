@@ -1307,6 +1307,24 @@ export const en: Translations = {
     // Time labels
     today: 'Today',
     yesterday: 'Yesterday',
+    // Page-specific
+    present: 'present',
+    noAttendanceRecorded: 'No Attendance Recorded',
+    noChildrenCheckedIn: 'No children checked in for',
+    goToAttendance: 'Go to Attendance',
+    viewAllChildren: 'View all children',
+    noChildrenRegistered: 'No children registered',
+    registerChildrenToStart: 'Register children to get started',
+    addChild: 'Add Child',
+    noCheckIn: 'Not checked in',
+    noChildrenWithFilters: 'No children match these filters',
+    clearFilters: 'Clear filters',
+    noClassroomAssigned: 'No classroom assigned',
+    registerAttendance: 'Register Attendance',
+    noChildren: 'No Children',
+    noChildrenWithCurrentFilters: 'No children found with current filters',
+    selectChildToViewActivities: 'Choose a child from the list to view and record their daily activities',
+    onlyPresent: 'Only present',
   },
 
   // ============================================
@@ -1437,6 +1455,77 @@ export const en: Translations = {
     noChildrenRegistered: 'No children registered',
     next: 'Next',
     yearsMonths: 'y/m',
+  },
+
+  // ============================================
+  // LEARNING
+  // ============================================
+  learning: {
+    title: 'Learning & Milestones',
+    subtitle: 'Track developmental milestones and learning progress',
+    children: 'Children',
+    searchChildren: 'Search children...',
+    noChildrenFound: 'No children found',
+    age: 'Age:',
+    overview: 'Overview',
+    allMilestones: 'All Milestones',
+    progressByArea: 'Progress by Development Area',
+    selectChildPrompt: 'Select a child to view their development progress',
+    allCategories: 'All Categories',
+    months: 'months',
+    years: 'years',
+    yearsMonths: 'y/m',
+    recentAchievements: 'Recent Achievements',
+    milestoneProgress: 'Milestone Progress',
+    notStarted: 'Not started',
+    inProgress: 'In progress',
+    achieved: 'Achieved',
+    needsSupport: 'Needs support',
+  },
+
+  // ============================================
+  // DOCUMENTS
+  // ============================================
+  documents: {
+    title: 'Forms & Documents',
+    subtitle: 'Manage all documents and forms for DCF compliance',
+    uploadDocument: 'Upload Document',
+    documentsExpiringSoon: 'Documents Expiring Soon',
+    daysRemaining: 'days remaining',
+    expires: 'Expires:',
+    andMoreExpiring: 'And {count} more documents expiring...',
+    allDocuments: 'All Documents',
+    searchDocuments: 'Search documents...',
+    document: 'Document',
+    category: 'Category',
+    entity: 'Entity',
+    noDocumentsFound: 'No documents found',
+    uploadToGetStarted: 'Upload a document to get started',
+    view: 'View',
+    approve: 'Approve',
+    reject: 'Reject',
+    enterRejectionReason: 'Enter rejection reason:',
+    // Categories
+    allCategories: 'All Categories',
+    enrollment: 'Enrollment',
+    medical: 'Medical',
+    dcfRequired: 'DCF Required',
+    permission: 'Permission',
+    emergency: 'Emergency',
+    financial: 'Financial',
+    other: 'Other',
+    // Statuses
+    allStatuses: 'All Statuses',
+    pending: 'Pending',
+    submitted: 'Submitted',
+    approved: 'Approved',
+    rejected: 'Rejected',
+    expired: 'Expired',
+    // Entity types
+    allTypes: 'All Types',
+    childrenType: 'Children',
+    familiesType: 'Families',
+    staffType: 'Staff',
   },
 
   // ============================================

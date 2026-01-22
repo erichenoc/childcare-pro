@@ -249,7 +249,7 @@ export default function DailyActivitiesPage() {
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
     if (dateToCompare.getTime() === yesterday.getTime()) {
-      return 'Ayer'
+      return t.dailyActivities.yesterday
     }
 
     return date.toLocaleDateString('es', {
@@ -294,7 +294,7 @@ export default function DailyActivitiesPage() {
             {t.nav.dailyActivities}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Registra comidas, siestas, pañales y más
+            {t.dailyActivities.subtitle}
           </p>
         </div>
 
@@ -346,11 +346,11 @@ export default function DailyActivitiesPage() {
               <GlassCardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Users className="w-5 h-5 text-primary-500" />
-                  <span>Niños ({filteredChildren.length})</span>
+                  <span>{t.dailyActivities.childrenCount} ({filteredChildren.length})</span>
                 </div>
                 {presentCount > 0 && (
                   <span className="text-xs font-normal text-green-600 dark:text-green-400">
-                    {presentCount} presentes
+                    {presentCount} {t.dailyActivities.present}
                   </span>
                 )}
               </GlassCardTitle>
@@ -361,7 +361,7 @@ export default function DailyActivitiesPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <GlassInput
                   type="text"
-                  placeholder="Buscar niños..."
+                  placeholder={t.dailyActivities.searchChildren}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9"
@@ -390,7 +390,7 @@ export default function DailyActivitiesPage() {
               >
                 <UserCheck className="w-4 h-4" />
                 <span className="flex-1 text-left">
-                  {showOnlyPresent ? 'Solo presentes' : 'Todos los niños'}
+                  {showOnlyPresent ? t.dailyActivities.onlyPresent : t.dailyActivities.viewAllChildren}
                 </span>
                 <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                   showOnlyPresent
@@ -410,16 +410,16 @@ export default function DailyActivitiesPage() {
                       <>
                         <AlertCircle className="w-8 h-8 mx-auto mb-2 text-amber-500 opacity-70" />
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Sin asistencia registrada
+                          {t.dailyActivities.noAttendanceRecorded}
                         </p>
                         <p className="text-xs mb-3">
-                          No hay niños con check-in para {selectedDate === new Date().toISOString().split('T')[0] ? 'hoy' : 'esta fecha'}
+                          {t.dailyActivities.noChildrenCheckedIn} {selectedDate === new Date().toISOString().split('T')[0] ? t.dailyActivities.today.toLowerCase() : t.common.date.toLowerCase()}
                         </p>
                         <div className="space-y-2">
                           <Link href="/dashboard/attendance">
                             <GlassButton variant="primary" size="sm" className="w-full">
                               <UserCheck className="w-4 h-4 mr-1" />
-                              Ir a Asistencia
+                              {t.dailyActivities.goToAttendance}
                             </GlassButton>
                           </Link>
                           <GlassButton
@@ -428,7 +428,7 @@ export default function DailyActivitiesPage() {
                             onClick={() => setShowOnlyPresent(false)}
                             className="w-full"
                           >
-                            Ver todos los niños
+                            {t.dailyActivities.viewAllChildren}
                           </GlassButton>
                         </div>
                       </>
@@ -437,15 +437,15 @@ export default function DailyActivitiesPage() {
                       <>
                         <Baby className="w-8 h-8 mx-auto mb-2 opacity-50" />
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Sin niños registrados
+                          {t.dailyActivities.noChildrenRegistered}
                         </p>
                         <p className="text-xs mb-3">
-                          Registra niños para comenzar
+                          {t.dailyActivities.registerChildrenToStart}
                         </p>
                         <Link href="/dashboard/children/new">
                           <GlassButton variant="primary" size="sm" className="w-full">
                             <UserPlus className="w-4 h-4 mr-1" />
-                            Agregar Niño
+                            {t.dailyActivities.addChild}
                           </GlassButton>
                         </Link>
                       </>
@@ -453,7 +453,7 @@ export default function DailyActivitiesPage() {
                       // No children match filters
                       <>
                         <Baby className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">No hay niños con estos filtros</p>
+                        <p className="text-sm">{t.dailyActivities.noChildrenWithFilters}</p>
                         <GlassButton
                           variant="ghost"
                           size="sm"
@@ -463,7 +463,7 @@ export default function DailyActivitiesPage() {
                           }}
                           className="mt-2"
                         >
-                          Limpiar filtros
+                          {t.dailyActivities.clearFilters}
                         </GlassButton>
                       </>
                     )}
@@ -507,9 +507,9 @@ export default function DailyActivitiesPage() {
                             <ChildActivityStatus counts={counts} />
                           </div>
                           <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                            {child.classroom?.name || 'Sin salón'}
+                            {child.classroom?.name || t.dailyActivities.noClassroom}
                             {!isPresent && !showOnlyPresent && (
-                              <span className="text-amber-500 ml-1">• Sin check-in</span>
+                              <span className="text-amber-500 ml-1">• {t.dailyActivities.noCheckIn}</span>
                             )}
                           </p>
                         </div>
@@ -529,7 +529,7 @@ export default function DailyActivitiesPage() {
                   disabled={filteredChildren.length === 0}
                 >
                   <Layers className="w-4 h-4 mr-2" />
-                  Registro en Lote
+                  {t.dailyActivities.bulkRegistration}
                 </GlassButton>
               </div>
             </GlassCardContent>
@@ -551,7 +551,7 @@ export default function DailyActivitiesPage() {
                       {selectedChild.first_name} {selectedChild.last_name}
                     </h2>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {selectedChild.classroom?.name || 'Sin salón asignado'}
+                      {selectedChild.classroom?.name || t.dailyActivities.noClassroomAssigned}
                     </p>
                   </div>
                 </div>
@@ -561,7 +561,7 @@ export default function DailyActivitiesPage() {
                   onClick={() => setIsReportModalOpen(true)}
                 >
                   <FileText className="w-4 h-4 mr-2" />
-                  Reporte Diario
+                  {t.dailyActivities.dailyReport}
                 </GlassButton>
               </div>
 
@@ -575,7 +575,7 @@ export default function DailyActivitiesPage() {
                 <GlassCardHeader>
                   <GlassCardTitle className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-primary-500" />
-                    Acciones Rápidas
+                    {t.dailyActivities.quickActions}
                   </GlassCardTitle>
                 </GlassCardHeader>
                 <GlassCardContent>
@@ -602,7 +602,7 @@ export default function DailyActivitiesPage() {
                 <GlassCardHeader>
                   <GlassCardTitle className="flex items-center gap-2">
                     <CalendarDays className="w-5 h-5 text-primary-500" />
-                    Línea de Tiempo
+                    {t.dailyActivities.timeline}
                   </GlassCardTitle>
                 </GlassCardHeader>
                 <GlassCardContent>
@@ -639,24 +639,23 @@ export default function DailyActivitiesPage() {
                   <>
                     <AlertCircle className="w-16 h-16 mx-auto text-amber-400 mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                      Sin Asistencia Registrada
+                      {t.dailyActivities.noAttendanceRecorded}
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                      No hay niños con check-in para {selectedDate === new Date().toISOString().split('T')[0] ? 'hoy' : 'esta fecha'}.
-                      Registra la asistencia primero para poder documentar actividades diarias.
+                      {t.dailyActivities.noChildrenCheckedIn} {selectedDate === new Date().toISOString().split('T')[0] ? t.dailyActivities.today.toLowerCase() : t.common.date.toLowerCase()}.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <Link href="/dashboard/attendance">
                         <GlassButton variant="primary">
                           <UserCheck className="w-4 h-4 mr-2" />
-                          Registrar Asistencia
+                          {t.dailyActivities.registerAttendance}
                         </GlassButton>
                       </Link>
                       <GlassButton
                         variant="secondary"
                         onClick={() => setShowOnlyPresent(false)}
                       >
-                        Ver Todos los Niños
+                        {t.dailyActivities.viewAllChildren}
                       </GlassButton>
                     </div>
                   </>
@@ -665,15 +664,15 @@ export default function DailyActivitiesPage() {
                   <>
                     <Baby className="w-16 h-16 mx-auto text-gray-400 mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                      Sin Niños
+                      {t.dailyActivities.noChildren}
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400 mb-6">
-                      No se encontraron niños con los filtros actuales
+                      {t.dailyActivities.noChildrenWithCurrentFilters}
                     </p>
                     <Link href="/dashboard/children/new">
                       <GlassButton variant="primary">
                         <UserPlus className="w-4 h-4 mr-2" />
-                        Agregar Niño
+                        {t.dailyActivities.addChild}
                       </GlassButton>
                     </Link>
                   </>
@@ -682,10 +681,10 @@ export default function DailyActivitiesPage() {
                   <>
                     <Baby className="w-16 h-16 mx-auto text-gray-400 mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                      Selecciona un Niño
+                      {t.dailyActivities.selectChild}
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400">
-                      Elige un niño de la lista para ver y registrar sus actividades diarias
+                      {t.dailyActivities.selectChildToViewActivities}
                     </p>
                   </>
                 )}

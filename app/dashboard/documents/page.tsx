@@ -91,7 +91,7 @@ export default function DocumentsPage() {
   }
 
   const handleReject = async (id: string) => {
-    const reason = prompt('Enter rejection reason:')
+    const reason = prompt(t.documents.enterRejectionReason)
     if (reason) {
       try {
         await documentsService.rejectDocument(id, reason)
@@ -103,30 +103,30 @@ export default function DocumentsPage() {
   }
 
   const categoryOptions = [
-    { value: '', label: 'All Categories' },
-    { value: 'enrollment', label: 'Enrollment' },
-    { value: 'medical', label: 'Medical' },
-    { value: 'dcf', label: 'DCF Required' },
-    { value: 'permission', label: 'Permission' },
-    { value: 'emergency', label: 'Emergency' },
-    { value: 'financial', label: 'Financial' },
-    { value: 'other', label: 'Other' },
+    { value: '', label: t.documents.allCategories },
+    { value: 'enrollment', label: t.documents.categories.enrollment },
+    { value: 'medical', label: t.documents.categories.medical },
+    { value: 'dcf', label: t.documents.categories.dcf },
+    { value: 'permission', label: t.documents.categories.permission },
+    { value: 'emergency', label: t.documents.categories.emergency },
+    { value: 'financial', label: t.documents.categories.financial },
+    { value: 'other', label: t.documents.categories.other },
   ]
 
   const statusOptions = [
-    { value: '', label: 'All Statuses' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'submitted', label: 'Submitted' },
-    { value: 'approved', label: 'Approved' },
-    { value: 'rejected', label: 'Rejected' },
-    { value: 'expired', label: 'Expired' },
+    { value: '', label: t.documents.allStatuses },
+    { value: 'pending', label: t.documents.statuses.pending },
+    { value: 'submitted', label: t.documents.statuses.submitted },
+    { value: 'approved', label: t.documents.statuses.approved },
+    { value: 'rejected', label: t.documents.statuses.rejected },
+    { value: 'expired', label: t.documents.statuses.expired },
   ]
 
   const entityTypeOptions = [
-    { value: '', label: 'All Types' },
-    { value: 'child', label: 'Children' },
-    { value: 'family', label: 'Families' },
-    { value: 'staff', label: 'Staff' },
+    { value: '', label: t.documents.allTypes },
+    { value: 'child', label: t.documents.entityTypes.child },
+    { value: 'family', label: t.documents.entityTypes.family },
+    { value: 'staff', label: t.documents.entityTypes.staff },
   ]
 
   const getCategoryLabel = (category: DocumentCategory) => {
@@ -153,7 +153,7 @@ export default function DocumentsPage() {
             {t.nav.documents || 'Forms & Documents'}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Manage all documents and forms for DCF compliance
+            {t.documents.subtitle}
           </p>
         </div>
         <GlassButton
@@ -162,7 +162,7 @@ export default function DocumentsPage() {
           className="flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Upload Document
+          {t.documents.uploadDocument}
         </GlassButton>
       </div>
 
@@ -175,7 +175,7 @@ export default function DocumentsPage() {
           <GlassCardHeader>
             <GlassCardTitle className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
               <Clock className="w-5 h-5" />
-              Documents Expiring Soon ({expiringDocs.length})
+              {t.documents.documentsExpiringSoon} ({expiringDocs.length})
             </GlassCardTitle>
           </GlassCardHeader>
           <GlassCardContent>
@@ -198,17 +198,17 @@ export default function DocumentsPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
-                      {doc.days_until_expiration} days remaining
+                      {doc.days_until_expiration} {t.documents.daysRemaining}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Expires: {formatDate(doc.expiration_date)}
+                      {t.documents.expires}: {formatDate(doc.expiration_date)}
                     </p>
                   </div>
                 </div>
               ))}
               {expiringDocs.length > 5 && (
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center pt-2">
-                  And {expiringDocs.length - 5} more documents expiring...
+                  {t.documents.andMoreExpiring.replace('{count}', String(expiringDocs.length - 5))}
                 </p>
               )}
             </div>
@@ -222,7 +222,7 @@ export default function DocumentsPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <GlassCardTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-primary-500" />
-              All Documents
+              {t.documents.allDocuments}
             </GlassCardTitle>
 
             {/* Filters */}
@@ -231,7 +231,7 @@ export default function DocumentsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <GlassInput
                   type="text"
-                  placeholder="Search documents..."
+                  placeholder={t.documents.searchDocuments}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9 w-48"
@@ -269,21 +269,21 @@ export default function DocumentsPage() {
             <GlassTable>
               <GlassTableHeader>
                 <GlassTableRow>
-                  <GlassTableHead>Document</GlassTableHead>
-                  <GlassTableHead>Category</GlassTableHead>
-                  <GlassTableHead>Entity</GlassTableHead>
-                  <GlassTableHead>Status</GlassTableHead>
-                  <GlassTableHead>Expires</GlassTableHead>
-                  <GlassTableHead className="text-right">Actions</GlassTableHead>
+                  <GlassTableHead>{t.documents.document}</GlassTableHead>
+                  <GlassTableHead>{t.documents.category}</GlassTableHead>
+                  <GlassTableHead>{t.documents.entity}</GlassTableHead>
+                  <GlassTableHead>{t.documents.status}</GlassTableHead>
+                  <GlassTableHead>{t.documents.expires}</GlassTableHead>
+                  <GlassTableHead className="text-right">{t.documents.actions}</GlassTableHead>
                 </GlassTableRow>
               </GlassTableHeader>
               <GlassTableBody>
                 {filteredDocuments.length === 0 ? (
                   <GlassTableEmpty colSpan={6}>
                     <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p>No documents found</p>
+                    <p>{t.documents.noDocumentsFound}</p>
                     <p className="text-sm text-gray-400 mt-1">
-                      Upload a document to get started
+                      {t.documents.uploadToStart}
                     </p>
                   </GlassTableEmpty>
                 ) : (
@@ -329,7 +329,7 @@ export default function DocumentsPage() {
                           <GlassButton
                             variant="ghost"
                             size="sm"
-                            title="View"
+                            title={t.documents.view}
                             onClick={() => {}}
                           >
                             <Eye className="w-4 h-4" />
@@ -339,7 +339,7 @@ export default function DocumentsPage() {
                               <GlassButton
                                 variant="ghost"
                                 size="sm"
-                                title="Approve"
+                                title={t.documents.approve}
                                 onClick={() => handleApprove(doc.id)}
                                 className="text-green-600 hover:text-green-700"
                               >
@@ -348,7 +348,7 @@ export default function DocumentsPage() {
                               <GlassButton
                                 variant="ghost"
                                 size="sm"
-                                title="Reject"
+                                title={t.documents.reject}
                                 onClick={() => handleReject(doc.id)}
                                 className="text-red-600 hover:text-red-700"
                               >

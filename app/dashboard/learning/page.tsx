@@ -121,11 +121,13 @@ export default function LearningMilestonesPage() {
     const today = new Date()
     const months = (today.getFullYear() - birthDate.getFullYear()) * 12 + (today.getMonth() - birthDate.getMonth())
     if (months < 12) {
-      return `${months} months`
+      return `${months} ${t.learning.months}`
     }
     const years = Math.floor(months / 12)
     const remainingMonths = months % 12
-    return remainingMonths > 0 ? `${years}y ${remainingMonths}m` : `${years} years`
+    return remainingMonths > 0
+      ? t.learning.yearsMonths.replace('{years}', String(years)).replace('{months}', String(remainingMonths))
+      : `${years} ${t.learning.years}`
   }
 
   const handleUpdateStatus = async (milestoneId: string, status: MilestoneStatus) => {
@@ -156,7 +158,7 @@ export default function LearningMilestonesPage() {
               {t.nav.learning}
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">
-              Track developmental milestones and learning progress
+              {t.learning.subtitle}
             </p>
           </div>
         </div>
@@ -167,7 +169,7 @@ export default function LearningMilestonesPage() {
             <div className="bg-neu-bg dark:bg-neu-bg-dark shadow-neu dark:shadow-neu-dark rounded-2xl p-4 sticky top-6">
               <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
                 <Baby className="w-5 h-5" />
-                Children
+                {t.learning.children}
               </h2>
 
               {/* Search */}
@@ -175,7 +177,7 @@ export default function LearningMilestonesPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search children..."
+                  placeholder={t.learning.searchChildren}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 bg-neu-bg dark:bg-neu-bg-dark shadow-neu-inset dark:shadow-neu-dark-inset rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -208,7 +210,7 @@ export default function LearningMilestonesPage() {
                 ))}
                 {filteredChildren.length === 0 && (
                   <p className="text-center text-gray-500 dark:text-gray-400 py-4 text-sm">
-                    No children found
+                    {t.learning.noChildrenFound}
                   </p>
                 )}
               </div>
@@ -227,7 +229,7 @@ export default function LearningMilestonesPage() {
                         {selectedChild.first_name} {selectedChild.last_name}
                       </h2>
                       <p className="text-gray-500 dark:text-gray-400">
-                        Age: {calculateAge(selectedChild.date_of_birth)}
+                        {t.learning.age}: {calculateAge(selectedChild.date_of_birth)}
                       </p>
                     </div>
                     <div className="flex gap-2">
@@ -242,7 +244,7 @@ export default function LearningMilestonesPage() {
                             : 'shadow-neu dark:shadow-neu-dark text-gray-600 dark:text-gray-400 hover:text-primary-600'
                         }`}
                       >
-                        Overview
+                        {t.learning.overview}
                       </button>
                       <button
                         onClick={() => setView('milestones')}
@@ -252,7 +254,7 @@ export default function LearningMilestonesPage() {
                             : 'shadow-neu dark:shadow-neu-dark text-gray-600 dark:text-gray-400 hover:text-primary-600'
                         }`}
                       >
-                        All Milestones
+                        {t.learning.allMilestones}
                       </button>
                     </div>
                   </div>
@@ -271,7 +273,7 @@ export default function LearningMilestonesPage() {
                     <div className="mb-6">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                         <Target className="w-5 h-5 text-primary-500" />
-                        Progress by Development Area
+                        {t.learning.progressByArea}
                       </h3>
                       <MilestoneSummaryGrid
                         summaries={summary}
@@ -293,7 +295,7 @@ export default function LearningMilestonesPage() {
                           onChange={(e) => setSelectedCategoryId(e.target.value)}
                           className="flex-1 bg-neu-bg dark:bg-neu-bg-dark shadow-neu-inset dark:shadow-neu-dark-inset rounded-xl px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
-                          <option value="">All Categories</option>
+                          <option value="">{t.learning.allCategories}</option>
                           {categories.map((category) => (
                             <option key={category.id} value={category.id}>
                               {category.name}
@@ -316,7 +318,7 @@ export default function LearningMilestonesPage() {
                 <div className="text-center">
                   <Baby className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
                   <p className="text-gray-500 dark:text-gray-400">
-                    Select a child to view their development progress
+                    {t.learning.selectChildPrompt}
                   </p>
                 </div>
               </div>

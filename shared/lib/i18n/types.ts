@@ -1205,6 +1205,24 @@ export interface Translations {
     // Time labels
     today: string
     yesterday: string
+    // Page-specific
+    present: string
+    noAttendanceRecorded: string
+    noChildrenCheckedIn: string
+    goToAttendance: string
+    viewAllChildren: string
+    noChildrenRegistered: string
+    registerChildrenToStart: string
+    addChild: string
+    noCheckIn: string
+    noChildrenWithFilters: string
+    clearFilters: string
+    noClassroomAssigned: string
+    registerAttendance: string
+    noChildren: string
+    noChildrenWithCurrentFilters: string
+    selectChildToViewActivities: string
+    onlyPresent: string
   }
   foodProgram: {
     title: string
@@ -1323,6 +1341,77 @@ export interface Translations {
     noChildrenRegistered: string
     next: string
     yearsMonths: string
+  }
+
+  // ============================================
+  // LEARNING MODULE
+  // ============================================
+  learning: {
+    title: string
+    subtitle: string
+    children: string
+    searchChildren: string
+    noChildrenFound: string
+    age: string
+    overview: string
+    allMilestones: string
+    progressByArea: string
+    selectChildPrompt: string
+    allCategories: string
+    months: string
+    years: string
+    yearsMonths: string
+    recentAchievements: string
+    milestoneProgress: string
+    notStarted: string
+    inProgress: string
+    achieved: string
+    needsSupport: string
+  }
+
+  // ============================================
+  // DOCUMENTS MODULE
+  // ============================================
+  documents: {
+    title: string
+    subtitle: string
+    uploadDocument: string
+    documentsExpiringSoon: string
+    daysRemaining: string
+    expires: string
+    andMoreExpiring: string
+    allDocuments: string
+    searchDocuments: string
+    document: string
+    category: string
+    entity: string
+    noDocumentsFound: string
+    uploadToGetStarted: string
+    view: string
+    approve: string
+    reject: string
+    enterRejectionReason: string
+    // Categories
+    allCategories: string
+    enrollment: string
+    medical: string
+    dcfRequired: string
+    permission: string
+    emergency: string
+    financial: string
+    other: string
+    // Statuses
+    allStatuses: string
+    pending: string
+    submitted: string
+    approved: string
+    rejected: string
+    expired: string
+    // Entity types
+    allTypes: string
+    childrenType: string
+    familiesType: string
+    staffType: string
   }
 
   // ============================================
