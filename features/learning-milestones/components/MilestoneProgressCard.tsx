@@ -281,7 +281,7 @@ function ProgressRow({ label, count, total, color }: ProgressRowProps) {
 
   return (
     <div className="flex items-center gap-2 text-sm">
-      <span className="w-28 text-gray-600 dark:text-gray-400">{label}</span>
+      <span className="w-36 text-gray-600 dark:text-gray-400 whitespace-nowrap">{label}</span>
       <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
         <div
           className={clsx('h-full transition-all duration-300', barColors[color])}
