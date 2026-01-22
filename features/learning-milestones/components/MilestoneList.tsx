@@ -11,9 +11,30 @@ import {
   Plus,
   Star,
 } from 'lucide-react'
-import type { ChildMilestone, MilestoneStatus } from '@/shared/types/learning-milestones'
+import type { ChildMilestone, MilestoneStatus, MilestoneTemplate } from '@/shared/types/learning-milestones'
 import { MilestoneStatusBadge } from './MilestoneStatusBadge'
-import { useTranslations } from '@/shared/lib/i18n'
+import { useTranslations, useLocale } from '@/shared/lib/i18n'
+
+// Helper to get localized milestone name
+function getLocalizedMilestoneName(
+  template: MilestoneTemplate | undefined,
+  customName: string | null,
+  locale: string
+): string {
+  // Custom name takes priority
+  if (customName) return customName
+
+  // If no template, return fallback
+  if (!template) return 'Unnamed Milestone'
+
+  // Use Spanish name if locale is 'es' and name_es exists
+  if (locale === 'es' && template.name_es) {
+    return template.name_es
+  }
+
+  // Default to English name
+  return template.name
+}
 
 // Helper function to get translated category name
 function useCategoryTranslation() {
@@ -143,9 +164,14 @@ interface MilestoneItemProps {
 
 function MilestoneItem({ milestone, onClick, onUpdateStatus, onAddObservation }: MilestoneItemProps) {
   const t = useTranslations()
+  const locale = useLocale()
   const [showStatusMenu, setShowStatusMenu] = useState(false)
 
-  const milestoneName = milestone.custom_milestone_name || milestone.template?.name || 'Unnamed Milestone'
+  const milestoneName = getLocalizedMilestoneName(
+    milestone.template,
+    milestone.custom_milestone_name,
+    locale
+  )
 
   const statusOptions: MilestoneStatus[] = ['not_started', 'emerging', 'developing', 'achieved', 'exceeding']
 
@@ -267,6 +293,7 @@ interface RecentAchievementsProps {
 
 export function RecentAchievements({ milestones, className }: RecentAchievementsProps) {
   const t = useTranslations()
+  const locale = useLocale()
   const recentAchieved = milestones
     .filter((m) => m.status === 'achieved' || m.status === 'exceeding')
     .sort((a, b) => new Date(b.observed_date || b.updated_at).getTime() - new Date(a.observed_date || a.updated_at).getTime())
@@ -287,7 +314,11 @@ export function RecentAchievements({ milestones, className }: RecentAchievements
           <div key={milestone.id} className="flex items-center gap-2 text-sm">
             <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
             <span className="text-gray-700 dark:text-gray-300 truncate">
-              {milestone.custom_milestone_name || milestone.template?.name}
+              {getLocalizedMilestoneName(
+                milestone.template,
+                milestone.custom_milestone_name,
+                locale
+              )}
             </span>
             {milestone.observed_date && (
               <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto">

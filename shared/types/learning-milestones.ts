@@ -35,6 +35,7 @@ export interface MilestoneTemplate {
   id: string
   category_id: string
   name: string
+  name_es: string | null // Spanish translation
   description: string | null
   age_range_start_months: number
   age_range_end_months: number
