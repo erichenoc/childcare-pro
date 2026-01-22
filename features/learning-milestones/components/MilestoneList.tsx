@@ -13,6 +13,24 @@ import {
 } from 'lucide-react'
 import type { ChildMilestone, MilestoneStatus } from '@/shared/types/learning-milestones'
 import { MilestoneStatusBadge } from './MilestoneStatusBadge'
+import { useTranslations } from '@/shared/lib/i18n'
+
+// Helper function to get translated category name
+function useCategoryTranslation() {
+  const t = useTranslations()
+
+  const categoryTranslations: Record<string, string> = {
+    'Physical Development': t.learning.physicalDevelopment,
+    'Cognitive Development': t.learning.cognitiveDevelopment,
+    'Language & Literacy': t.learning.languageLiteracy,
+    'Social-Emotional': t.learning.socialEmotional,
+    'Creative Arts': t.learning.creativeArts,
+    'Mathematical Thinking': t.learning.mathematicalThinking,
+    'Uncategorized': t.learning.uncategorized,
+  }
+
+  return (categoryName: string) => categoryTranslations[categoryName] || categoryName
+}
 
 interface MilestoneListProps {
   milestones: ChildMilestone[]
@@ -29,6 +47,8 @@ export function MilestoneList({
   onAddObservation,
   className,
 }: MilestoneListProps) {
+  const t = useTranslations()
+  const getCategoryName = useCategoryTranslation()
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
   // Group milestones by category
@@ -55,7 +75,7 @@ export function MilestoneList({
     return (
       <div className="text-center py-8 text-gray-500 dark:text-gray-400">
         <Star className="w-12 h-12 mx-auto mb-2 opacity-50" />
-        <p>No milestones tracked yet</p>
+        <p>{t.learning.noMilestonesTracked}</p>
       </div>
     )
   }
@@ -85,11 +105,11 @@ export function MilestoneList({
                   <ChevronRight className="w-5 h-5 text-gray-400" />
                 )}
                 <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                  {categoryName}
+                  {getCategoryName(categoryName)}
                 </h3>
               </div>
               <span className="text-sm text-gray-500 dark:text-gray-400">
-                {achievedCount}/{categoryMilestones.length} completed
+                {achievedCount}/{categoryMilestones.length} {t.learning.completed}
               </span>
             </button>
 
@@ -122,6 +142,7 @@ interface MilestoneItemProps {
 }
 
 function MilestoneItem({ milestone, onClick, onUpdateStatus, onAddObservation }: MilestoneItemProps) {
+  const t = useTranslations()
   const [showStatusMenu, setShowStatusMenu] = useState(false)
 
   const milestoneName = milestone.custom_milestone_name || milestone.template?.name || 'Unnamed Milestone'
@@ -146,7 +167,7 @@ function MilestoneItem({ milestone, onClick, onUpdateStatus, onAddObservation }:
         {milestone.observed_date && (
           <div className="flex items-center gap-1 mt-1 text-xs text-gray-400 dark:text-gray-500">
             <Calendar className="w-3 h-3" />
-            <span>Observed: {new Date(milestone.observed_date).toLocaleDateString()}</span>
+            <span>{t.learning.observed} {new Date(milestone.observed_date).toLocaleDateString()}</span>
           </div>
         )}
       </div>
@@ -165,7 +186,7 @@ function MilestoneItem({ milestone, onClick, onUpdateStatus, onAddObservation }:
                 setShowStatusMenu(!showStatusMenu)
               }}
               className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              title="Update status"
+              title={t.learning.updateStatus}
             >
               <CheckCircle2 className="w-4 h-4" />
             </button>
@@ -200,7 +221,7 @@ function MilestoneItem({ milestone, onClick, onUpdateStatus, onAddObservation }:
               onAddObservation(milestone.id)
             }}
             className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="Add observation"
+            title={t.learning.addObservation}
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -210,7 +231,7 @@ function MilestoneItem({ milestone, onClick, onUpdateStatus, onAddObservation }:
         <button
           onClick={onClick}
           className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          title="View details"
+          title={t.learning.viewDetails}
         >
           <Eye className="w-4 h-4" />
         </button>
@@ -245,6 +266,7 @@ interface RecentAchievementsProps {
 }
 
 export function RecentAchievements({ milestones, className }: RecentAchievementsProps) {
+  const t = useTranslations()
   const recentAchieved = milestones
     .filter((m) => m.status === 'achieved' || m.status === 'exceeding')
     .sort((a, b) => new Date(b.observed_date || b.updated_at).getTime() - new Date(a.observed_date || a.updated_at).getTime())
@@ -258,7 +280,7 @@ export function RecentAchievements({ milestones, className }: RecentAchievements
     <div className={clsx('bg-neu-bg dark:bg-neu-bg-dark shadow-neu dark:shadow-neu-dark rounded-2xl p-4', className)}>
       <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
         <Star className="w-5 h-5 text-yellow-500" />
-        Recent Achievements
+        {t.learning.recentAchievements}
       </h3>
       <div className="space-y-2">
         {recentAchieved.map((milestone) => (

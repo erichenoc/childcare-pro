@@ -11,6 +11,7 @@ import {
   Target,
 } from 'lucide-react'
 import type { MilestoneSummary, MilestoneStatus } from '@/shared/types/learning-milestones'
+import { useTranslations } from '@/shared/lib/i18n'
 
 interface MilestoneProgressCardProps {
   summary: MilestoneSummary
@@ -27,6 +28,22 @@ const categoryIcons: Record<string, React.ElementType> = {
   'Mathematical Thinking': Calculator,
 }
 
+// Helper function to get translated category name
+function useCategoryTranslation() {
+  const t = useTranslations()
+
+  const categoryTranslations: Record<string, string> = {
+    'Physical Development': t.learning.physicalDevelopment,
+    'Cognitive Development': t.learning.cognitiveDevelopment,
+    'Language & Literacy': t.learning.languageLiteracy,
+    'Social-Emotional': t.learning.socialEmotional,
+    'Creative Arts': t.learning.creativeArts,
+    'Mathematical Thinking': t.learning.mathematicalThinking,
+  }
+
+  return (categoryName: string) => categoryTranslations[categoryName] || categoryName
+}
+
 const categoryColors: Record<string, string> = {
   'Physical Development': 'text-orange-500',
   'Cognitive Development': 'text-blue-500',
@@ -37,6 +54,8 @@ const categoryColors: Record<string, string> = {
 }
 
 export function MilestoneProgressCard({ summary, onClick, className }: MilestoneProgressCardProps) {
+  const t = useTranslations()
+  const getCategoryName = useCategoryTranslation()
   const Icon = categoryIcons[summary.category_name] || Target
   const colorClass = categoryColors[summary.category_name] || 'text-gray-500'
 
@@ -64,11 +83,11 @@ export function MilestoneProgressCard({ summary, onClick, className }: Milestone
             <Icon className="w-5 h-5" />
           </div>
           <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-            {summary.category_name}
+            {getCategoryName(summary.category_name)}
           </h3>
         </div>
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          {summary.total_milestones} total
+          {summary.total_milestones} {t.learning.total}
         </span>
       </div>
 
@@ -104,21 +123,21 @@ export function MilestoneProgressCard({ summary, onClick, className }: Milestone
 
       {/* Stats */}
       <div className="grid grid-cols-5 gap-1 text-center text-xs">
-        <StatusCount label="Not Started" count={summary.not_started} color="gray" />
-        <StatusCount label="Emerging" count={summary.emerging} color="yellow" />
-        <StatusCount label="Developing" count={summary.developing} color="blue" />
-        <StatusCount label="Achieved" count={summary.achieved} color="green" />
-        <StatusCount label="Exceeding" count={summary.exceeding} color="purple" />
+        <StatusCount label={t.learning.notStarted} count={summary.not_started} color="gray" />
+        <StatusCount label={t.learning.emerging} count={summary.emerging} color="yellow" />
+        <StatusCount label={t.learning.developing} count={summary.developing} color="blue" />
+        <StatusCount label={t.learning.achieved} count={summary.achieved} color="green" />
+        <StatusCount label={t.learning.exceeding} count={summary.exceeding} color="purple" />
       </div>
 
       {/* Summary text */}
       <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
         <div className="flex justify-between text-xs">
-          <span className="text-gray-500 dark:text-gray-400">Mastered</span>
+          <span className="text-gray-500 dark:text-gray-400">{t.learning.mastered}</span>
           <span className="font-medium text-green-600 dark:text-green-400">{achievedPercent}%</span>
         </div>
         <div className="flex justify-between text-xs mt-1">
-          <span className="text-gray-500 dark:text-gray-400">In Progress</span>
+          <span className="text-gray-500 dark:text-gray-400">{t.learning.inProgress}</span>
           <span className="font-medium text-blue-600 dark:text-blue-400">{inProgressPercent}%</span>
         </div>
       </div>
@@ -160,11 +179,13 @@ interface MilestoneSummaryGridProps {
 }
 
 export function MilestoneSummaryGrid({ summaries, onCategoryClick, className }: MilestoneSummaryGridProps) {
+  const t = useTranslations()
+
   if (summaries.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500 dark:text-gray-400">
         <Target className="w-12 h-12 mx-auto mb-2 opacity-50" />
-        <p>No milestone data available</p>
+        <p>{t.learning.noMilestoneData}</p>
       </div>
     )
   }
@@ -190,6 +211,7 @@ interface OverallMilestoneProgressProps {
 }
 
 export function OverallMilestoneProgress({ summaries, className }: OverallMilestoneProgressProps) {
+  const t = useTranslations()
   const totals = summaries.reduce(
     (acc, s) => ({
       total: acc.total + s.total_milestones,
@@ -214,7 +236,7 @@ export function OverallMilestoneProgress({ summaries, className }: OverallMilest
       )}
     >
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-        Overall Development Progress
+        {t.learning.overallDevelopmentProgress}
       </h3>
 
       <div className="flex items-center gap-6 mb-4">
@@ -249,15 +271,18 @@ export function OverallMilestoneProgress({ summaries, className }: OverallMilest
         </div>
 
         <div className="flex-1 space-y-2">
-          <ProgressRow label="Achieved/Exceeding" count={totals.achieved + totals.exceeding} total={totals.total} color="green" />
-          <ProgressRow label="Developing" count={totals.developing} total={totals.total} color="blue" />
-          <ProgressRow label="Emerging" count={totals.emerging} total={totals.total} color="yellow" />
-          <ProgressRow label="Not Started" count={totals.not_started} total={totals.total} color="gray" />
+          <ProgressRow label={t.learning.achievedExceeding} count={totals.achieved + totals.exceeding} total={totals.total} color="green" />
+          <ProgressRow label={t.learning.developing} count={totals.developing} total={totals.total} color="blue" />
+          <ProgressRow label={t.learning.emerging} count={totals.emerging} total={totals.total} color="yellow" />
+          <ProgressRow label={t.learning.notStarted} count={totals.not_started} total={totals.total} color="gray" />
         </div>
       </div>
 
       <p className="text-sm text-gray-500 dark:text-gray-400">
-        {totals.achieved + totals.exceeding} of {totals.total} milestones mastered across {summaries.length} developmental areas.
+        {t.learning.milestonesAcrossAreas
+          .replace('{count}', String(totals.achieved + totals.exceeding))
+          .replace('{total}', String(totals.total))
+          .replace('{areas}', String(summaries.length))}
       </p>
     </div>
   )

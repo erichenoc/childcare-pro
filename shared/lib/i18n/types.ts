@@ -1367,6 +1367,32 @@ export interface Translations {
     inProgress: string
     achieved: string
     needsSupport: string
+    // Status labels
+    emerging: string
+    developing: string
+    exceeding: string
+    achievedExceeding: string
+    // Progress card
+    total: string
+    mastered: string
+    noMilestoneData: string
+    overallDevelopmentProgress: string
+    milestonesAcrossAreas: string
+    // Milestone list
+    noMilestonesTracked: string
+    completed: string
+    observed: string
+    updateStatus: string
+    addObservation: string
+    viewDetails: string
+    uncategorized: string
+    // Category translations
+    physicalDevelopment: string
+    cognitiveDevelopment: string
+    languageLiteracy: string
+    socialEmotional: string
+    creativeArts: string
+    mathematicalThinking: string
   }
 
   // ============================================
