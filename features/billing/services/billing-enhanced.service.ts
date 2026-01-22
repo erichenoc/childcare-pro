@@ -190,6 +190,10 @@ export const billingEnhancedService = {
     }
     const invoiceNumber = `INV-${year}-${String(nextNumber).padStart(4, '0')}`
 
+    // Calculate period dates from billing_periods if not provided directly
+    const periodStart = data.start_date || data.billing_periods?.[0]?.week_start || null
+    const periodEnd = data.end_date || data.billing_periods?.[data.billing_periods.length - 1]?.week_end || null
+
     // Calculate totals from line items
     const lineItems: InvoiceLineItem[] = []
     let subtotal = 0
@@ -210,8 +214,8 @@ export const billingEnhancedService = {
         total,
         child_id: child.child_id,
         child_name: child.child_name,
-        period_start: data.start_date,
-        period_end: data.end_date,
+        period_start: periodStart,
+        period_end: periodEnd,
       })
     }
 
@@ -223,7 +227,7 @@ export const billingEnhancedService = {
       }
     }
 
-    // Apply discounts
+    // Apply discounts (support both formats: discount_percent/discount_amount and simple discount)
     let discountTotal = 0
     if (data.discount_percent && data.discount_percent > 0) {
       discountTotal = subtotal * (data.discount_percent / 100)
@@ -243,14 +247,30 @@ export const billingEnhancedService = {
         unit_price: -discountTotal,
         total: -discountTotal,
       })
+    } else if (data.discount && data.discount > 0) {
+      // Support simple discount field from multi-week page
+      discountTotal = data.discount
+      lineItems.push({
+        item_type: 'discount',
+        description: 'Descuento aplicado',
+        quantity: 1,
+        unit_price: -discountTotal,
+        total: -discountTotal,
+      })
     }
 
     const grandTotal = subtotal - discountTotal
 
-    // Calculate due date based on billing period
-    const startDateStr = data.start_date || data.billing_periods?.[0]?.week_start || new Date().toISOString()
-    const dueDate = new Date(startDateStr)
-    dueDate.setDate(dueDate.getDate() - 3) // Due 3 days before period starts
+    // Calculate due date - use provided due_date or calculate from period start
+    let dueDateStr: string
+    if (data.due_date) {
+      dueDateStr = data.due_date
+    } else {
+      const startDateStr = periodStart || new Date().toISOString()
+      const dueDate = new Date(startDateStr)
+      dueDate.setDate(dueDate.getDate() - 3) // Due 3 days before period starts
+      dueDateStr = dueDate.toISOString().split('T')[0]
+    }
 
     // Create invoice
     const { data: invoice, error: invoiceError } = await supabase
@@ -264,10 +284,10 @@ export const billingEnhancedService = {
         discount: discountTotal,
         amount_paid: 0,
         status: 'draft',
-        due_date: dueDate.toISOString().split('T')[0],
-        period_start: data.start_date,
-        period_end: data.end_date,
-        billing_period: data.billing_period,
+        due_date: dueDateStr,
+        period_start: periodStart,
+        period_end: periodEnd,
+        billing_period: data.billing_period || null,
         notes: data.notes || null,
         line_items: lineItems,
       })
