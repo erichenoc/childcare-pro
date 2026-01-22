@@ -1499,6 +1499,8 @@ export const en: Translations = {
     document: 'Document',
     category: 'Category',
     entity: 'Entity',
+    status: 'Status',
+    actions: 'Actions',
     noDocumentsFound: 'No documents found',
     uploadToGetStarted: 'Upload a document to get started',
     view: 'View',

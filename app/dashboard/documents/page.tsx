@@ -104,29 +104,29 @@ export default function DocumentsPage() {
 
   const categoryOptions = [
     { value: '', label: t.documents.allCategories },
-    { value: 'enrollment', label: t.documents.categories.enrollment },
-    { value: 'medical', label: t.documents.categories.medical },
-    { value: 'dcf', label: t.documents.categories.dcf },
-    { value: 'permission', label: t.documents.categories.permission },
-    { value: 'emergency', label: t.documents.categories.emergency },
-    { value: 'financial', label: t.documents.categories.financial },
-    { value: 'other', label: t.documents.categories.other },
+    { value: 'enrollment', label: t.documents.enrollment },
+    { value: 'medical', label: t.documents.medical },
+    { value: 'dcf', label: t.documents.dcfRequired },
+    { value: 'permission', label: t.documents.permission },
+    { value: 'emergency', label: t.documents.emergency },
+    { value: 'financial', label: t.documents.financial },
+    { value: 'other', label: t.documents.other },
   ]
 
   const statusOptions = [
     { value: '', label: t.documents.allStatuses },
-    { value: 'pending', label: t.documents.statuses.pending },
-    { value: 'submitted', label: t.documents.statuses.submitted },
-    { value: 'approved', label: t.documents.statuses.approved },
-    { value: 'rejected', label: t.documents.statuses.rejected },
-    { value: 'expired', label: t.documents.statuses.expired },
+    { value: 'pending', label: t.documents.pending },
+    { value: 'submitted', label: t.documents.submitted },
+    { value: 'approved', label: t.documents.approved },
+    { value: 'rejected', label: t.documents.rejected },
+    { value: 'expired', label: t.documents.expired },
   ]
 
   const entityTypeOptions = [
     { value: '', label: t.documents.allTypes },
-    { value: 'child', label: t.documents.entityTypes.child },
-    { value: 'family', label: t.documents.entityTypes.family },
-    { value: 'staff', label: t.documents.entityTypes.staff },
+    { value: 'child', label: t.documents.childrenType },
+    { value: 'family', label: t.documents.familiesType },
+    { value: 'staff', label: t.documents.staffType },
   ]
 
   const getCategoryLabel = (category: DocumentCategory) => {
@@ -283,7 +283,7 @@ export default function DocumentsPage() {
                     <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                     <p>{t.documents.noDocumentsFound}</p>
                     <p className="text-sm text-gray-400 mt-1">
-                      {t.documents.uploadToStart}
+                      {t.documents.uploadToGetStarted}
                     </p>
                   </GlassTableEmpty>
                 ) : (

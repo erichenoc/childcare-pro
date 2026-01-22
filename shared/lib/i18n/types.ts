@@ -1385,6 +1385,8 @@ export interface Translations {
     document: string
     category: string
     entity: string
+    status: string
+    actions: string
     noDocumentsFound: string
     uploadToGetStarted: string
     view: string
