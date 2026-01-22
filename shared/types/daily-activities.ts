@@ -50,6 +50,10 @@ export type HealthObservationType =
 export type DailyReportStatus = 'draft' | 'completed' | 'sent'
 export type SendVia = 'email' | 'app' | 'both'
 
+// Bottle/Feeding types (for infants)
+export type MilkType = 'breast_milk' | 'formula' | 'whole_milk' | 'cow_milk' | 'soy_milk' | 'almond_milk' | 'oat_milk' | 'other'
+export type BottleTemperature = 'warm' | 'room_temp' | 'cold'
+
 // ==================== Meal Records ====================
 
 export interface MealRecord {
@@ -303,6 +307,82 @@ export interface DailyReportFormData {
   photos?: string[]
 }
 
+// ==================== Bottle Feedings (Infants) ====================
+
+export interface BottleFeeding {
+  id: string
+  organization_id: string
+  child_id: string
+  recorded_by: string | null
+  feeding_time: string
+  amount_oz: number
+  milk_type: MilkType
+  formula_brand: string | null
+  temperature: BottleTemperature | null
+  duration_minutes: number | null
+  finished_bottle: boolean
+  burped: boolean
+  spit_up: boolean
+  notes: string | null
+  created_at: string
+  updated_at: string
+  // Joined relations
+  child?: {
+    id: string
+    first_name: string
+    last_name: string
+  }
+}
+
+export interface BottleFeedingFormData {
+  child_id: string
+  feeding_time?: string
+  amount_oz: number
+  milk_type: MilkType
+  formula_brand?: string
+  temperature?: BottleTemperature
+  duration_minutes?: number
+  finished_bottle?: boolean
+  burped?: boolean
+  spit_up?: boolean
+  notes?: string
+}
+
+// ==================== Daily Photos ====================
+
+export interface DailyPhoto {
+  id: string
+  organization_id: string
+  child_id: string
+  recorded_by: string | null
+  photo_url: string
+  thumbnail_url: string | null
+  caption: string | null
+  photo_time: string
+  activity_type: string | null
+  location: string | null
+  shared_with_parents: boolean
+  shared_at: string | null
+  created_at: string
+  updated_at: string
+  // Joined relations
+  child?: {
+    id: string
+    first_name: string
+    last_name: string
+  }
+}
+
+export interface DailyPhotoFormData {
+  child_id: string
+  photo_url: string
+  thumbnail_url?: string
+  caption?: string
+  photo_time?: string
+  activity_type?: string
+  location?: string
+}
+
 // ==================== Daily Summary ====================
 
 export interface ChildDailySummary {
@@ -313,6 +393,8 @@ export interface ChildDailySummary {
   activities: ActivityRecord[]
   moods: MoodRecord[]
   health_observations: HealthObservation[]
+  bottle_feedings: BottleFeeding[]
+  photos: DailyPhoto[]
 }
 
 export interface DailyActivityCounts {
@@ -419,4 +501,21 @@ export const ENGAGEMENT_LEVEL_LABELS: Record<EngagementLevel, string> = {
   engaged: 'Engaged',
   somewhat_engaged: 'Somewhat Engaged',
   not_interested: 'Not Interested',
+}
+
+export const MILK_TYPE_LABELS: Record<MilkType, string> = {
+  breast_milk: 'Leche Materna',
+  formula: 'Formula',
+  whole_milk: 'Leche Entera',
+  cow_milk: 'Leche de Vaca',
+  soy_milk: 'Leche de Soya',
+  almond_milk: 'Leche de Almendra',
+  oat_milk: 'Leche de Avena',
+  other: 'Otra',
+}
+
+export const BOTTLE_TEMPERATURE_LABELS: Record<BottleTemperature, string> = {
+  warm: 'Tibia',
+  room_temp: 'Temperatura Ambiente',
+  cold: 'Fria',
 }

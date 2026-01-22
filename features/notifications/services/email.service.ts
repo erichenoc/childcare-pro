@@ -242,6 +242,144 @@ export const EMAIL_TEMPLATES = {
     `,
   }),
 
+  dailyActivityReport: (params: {
+    parentName: string
+    childName: string
+    date: string
+    centerName: string
+    meals: Array<{ time: string; type: string; amount: string }>
+    naps: Array<{ startTime: string; endTime: string; quality: string }>
+    bathroom: Array<{ time: string; type: string }>
+    activities: Array<{ time: string; name: string }>
+    moods: Array<{ time: string; mood: string }>
+    bottleFeedings?: Array<{ time: string; amount: string; type: string }>
+    photos?: Array<{ url: string; caption?: string }>
+    notes?: string
+  }) => ({
+    subject: `Reporte Diario de ${params.childName} - ${params.date}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reporte Diario</title>
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 20px;">
+        <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 32px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Reporte Diario</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 16px;">${params.childName} - ${params.date}</p>
+          </div>
+          <div style="padding: 32px;">
+            <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+              Hola ${params.parentName}, aqui esta el resumen de las actividades de ${params.childName} de hoy:
+            </p>
+
+            ${params.meals.length > 0 ? `
+            <div style="margin-bottom: 24px;">
+              <h3 style="color: #f59e0b; font-size: 16px; margin: 0 0 12px; display: flex; align-items: center;">
+                🍽️ Comidas
+              </h3>
+              <ul style="margin: 0; padding-left: 20px; color: #374151;">
+                ${params.meals.map(m => `<li style="margin-bottom: 8px;">${m.time} - ${m.type}: ${m.amount}</li>`).join('')}
+              </ul>
+            </div>
+            ` : ''}
+
+            ${params.naps.length > 0 ? `
+            <div style="margin-bottom: 24px;">
+              <h3 style="color: #3b82f6; font-size: 16px; margin: 0 0 12px;">
+                😴 Siestas
+              </h3>
+              <ul style="margin: 0; padding-left: 20px; color: #374151;">
+                ${params.naps.map(n => `<li style="margin-bottom: 8px;">${n.startTime} - ${n.endTime} (${n.quality})</li>`).join('')}
+              </ul>
+            </div>
+            ` : ''}
+
+            ${params.bathroom.length > 0 ? `
+            <div style="margin-bottom: 24px;">
+              <h3 style="color: #10b981; font-size: 16px; margin: 0 0 12px;">
+                🚽 Bano/Panales
+              </h3>
+              <ul style="margin: 0; padding-left: 20px; color: #374151;">
+                ${params.bathroom.map(b => `<li style="margin-bottom: 8px;">${b.time} - ${b.type}</li>`).join('')}
+              </ul>
+            </div>
+            ` : ''}
+
+            ${params.bottleFeedings && params.bottleFeedings.length > 0 ? `
+            <div style="margin-bottom: 24px;">
+              <h3 style="color: #ec4899; font-size: 16px; margin: 0 0 12px;">
+                🍼 Biberones
+              </h3>
+              <ul style="margin: 0; padding-left: 20px; color: #374151;">
+                ${params.bottleFeedings.map(b => `<li style="margin-bottom: 8px;">${b.time} - ${b.amount} oz (${b.type})</li>`).join('')}
+              </ul>
+            </div>
+            ` : ''}
+
+            ${params.activities.length > 0 ? `
+            <div style="margin-bottom: 24px;">
+              <h3 style="color: #6366f1; font-size: 16px; margin: 0 0 12px;">
+                🎨 Actividades
+              </h3>
+              <ul style="margin: 0; padding-left: 20px; color: #374151;">
+                ${params.activities.map(a => `<li style="margin-bottom: 8px;">${a.time} - ${a.name}</li>`).join('')}
+              </ul>
+            </div>
+            ` : ''}
+
+            ${params.moods.length > 0 ? `
+            <div style="margin-bottom: 24px;">
+              <h3 style="color: #f97316; font-size: 16px; margin: 0 0 12px;">
+                😊 Estado de Animo
+              </h3>
+              <ul style="margin: 0; padding-left: 20px; color: #374151;">
+                ${params.moods.map(m => `<li style="margin-bottom: 8px;">${m.time} - ${m.mood}</li>`).join('')}
+              </ul>
+            </div>
+            ` : ''}
+
+            ${params.photos && params.photos.length > 0 ? `
+            <div style="margin-bottom: 24px;">
+              <h3 style="color: #14b8a6; font-size: 16px; margin: 0 0 12px;">
+                📸 Fotos del Dia
+              </h3>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                ${params.photos.map(p => `
+                  <div style="text-align: center;">
+                    <img src="${p.url}" alt="${p.caption || 'Foto'}" style="max-width: 150px; border-radius: 8px; margin-bottom: 4px;">
+                    ${p.caption ? `<p style="font-size: 12px; color: #6b7280; margin: 0;">${p.caption}</p>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            ` : ''}
+
+            ${params.notes ? `
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 24px 0;">
+              <h4 style="color: #166534; font-size: 14px; margin: 0 0 8px;">📝 Notas Adicionales</h4>
+              <p style="color: #374151; font-size: 14px; margin: 0; white-space: pre-wrap;">${params.notes}</p>
+            </div>
+            ` : ''}
+
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 24px 0 0;">
+              Gracias por confiar en nosotros para el cuidado de ${params.childName}. Si tiene alguna pregunta, no dude en contactarnos.
+            </p>
+          </div>
+          <div style="background: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+              ${params.centerName} - Powered by ChildCare Pro
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
+
   genericNotification: (params: { subject: string; body: string; centerName?: string }) => ({
     subject: params.subject,
     html: `
@@ -400,6 +538,24 @@ class EmailService {
 
   async sendGenericNotification(to: string | string[], params: { subject: string; body: string; centerName?: string }): Promise<EmailResult> {
     const template = EMAIL_TEMPLATES.genericNotification(params)
+    return this.send({ to, ...template })
+  }
+
+  async sendDailyActivityReport(to: string | string[], params: {
+    parentName: string
+    childName: string
+    date: string
+    centerName: string
+    meals: Array<{ time: string; type: string; amount: string }>
+    naps: Array<{ startTime: string; endTime: string; quality: string }>
+    bathroom: Array<{ time: string; type: string }>
+    activities: Array<{ time: string; name: string }>
+    moods: Array<{ time: string; mood: string }>
+    bottleFeedings?: Array<{ time: string; amount: string; type: string }>
+    photos?: Array<{ url: string; caption?: string }>
+    notes?: string
+  }): Promise<EmailResult> {
+    const template = EMAIL_TEMPLATES.dailyActivityReport(params)
     return this.send({ to, ...template })
   }
 

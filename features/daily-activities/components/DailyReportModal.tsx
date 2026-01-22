@@ -17,6 +17,7 @@ import {
   Activity,
   Heart,
   Download,
+  Milk,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import {
@@ -37,6 +38,7 @@ import type {
   MoodRecord,
   HealthObservation,
   DailyReport,
+  BottleFeeding,
 } from '@/shared/types/daily-activities'
 import {
   MEAL_TYPE_LABELS,
@@ -44,6 +46,7 @@ import {
   NAP_QUALITY_LABELS,
   MOOD_LABELS,
   MOOD_EMOJIS,
+  MILK_TYPE_LABELS,
 } from '@/shared/types/daily-activities'
 import type { Child } from '@/shared/types'
 
@@ -58,6 +61,8 @@ interface DailyReportModalProps {
   activities: ActivityRecord[]
   moods: MoodRecord[]
   healthObs: HealthObservation[]
+  bottleFeedings?: BottleFeeding[]
+  centerName?: string
 }
 
 export function DailyReportModal({
@@ -71,6 +76,8 @@ export function DailyReportModal({
   activities,
   moods,
   healthObs,
+  bottleFeedings = [],
+  centerName = 'ChildCare Pro',
 }: DailyReportModalProps) {
   const t = useTranslations()
   const [summary, setSummary] = useState('')
@@ -117,6 +124,12 @@ export function DailyReportModal({
       )
     }
 
+    // Bottle feedings summary
+    if (bottleFeedings.length > 0) {
+      const totalOz = bottleFeedings.reduce((sum, b) => sum + (Number(b.amount_oz) || 0), 0)
+      parts.push(`Biberones: ${bottleFeedings.length} (${totalOz} oz total)`)
+    }
+
     // Naps summary
     if (naps.length > 0) {
       const totalNapMinutes = naps.reduce((sum, n) => sum + (n.duration_minutes || 0), 0)
@@ -158,16 +171,45 @@ export function DailyReportModal({
 
     setIsLoading(true)
     try {
-      // Create or update the report
-      await dailyActivitiesService.createOrUpdateDailyReport({
+      // Create or update the report in database
+      const report = await dailyActivitiesService.createOrUpdateDailyReport({
         child_id: child.id,
         report_date: date,
         overall_day_summary: summary,
         status: 'completed',
       })
 
-      // Send the report
-      await dailyActivitiesService.sendDailyReport(child.id, date, sendVia)
+      // Send the report via email if email method selected
+      if (sendVia === 'email' || sendVia === 'both') {
+        // Get parent email from family (you would need to fetch this in production)
+        const parentEmail = child.family?.primary_email || ''
+        const parentName = child.family?.name || 'Padre/Tutor'
+
+        if (parentEmail) {
+          const response = await fetch('/api/daily-report/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              child_id: child.id,
+              date,
+              parent_email: parentEmail,
+              parent_name: parentName,
+              child_name: `${child.first_name} ${child.last_name}`,
+              center_name: centerName,
+              notes: summary,
+            }),
+          })
+
+          if (!response.ok) {
+            console.error('Error sending email:', await response.text())
+          }
+        }
+      }
+
+      // Update status in database using the report ID
+      if (report?.id) {
+        await dailyActivitiesService.sendDailyReport(report.id, sendVia)
+      }
 
       setIsSent(true)
     } catch (error) {
@@ -210,7 +252,8 @@ export function DailyReportModal({
     naps.length > 0 ||
     bathroom.length > 0 ||
     activities.length > 0 ||
-    moods.length > 0
+    moods.length > 0 ||
+    bottleFeedings.length > 0
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -300,6 +343,25 @@ export function DailyReportModal({
                 {bathroom.length > 0 ? (
                   <div className="text-xs text-gray-600 dark:text-gray-400">
                     {bathroom.length} {t.dailyActivities.diaper.toLowerCase()}
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-400">{t.dailyActivities.noRecords}</span>
+                )}
+              </div>
+
+              {/* Bottle Feedings */}
+              <div className="p-3 rounded-xl shadow-neu dark:shadow-neu-dark">
+                <div className="flex items-center gap-2 mb-2">
+                  <Milk className="w-4 h-4 text-pink-500" />
+                  <span className="text-sm font-medium">Biberones</span>
+                </div>
+                {bottleFeedings.length > 0 ? (
+                  <div className="space-y-1">
+                    {bottleFeedings.map((bottle) => (
+                      <div key={bottle.id} className="text-xs text-gray-600 dark:text-gray-400">
+                        {bottle.amount_oz} oz - {MILK_TYPE_LABELS[bottle.milk_type]}
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <span className="text-xs text-gray-400">{t.dailyActivities.noRecords}</span>

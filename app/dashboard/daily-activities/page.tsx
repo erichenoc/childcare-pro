@@ -46,6 +46,7 @@ import type {
   ActivityRecord,
   MoodRecord,
   HealthObservation,
+  BottleFeeding,
 } from '@/shared/types/daily-activities'
 import type { Child } from '@/shared/types'
 import type { Classroom } from '@/features/classrooms/types'
@@ -89,6 +90,7 @@ export default function DailyActivitiesPage() {
   const [activities, setActivities] = useState<ActivityRecord[]>([])
   const [moods, setMoods] = useState<MoodRecord[]>([])
   const [healthObs, setHealthObs] = useState<HealthObservation[]>([])
+  const [bottleFeedings, setBottleFeedings] = useState<BottleFeeding[]>([])
 
   useEffect(() => {
     loadInitialData()
@@ -150,7 +152,7 @@ export default function DailyActivitiesPage() {
     setIsLoading(true)
     try {
       const filters = { child_id: selectedChildId, date: selectedDate }
-      const [mealsData, napsData, bathroomData, activitiesData, moodsData, healthData] =
+      const [mealsData, napsData, bathroomData, activitiesData, moodsData, healthData, bottleFeedingsData] =
         await Promise.all([
           dailyActivitiesService.getMeals(filters),
           dailyActivitiesService.getNaps(filters),
@@ -158,6 +160,7 @@ export default function DailyActivitiesPage() {
           dailyActivitiesService.getActivities(filters),
           dailyActivitiesService.getMoods(filters),
           dailyActivitiesService.getHealthObservations(filters),
+          dailyActivitiesService.getBottleFeedings(filters),
         ])
 
       setMeals(mealsData)
@@ -166,6 +169,7 @@ export default function DailyActivitiesPage() {
       setActivities(activitiesData)
       setMoods(moodsData)
       setHealthObs(healthData)
+      setBottleFeedings(bottleFeedingsData)
 
       // Update counts for this child
       setChildActivityCounts((prev) => ({
@@ -707,6 +711,7 @@ export default function DailyActivitiesPage() {
         activities={activities}
         moods={moods}
         healthObs={healthObs}
+        bottleFeedings={bottleFeedings}
       />
     </div>
   )

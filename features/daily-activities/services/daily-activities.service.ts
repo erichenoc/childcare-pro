@@ -17,6 +17,10 @@ import type {
   DailyReportFormData,
   ChildDailySummary,
   DailyActivityFilters,
+  BottleFeeding,
+  BottleFeedingFormData,
+  DailyPhoto,
+  DailyPhotoFormData,
 } from '@/shared/types/daily-activities'
 
 export const dailyActivitiesService = {
@@ -490,13 +494,15 @@ export const dailyActivitiesService = {
   // ==================== Aggregated Summary ====================
 
   async getChildDailySummary(childId: string, date: string): Promise<ChildDailySummary> {
-    const [meals, naps, bathroom, activities, moods, healthObs] = await Promise.all([
+    const [meals, naps, bathroom, activities, moods, healthObs, bottleFeedings, photos] = await Promise.all([
       this.getMeals({ child_id: childId, date }),
       this.getNaps({ child_id: childId, date }),
       this.getBathroomRecords({ child_id: childId, date }),
       this.getActivities({ child_id: childId, date }),
       this.getMoods({ child_id: childId, date }),
       this.getHealthObservations({ child_id: childId, date }),
+      this.getBottleFeedings({ child_id: childId, date }),
+      this.getDailyPhotos({ child_id: childId, date }),
     ])
 
     return {
@@ -507,6 +513,8 @@ export const dailyActivitiesService = {
       activities,
       moods,
       health_observations: healthObs,
+      bottle_feedings: bottleFeedings,
+      photos,
     }
   },
 
@@ -539,6 +547,172 @@ export const dailyActivitiesService = {
     return this.createMood({
       child_id: childId,
       mood,
+    })
+  },
+
+  // ==================== Bottle Feedings (Infants) ====================
+
+  async getBottleFeedings(filters?: DailyActivityFilters): Promise<BottleFeeding[]> {
+    const supabase = createClient()
+    const orgId = await requireOrgId()
+
+    let query = supabase
+      .from('bottle_feedings')
+      .select(`
+        *,
+        child:children(id, first_name, last_name)
+      `)
+      .eq('organization_id', orgId)
+      .order('feeding_time', { ascending: false })
+
+    if (filters?.child_id) {
+      query = query.eq('child_id', filters.child_id)
+    }
+    if (filters?.date) {
+      query = query.gte('feeding_time', `${filters.date}T00:00:00`)
+        .lt('feeding_time', `${filters.date}T23:59:59`)
+    }
+
+    const { data, error } = await query
+    if (error) throw error
+    return (data || []) as BottleFeeding[]
+  },
+
+  async createBottleFeeding(feeding: BottleFeedingFormData): Promise<BottleFeeding> {
+    const supabase = createClient()
+    const orgId = await requireOrgId()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const { data, error } = await supabase
+      .from('bottle_feedings')
+      .insert({
+        ...feeding,
+        organization_id: orgId,
+        recorded_by: user?.id,
+        feeding_time: feeding.feeding_time || new Date().toISOString(),
+      })
+      .select('*')
+      .single()
+
+    if (error) throw error
+    return data as BottleFeeding
+  },
+
+  async deleteBottleFeeding(id: string): Promise<void> {
+    const supabase = createClient()
+    const { error } = await supabase.from('bottle_feedings').delete().eq('id', id)
+    if (error) throw error
+  },
+
+  async quickBottleFeeding(childId: string, amountOz: number, milkType: BottleFeedingFormData['milk_type']): Promise<BottleFeeding> {
+    return this.createBottleFeeding({
+      child_id: childId,
+      amount_oz: amountOz,
+      milk_type: milkType,
+    })
+  },
+
+  // ==================== Daily Photos ====================
+
+  async getDailyPhotos(filters?: DailyActivityFilters): Promise<DailyPhoto[]> {
+    const supabase = createClient()
+    const orgId = await requireOrgId()
+
+    let query = supabase
+      .from('daily_photos')
+      .select(`
+        *,
+        child:children(id, first_name, last_name)
+      `)
+      .eq('organization_id', orgId)
+      .order('photo_time', { ascending: false })
+
+    if (filters?.child_id) {
+      query = query.eq('child_id', filters.child_id)
+    }
+    if (filters?.date) {
+      query = query.gte('photo_time', `${filters.date}T00:00:00`)
+        .lt('photo_time', `${filters.date}T23:59:59`)
+    }
+
+    const { data, error } = await query
+    if (error) throw error
+    return (data || []) as DailyPhoto[]
+  },
+
+  async createDailyPhoto(photo: DailyPhotoFormData): Promise<DailyPhoto> {
+    const supabase = createClient()
+    const orgId = await requireOrgId()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const { data, error } = await supabase
+      .from('daily_photos')
+      .insert({
+        ...photo,
+        organization_id: orgId,
+        recorded_by: user?.id,
+        photo_time: photo.photo_time || new Date().toISOString(),
+      })
+      .select('*')
+      .single()
+
+    if (error) throw error
+    return data as DailyPhoto
+  },
+
+  async deleteDailyPhoto(id: string): Promise<void> {
+    const supabase = createClient()
+    const { error } = await supabase.from('daily_photos').delete().eq('id', id)
+    if (error) throw error
+  },
+
+  async sharePhotoWithParents(id: string): Promise<DailyPhoto> {
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('daily_photos')
+      .update({
+        shared_with_parents: true,
+        shared_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select('*')
+      .single()
+
+    if (error) throw error
+    return data as DailyPhoto
+  },
+
+  // ==================== Photo Upload Helper ====================
+
+  async uploadDailyPhoto(childId: string, file: File, caption?: string): Promise<DailyPhoto> {
+    const supabase = createClient()
+    const orgId = await requireOrgId()
+
+    // Generate unique filename
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${orgId}/${childId}/${Date.now()}.${fileExt}`
+
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('daily-photos')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+      })
+
+    if (uploadError) throw uploadError
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('daily-photos')
+      .getPublicUrl(fileName)
+
+    // Create photo record
+    return this.createDailyPhoto({
+      child_id: childId,
+      photo_url: publicUrl,
+      caption,
     })
   },
 }
