@@ -106,33 +106,35 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Invalid model ID' }, { status: 400 })
     }
 
-    // 🔐 AUTHENTICATION: TEMPORARILY DISABLED FOR TESTING
-    // const supabase = await createClient()
-    // const {
-    //   data: { user },
-    //   error: authError,
-    // } = await supabase.auth.getUser()
+    // 🔐 AUTHENTICATION: Verify user is logged in
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    // if (authError || !user) {
-    //   return Response.json({ error: 'Unauthorized' }, { status: 401 })
-    // }
+    if (authError || !user) {
+      console.error('[Chat API] Unauthorized access attempt')
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    // // 🔒 AUTHORIZATION: Verify conversation ownership
-    // if (conversationId) {
-    //   const { data: conversation, error: conversationError } = await supabase
-    //     .from('conversations')
-    //     .select('user_id')
-    //     .eq('id', conversationId)
-    //     .single()
+    // 🔒 AUTHORIZATION: Verify conversation ownership
+    if (conversationId) {
+      const { data: conversation, error: conversationError } = await supabase
+        .from('conversations')
+        .select('user_id')
+        .eq('id', conversationId)
+        .single()
 
-    //   if (conversationError || !conversation) {
-    //     return Response.json({ error: 'Conversation not found' }, { status: 404 })
-    //   }
+      if (conversationError || !conversation) {
+        return Response.json({ error: 'Conversation not found' }, { status: 404 })
+      }
 
-    //   if (conversation.user_id !== user.id) {
-    //     return Response.json({ error: 'Forbidden' }, { status: 403 })
-    //   }
-    // }
+      if (conversation.user_id !== user.id) {
+        console.error('[Chat API] Forbidden - user does not own conversation')
+        return Response.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
 
     // 🤖 MODEL SETUP: Branch for OpenRouter with reasoning vs other providers
     const useCustomStreaming = modelInfo.supportsThinking && modelInfo.provider === 'openrouter'

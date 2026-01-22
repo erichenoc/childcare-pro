@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   CalendarDays,
   Baby,
@@ -9,6 +9,9 @@ import {
   Clock,
   Users,
   Search,
+  FileText,
+  Layers,
+  Filter,
 } from 'lucide-react'
 import {
   GlassCard,
@@ -24,8 +27,13 @@ import {
   QuickActionButtons,
   ActivityTimeline,
   DailySummaryStats,
+  BulkActivityModal,
+  DailyReportModal,
+  ChildActivityStatus,
+  MissingActivitiesBadge,
 } from '@/features/daily-activities/components'
 import { childrenService } from '@/features/children/services/children.service'
+import { classroomsService } from '@/features/classrooms/services/classrooms.service'
 import type {
   MealRecord,
   NapRecord,
@@ -35,7 +43,17 @@ import type {
   HealthObservation,
 } from '@/shared/types/daily-activities'
 import type { Child } from '@/shared/types'
+import type { Classroom } from '@/features/classrooms/types'
 import { useTranslations } from '@/shared/lib/i18n'
+
+interface ChildActivityCounts {
+  [childId: string]: {
+    meals: number
+    naps: number
+    bathroom: number
+    moods: number
+  }
+}
 
 export default function DailyActivitiesPage() {
   const t = useTranslations()
@@ -45,10 +63,17 @@ export default function DailyActivitiesPage() {
   })
   const [selectedChildId, setSelectedChildId] = useState<string>('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedClassroomId, setSelectedClassroomId] = useState<string>('')
   const [children, setChildren] = useState<Child[]>([])
+  const [classrooms, setClassrooms] = useState<Classroom[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [childActivityCounts, setChildActivityCounts] = useState<ChildActivityCounts>({})
 
-  // Activity data
+  // Modal states
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false)
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+
+  // Activity data for selected child
   const [meals, setMeals] = useState<MealRecord[]>([])
   const [naps, setNaps] = useState<NapRecord[]>([])
   const [bathroom, setBathroom] = useState<BathroomRecord[]>([])
@@ -57,22 +82,30 @@ export default function DailyActivitiesPage() {
   const [healthObs, setHealthObs] = useState<HealthObservation[]>([])
 
   useEffect(() => {
-    loadChildren()
+    loadInitialData()
   }, [])
 
   useEffect(() => {
     loadActivities()
   }, [selectedDate, selectedChildId])
 
-  const loadChildren = async () => {
+  useEffect(() => {
+    loadAllChildrenCounts()
+  }, [selectedDate, children])
+
+  const loadInitialData = async () => {
     try {
-      const data = await childrenService.getChildren()
-      setChildren(data)
-      if (data.length > 0 && !selectedChildId) {
-        setSelectedChildId(data[0].id)
+      const [childrenData, classroomsData] = await Promise.all([
+        childrenService.getChildren(),
+        classroomsService.getAll(),
+      ])
+      setChildren(childrenData)
+      setClassrooms(classroomsData.filter((c) => c.status === 'active'))
+      if (childrenData.length > 0 && !selectedChildId) {
+        setSelectedChildId(childrenData[0].id)
       }
     } catch (error) {
-      console.error('Error loading children:', error)
+      console.error('Error loading initial data:', error)
     }
   }
 
@@ -98,6 +131,17 @@ export default function DailyActivitiesPage() {
       setActivities(activitiesData)
       setMoods(moodsData)
       setHealthObs(healthData)
+
+      // Update counts for this child
+      setChildActivityCounts((prev) => ({
+        ...prev,
+        [selectedChildId]: {
+          meals: mealsData.length,
+          naps: napsData.length,
+          bathroom: bathroomData.length,
+          moods: moodsData.length,
+        },
+      }))
     } catch (error) {
       console.error('Error loading activities:', error)
     } finally {
@@ -105,11 +149,44 @@ export default function DailyActivitiesPage() {
     }
   }
 
+  const loadAllChildrenCounts = async () => {
+    // Load activity counts for all children (for status indicators)
+    const counts: ChildActivityCounts = {}
+
+    // Batch load counts - this could be optimized with a single API call
+    for (const child of children) {
+      try {
+        const filters = { child_id: child.id, date: selectedDate }
+        const [mealsData, napsData, bathroomData, moodsData] = await Promise.all([
+          dailyActivitiesService.getMeals(filters),
+          dailyActivitiesService.getNaps(filters),
+          dailyActivitiesService.getBathroomRecords(filters),
+          dailyActivitiesService.getMoods(filters),
+        ])
+        counts[child.id] = {
+          meals: mealsData.length,
+          naps: napsData.length,
+          bathroom: bathroomData.length,
+          moods: moodsData.length,
+        }
+      } catch (error) {
+        counts[child.id] = { meals: 0, naps: 0, bathroom: 0, moods: 0 }
+      }
+    }
+    setChildActivityCounts(counts)
+  }
+
   const navigateDate = (direction: 'prev' | 'next') => {
     const date = new Date(selectedDate)
     date.setDate(date.getDate() + (direction === 'next' ? 1 : -1))
     setSelectedDate(date.toISOString().split('T')[0])
   }
+
+  const goToToday = () => {
+    setSelectedDate(new Date().toISOString().split('T')[0])
+  }
+
+  const isToday = selectedDate === new Date().toISOString().split('T')[0]
 
   const formatDateDisplay = (dateStr: string) => {
     const date = new Date(dateStr)
@@ -119,29 +196,41 @@ export default function DailyActivitiesPage() {
     dateToCompare.setHours(0, 0, 0, 0)
 
     if (dateToCompare.getTime() === today.getTime()) {
-      return 'Today'
+      return t.dashboard.today
     }
 
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
     if (dateToCompare.getTime() === yesterday.getTime()) {
-      return 'Yesterday'
+      return 'Ayer'
     }
 
-    return date.toLocaleDateString(undefined, {
-      weekday: 'long',
+    return date.toLocaleDateString('es', {
+      weekday: 'short',
       month: 'short',
       day: 'numeric',
     })
   }
 
-  const filteredChildren = children.filter(
-    (child) =>
-      !searchTerm ||
-      `${child.first_name} ${child.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Filter children by search and classroom
+  const filteredChildren = useMemo(() => {
+    return children.filter((child) => {
+      const matchesSearch =
+        !searchTerm ||
+        `${child.first_name} ${child.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesClassroom =
+        !selectedClassroomId || child.classroom_id === selectedClassroomId
+      return matchesSearch && matchesClassroom && child.status === 'active'
+    })
+  }, [children, searchTerm, selectedClassroomId])
 
   const selectedChild = children.find((c) => c.id === selectedChildId)
+
+  // Classroom options for filter
+  const classroomOptions = [
+    { value: '', label: t.common.allClassrooms },
+    ...classrooms.map((c) => ({ value: c.id, label: c.name })),
+  ]
 
   return (
     <div className="space-y-6">
@@ -149,38 +238,49 @@ export default function DailyActivitiesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {t.nav.dailyActivities || 'Daily Activities'}
+            {t.nav.dailyActivities}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Track meals, naps, activities and more
+            Registra comidas, siestas, pañales y más
           </p>
         </div>
 
         {/* Date Navigation */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <GlassButton variant="secondary" size="sm" onClick={() => navigateDate('prev')}>
             <ChevronLeft className="w-4 h-4" />
           </GlassButton>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl shadow-neu dark:shadow-neu-dark">
-            <CalendarDays className="w-4 h-4 text-primary-500" />
-            <span className="font-medium text-gray-900 dark:text-gray-100">
-              {formatDateDisplay(selectedDate)}
-            </span>
-          </div>
+
+          <GlassButton
+            variant={isToday ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={goToToday}
+          >
+            <CalendarDays className="w-4 h-4 mr-1" />
+            {t.dashboard.today}
+          </GlassButton>
+
           <GlassButton
             variant="secondary"
             size="sm"
             onClick={() => navigateDate('next')}
-            disabled={selectedDate === new Date().toISOString().split('T')[0]}
+            disabled={isToday}
           >
             <ChevronRight className="w-4 h-4" />
           </GlassButton>
+
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl shadow-neu dark:shadow-neu-dark text-sm">
+            <span className="font-medium text-gray-900 dark:text-gray-100">
+              {formatDateDisplay(selectedDate)}
+            </span>
+          </div>
+
           <GlassInput
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             max={new Date().toISOString().split('T')[0]}
-            className="w-40"
+            className="w-36"
           />
         </div>
       </div>
@@ -192,45 +292,90 @@ export default function DailyActivitiesPage() {
             <GlassCardHeader>
               <GlassCardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary-500" />
-                Children
+                Niños ({filteredChildren.length})
               </GlassCardTitle>
             </GlassCardHeader>
             <GlassCardContent className="space-y-3">
+              {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <GlassInput
                   type="text"
-                  placeholder="Search children..."
+                  placeholder="Buscar niños..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9"
                 />
               </div>
 
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                {filteredChildren.map((child) => (
-                  <button
-                    key={child.id}
-                    onClick={() => setSelectedChildId(child.id)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
-                      selectedChildId === child.id
-                        ? 'shadow-neu-inset dark:shadow-neu-dark-inset bg-primary-50 dark:bg-primary-900/20'
-                        : 'shadow-neu dark:shadow-neu-dark hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset'
-                    }`}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                      <Baby className="w-5 h-5 text-primary-500" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-medium text-gray-900 dark:text-gray-100">
-                        {child.first_name} {child.last_name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {child.classroom?.name || 'No classroom'}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+              {/* Classroom Filter */}
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <GlassSelect
+                  options={classroomOptions}
+                  value={selectedClassroomId}
+                  onChange={(e) => setSelectedClassroomId(e.target.value)}
+                  className="flex-1"
+                />
+              </div>
+
+              {/* Children List */}
+              <div className="space-y-2 max-h-[350px] overflow-y-auto">
+                {filteredChildren.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <Baby className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No hay niños en este salón</p>
+                  </div>
+                ) : (
+                  filteredChildren.map((child) => {
+                    const counts = childActivityCounts[child.id] || {
+                      meals: 0,
+                      naps: 0,
+                      bathroom: 0,
+                      moods: 0,
+                    }
+                    return (
+                      <button
+                        key={child.id}
+                        onClick={() => setSelectedChildId(child.id)}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
+                          selectedChildId === child.id
+                            ? 'shadow-neu-inset dark:shadow-neu-dark-inset bg-primary-50 dark:bg-primary-900/20'
+                            : 'shadow-neu dark:shadow-neu-dark hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset'
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                          <Baby className="w-5 h-5 text-primary-500" />
+                        </div>
+                        <div className="text-left flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                              {child.first_name} {child.last_name}
+                            </p>
+                            <ChildActivityStatus counts={counts} />
+                          </div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            {child.classroom?.name || 'Sin salón'}
+                          </p>
+                        </div>
+                      </button>
+                    )
+                  })
+                )}
+              </div>
+
+              {/* Bulk Actions */}
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <GlassButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setIsBulkModalOpen(true)}
+                  className="w-full"
+                  disabled={filteredChildren.length === 0}
+                >
+                  <Layers className="w-4 h-4 mr-2" />
+                  Registro en Lote
+                </GlassButton>
               </div>
             </GlassCardContent>
           </GlassCard>
@@ -240,12 +385,42 @@ export default function DailyActivitiesPage() {
         <div className="lg:col-span-3 space-y-6">
           {selectedChild ? (
             <>
+              {/* Child Header with Report Button */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                    <Baby className="w-6 h-6 text-primary-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      {selectedChild.first_name} {selectedChild.last_name}
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {selectedChild.classroom?.name || 'Sin salón asignado'}
+                    </p>
+                  </div>
+                </div>
+                <GlassButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setIsReportModalOpen(true)}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Reporte Diario
+                </GlassButton>
+              </div>
+
+              {/* What's Missing Today */}
+              {childActivityCounts[selectedChild.id] && (
+                <MissingActivitiesBadge counts={childActivityCounts[selectedChild.id]} />
+              )}
+
               {/* Quick Actions */}
               <GlassCard>
                 <GlassCardHeader>
                   <GlassCardTitle className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-primary-500" />
-                    Quick Actions
+                    Acciones Rápidas
                   </GlassCardTitle>
                 </GlassCardHeader>
                 <GlassCardContent>
@@ -272,7 +447,7 @@ export default function DailyActivitiesPage() {
                 <GlassCardHeader>
                   <GlassCardTitle className="flex items-center gap-2">
                     <CalendarDays className="w-5 h-5 text-primary-500" />
-                    Today&apos;s Timeline
+                    Línea de Tiempo
                   </GlassCardTitle>
                 </GlassCardHeader>
                 <GlassCardContent>
@@ -306,16 +481,42 @@ export default function DailyActivitiesPage() {
               <GlassCardContent className="py-12 text-center">
                 <Baby className="w-16 h-16 mx-auto text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                  Select a Child
+                  Selecciona un Niño
                 </h3>
                 <p className="text-gray-500 dark:text-gray-400">
-                  Choose a child from the list to view and record their daily activities
+                  Elige un niño de la lista para ver y registrar sus actividades diarias
                 </p>
               </GlassCardContent>
             </GlassCard>
           )}
         </div>
       </div>
+
+      {/* Bulk Activity Modal */}
+      <BulkActivityModal
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        children={filteredChildren}
+        classroomId={selectedClassroomId || undefined}
+        onSuccess={() => {
+          loadActivities()
+          loadAllChildrenCounts()
+        }}
+      />
+
+      {/* Daily Report Modal */}
+      <DailyReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        child={selectedChild || null}
+        date={selectedDate}
+        meals={meals}
+        naps={naps}
+        bathroom={bathroom}
+        activities={activities}
+        moods={moods}
+        healthObs={healthObs}
+      />
     </div>
   )
 }

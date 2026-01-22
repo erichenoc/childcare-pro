@@ -14,6 +14,7 @@ Plataforma SaaS multi-tenant para la gestion integral de guarderias y centros de
 | Sistema de Asistencia | Completado |
 | Facturacion con Stripe | Completado |
 | Ratios DCF en Tiempo Real | Completado |
+| Seguridad de APIs | Completado |
 
 ## Tech Stack
 
@@ -72,7 +73,25 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Seguridad (requerido para admin)
+NEXT_PUBLIC_SUPER_ADMIN_EMAIL=admin@tudominio.com
 ```
+
+### Migracion Pendiente
+
+Despues de configurar las variables de entorno, ejecutar la migracion de seguridad:
+
+```bash
+# Ejecutar en Supabase SQL Editor o via CLI
+supabase db push
+# O ejecutar manualmente: supabase/migrations/021_audit_logs.sql
+```
+
+Esta migracion crea:
+- Tabla `audit_logs` para registro de operaciones sensibles
+- Tabla `sales_leads` para gestion de leads
+- Tabla `appointments` para citas/demos
 
 ## Estructura del Proyecto
 
@@ -112,7 +131,11 @@ proyecto/
 ├── shared/                       # Codigo compartido
 │   ├── components/               # Componentes UI
 │   ├── lib/                      # Utilidades y configuracion
-│   │   └── supabase/
+│   │   ├── supabase/             # Cliente Supabase
+│   │   ├── auth-helpers.ts       # Utilidades de autenticacion
+│   │   ├── rate-limiter.ts       # Rate limiting para APIs
+│   │   ├── audit-logger.ts       # Audit logging
+│   │   └── validations/          # Schemas Zod
 │   └── types/                    # Tipos TypeScript
 │
 └── docs/                         # Documentacion adicional
@@ -188,6 +211,84 @@ El sistema usa Supabase Auth con soporte para:
 1. Ir a Supabase Dashboard > Authentication > Providers
 2. Habilitar Google
 3. Configurar credenciales de Google Cloud Console
+
+## Seguridad
+
+### Utilidades de Seguridad Disponibles
+
+El proyecto incluye utilidades reutilizables para seguridad en APIs:
+
+| Archivo | Descripcion |
+|---------|-------------|
+| `shared/lib/auth-helpers.ts` | Verificacion de autenticacion y autorizacion admin |
+| `shared/lib/rate-limiter.ts` | Rate limiting configurable por endpoint |
+| `shared/lib/audit-logger.ts` | Logging de operaciones sensibles |
+| `shared/lib/validations/*.ts` | Schemas Zod para validacion de entrada |
+
+### Uso de Auth Helpers
+
+```typescript
+import { verifyAdminAuth, isAuthError } from '@/shared/lib/auth-helpers'
+
+export async function GET(request: NextRequest) {
+  const auth = await verifyAdminAuth()
+  if (isAuthError(auth)) return auth.response
+
+  // Usuario autenticado como admin
+  const { user } = auth
+}
+```
+
+### Uso de Rate Limiter
+
+```typescript
+import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
+
+export async function POST(request: NextRequest) {
+  const rateLimitResponse = checkRateLimit(request, RateLimits.public, 'leads')
+  if (rateLimitResponse) return rateLimitResponse
+
+  // Procesar request
+}
+```
+
+Configuraciones predefinidas:
+- `RateLimits.public`: 10 req/min (endpoints publicos)
+- `RateLimits.authenticated`: 60 req/min (usuarios autenticados)
+- `RateLimits.strict`: 5 req/5min (operaciones sensibles)
+- `RateLimits.ai`: 20 req/min (endpoints de IA)
+
+### Uso de Audit Logger
+
+```typescript
+import { AuditLogger } from '@/shared/lib/audit-logger'
+
+// Registrar acceso admin
+await AuditLogger.adminAccess(user.email, user.id, 'leads', request.headers)
+
+// Registrar pago iniciado
+await AuditLogger.paymentInitiated(userId, orgId, invoiceId, amount, headers)
+
+// Alertas de seguridad
+await AuditLogger.securityAlert('Suspicious activity', { details }, headers)
+```
+
+### Uso de Schemas de Validacion
+
+```typescript
+import { createLeadSchema } from '@/shared/lib/validations'
+
+const result = createLeadSchema.safeParse(body)
+if (!result.success) {
+  return NextResponse.json({ error: result.error.errors }, { status: 400 })
+}
+const validatedData = result.data
+```
+
+Schemas disponibles:
+- `createLeadSchema` / `getLeadsQuerySchema`
+- `createAppointmentSchema` / `getAppointmentsQuerySchema`
+- `createCheckoutSessionSchema`
 
 ## Ratios DCF de Florida
 

@@ -13,6 +13,7 @@
 | Asistencia | Completado | Check-in/check-out funcional |
 | Facturacion | Completado | Facturas con integracion Stripe |
 | Ratios DCF | Completado | Monitoreo en tiempo real |
+| Seguridad APIs | Completado | Rate limiting, auth helpers, audit logging, validacion Zod |
 
 ### Integracion Stripe (Recien Implementado)
 
@@ -31,6 +32,35 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 **Metodos de pago soportados:**
 - Tarjeta de credito/debito via Stripe Checkout
 - Pagos manuales (efectivo, cheque, transferencia)
+
+### Mejoras de Seguridad (Enero 2026)
+
+**Nueva variable de entorno requerida:**
+```env
+NEXT_PUBLIC_SUPER_ADMIN_EMAIL=admin@tudominio.com
+```
+
+**Migracion pendiente:**
+```bash
+# Ejecutar: supabase/migrations/021_audit_logs.sql
+# Crea tablas: audit_logs, sales_leads, appointments
+```
+
+**Utilidades de seguridad disponibles:**
+
+| Archivo | Uso |
+|---------|-----|
+| `shared/lib/auth-helpers.ts` | `verifyAdminAuth()`, `verifyUserAuth()` |
+| `shared/lib/rate-limiter.ts` | `checkRateLimit(request, RateLimits.public, 'prefix')` |
+| `shared/lib/audit-logger.ts` | `AuditLogger.adminAccess()`, `AuditLogger.paymentInitiated()` |
+| `shared/lib/validations/` | Schemas Zod: `createLeadSchema`, `createAppointmentSchema`, etc. |
+
+**APIs con seguridad mejorada:**
+- `POST /api/stripe/checkout` - Auth + Zod + Audit logging
+- `GET/POST /api/leads` - Admin auth + Zod + Rate limit + Audit
+- `GET/POST /api/appointments` - Admin auth + Zod + Rate limit
+- `POST /api/chat/sales` - Rate limiting + API key fix
+- `POST /api/chat` - Auth habilitada
 
 ---
 
@@ -283,7 +313,7 @@ test('should calculate total with tax', () => {
 - Use schema validation (Zod, Yup, etc.)
 
 ### Authentication & Authorization
-- JWT tokens con expiración
+- JWT tokens con expiracion
 - Role-based access control
 - Secure session management
 
@@ -291,6 +321,104 @@ test('should calculate total with tax', () => {
 - Never log sensitive data
 - Encrypt data at rest
 - Use HTTPS everywhere
+
+### Utilidades de Seguridad del Proyecto
+
+**Auth Helpers** (`shared/lib/auth-helpers.ts`):
+```typescript
+import { verifyAdminAuth, verifyUserAuth, isAuthError } from '@/shared/lib/auth-helpers'
+
+// Verificar admin
+const auth = await verifyAdminAuth()
+if (isAuthError(auth)) return auth.response
+// auth.user.id, auth.user.email, auth.isAdmin
+
+// Verificar usuario con organizacion
+const userAuth = await verifyUserAuth()
+if (isAuthError(userAuth)) return userAuth.response
+// userAuth.user, userAuth.organizationId
+```
+
+**Rate Limiter** (`shared/lib/rate-limiter.ts`):
+```typescript
+import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
+
+// Aplicar rate limiting
+const rateLimited = checkRateLimit(request, RateLimits.public, 'my-endpoint')
+if (rateLimited) return rateLimited
+
+// Configuraciones disponibles:
+// - RateLimits.public: 10 req/min
+// - RateLimits.authenticated: 60 req/min
+// - RateLimits.strict: 5 req/5min
+// - RateLimits.ai: 20 req/min
+```
+
+**Audit Logger** (`shared/lib/audit-logger.ts`):
+```typescript
+import { AuditLogger, logAuditEvent } from '@/shared/lib/audit-logger'
+
+// Helpers predefinidos
+await AuditLogger.adminAccess(email, userId, resource, headers)
+await AuditLogger.paymentInitiated(userId, orgId, invoiceId, amount, headers)
+await AuditLogger.securityAlert(message, details, headers)
+await AuditLogger.leadCreated(leadId, source, headers)
+
+// Evento personalizado
+await logAuditEvent({
+  action: 'CUSTOM_ACTION',
+  severity: 'info',
+  userId,
+  details: { ... }
+})
+```
+
+**Validacion Zod** (`shared/lib/validations/`):
+```typescript
+import {
+  createLeadSchema,
+  createAppointmentSchema,
+  createCheckoutSessionSchema
+} from '@/shared/lib/validations'
+
+const result = createLeadSchema.safeParse(body)
+if (!result.success) {
+  return NextResponse.json({
+    error: 'Validation failed',
+    details: result.error.errors
+  }, { status: 400 })
+}
+const validData = result.data
+```
+
+### Patron Recomendado para APIs Seguras
+
+```typescript
+export async function POST(request: NextRequest) {
+  // 1. Rate limiting
+  const rateLimited = checkRateLimit(request, RateLimits.authenticated, 'my-api')
+  if (rateLimited) return rateLimited
+
+  // 2. Autenticacion
+  const auth = await verifyAdminAuth()
+  if (isAuthError(auth)) return auth.response
+
+  // 3. Validacion de entrada
+  const body = await request.json()
+  const validation = mySchema.safeParse(body)
+  if (!validation.success) {
+    return NextResponse.json({ error: validation.error.errors }, { status: 400 })
+  }
+
+  // 4. Logica de negocio
+  const result = await processData(validation.data)
+
+  // 5. Audit logging
+  await AuditLogger.adminAccess(auth.user.email, auth.user.id, 'my-resource', request.headers)
+
+  return NextResponse.json(result)
+}
+```
 
 ## ⚡ Performance Guidelines
 

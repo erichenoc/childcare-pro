@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/shared/lib/supabase/server'
+import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
 
 // ============================================================================
 // CHILDCARE AI - ULTIMATE SALES CONVERSION AGENT WITH LEAD CAPTURE
@@ -280,6 +281,12 @@ function analyzeConversation(messages: Array<{ role: string; content: string }>)
 }
 
 export async function POST(request: NextRequest) {
+  // 🛡️ RATE LIMITING: Prevent abuse of expensive AI endpoint
+  const rateLimitResponse = checkRateLimit(request, RateLimits.ai, 'sales-chat')
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const { messages, leadId, sessionId } = await request.json()
 
@@ -290,8 +297,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Usar la API key proporcionada por el usuario
-    const apiKey = process.env.OPENROUTER_API_KEY || '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'
+    // 🔐 SECURITY: API key from environment only - no fallback
+    const apiKey = process.env.OPENROUTER_API_KEY
+    if (!apiKey) {
+      console.error('[Sales Chat] OPENROUTER_API_KEY not configured')
+      return NextResponse.json(
+        { error: 'AI service not configured' },
+        { status: 503 }
+      )
+    }
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',

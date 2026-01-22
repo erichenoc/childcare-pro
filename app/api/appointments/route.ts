@@ -1,16 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/shared/lib/supabase/server'
+import { verifyAdminAuth, isAuthError } from '@/shared/lib/auth-helpers'
+import { createAppointmentSchema, getAppointmentsQuerySchema } from '@/shared/lib/validations'
+import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
 
-// GET - List all appointments
+// GET - List all appointments (Admin only)
 export async function GET(request: NextRequest) {
   try {
+    // 🔐 AUTHENTICATION: Verify admin access
+    const authResult = await verifyAdminAuth()
+    if (isAuthError(authResult)) {
+      console.error('[Appointments API] Unauthorized access attempt')
+      return authResult.response
+    }
+
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
 
-    const status = searchParams.get('status')
-    const leadId = searchParams.get('lead_id')
-    const fromDate = searchParams.get('from_date')
-    const toDate = searchParams.get('to_date')
+    // 🛡️ VALIDATION: Parse and validate query parameters
+    const queryParams = {
+      status: searchParams.get('status') || undefined,
+      lead_id: searchParams.get('lead_id') || undefined,
+      from_date: searchParams.get('from_date') || undefined,
+      to_date: searchParams.get('to_date') || undefined
+    }
+
+    const validationResult = getAppointmentsQuerySchema.safeParse(queryParams)
+    if (!validationResult.success) {
+      console.error('[Appointments API] Invalid query parameters:', validationResult.error.flatten())
+      return NextResponse.json(
+        { error: 'Invalid query parameters', details: validationResult.error.flatten().fieldErrors },
+        { status: 400 }
+      )
+    }
+
+    const { status, lead_id: leadId, from_date: fromDate, to_date: toDate } = validationResult.data
 
     let query = supabase
       .from('appointments')
@@ -38,6 +62,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    console.log('[Appointments API] Fetched', data?.length, 'appointments by admin:', authResult.user.email)
+
     return NextResponse.json({ appointments: data })
   } catch (error) {
     console.error('Appointments API error:', error)
@@ -45,34 +71,43 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create a new appointment
+// POST - Create a new appointment (Public - used by sales chat widget for demo booking)
+// Note: This endpoint is intentionally public to allow appointment scheduling from the website
 export async function POST(request: NextRequest) {
+  // 🛡️ RATE LIMITING: Prevent spam and abuse
+  const rateLimitResponse = checkRateLimit(request, RateLimits.public, 'appointments-create')
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const supabase = await createClient()
     const body = await request.json()
 
+    // 🛡️ VALIDATION: Parse and validate request body with Zod
+    const validationResult = createAppointmentSchema.safeParse(body)
+    if (!validationResult.success) {
+      console.error('[Appointments API] Validation failed:', validationResult.error.flatten())
+      return NextResponse.json(
+        { error: 'Invalid input data', details: validationResult.error.flatten().fieldErrors },
+        { status: 400 }
+      )
+    }
+
     const {
       lead_id,
-      title = 'Product Demo - ChildCare AI',
+      title,
       description,
-      appointment_type = 'demo',
+      appointment_type,
       scheduled_date,
       scheduled_time,
-      duration_minutes = 30,
-      timezone = 'America/New_York',
+      duration_minutes,
+      timezone,
       lead_name,
       lead_email,
       lead_phone,
       meeting_notes
-    } = body
-
-    // Validate required fields
-    if (!scheduled_date || !scheduled_time) {
-      return NextResponse.json(
-        { error: 'scheduled_date and scheduled_time are required' },
-        { status: 400 }
-      )
-    }
+    } = validationResult.data
 
     const { data, error } = await supabase
       .from('appointments')

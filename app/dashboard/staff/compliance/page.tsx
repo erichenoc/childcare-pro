@@ -419,7 +419,7 @@ export default function StaffCompliancePage() {
                   Registrar Horas In-Service
                 </GlassButton>
               </Link>
-              <Link href="/dashboard/reports/compliance" className="block">
+              <Link href="/dashboard/reports" className="block">
                 <GlassButton variant="secondary" className="w-full justify-start">
                   <FileWarning className="w-4 h-4 mr-2" />
                   Generar Reporte DCF

@@ -10,7 +10,8 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/shared/lib/supabase/client'
 
-const SUPER_ADMIN_EMAIL = 'erichenoc@gmail.com'
+// 🔐 SECURITY: Admin email from environment variable
+const SUPER_ADMIN_EMAIL = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL || ''
 
 interface NavItem {
   label: string
