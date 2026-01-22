@@ -109,6 +109,13 @@ export function exportToCSV(data: ReportData, filename: string): void {
  * Generate and open PDF via print dialog
  */
 export function exportToPDF(data: ReportData, filename: string): void {
+  // Calculate column widths as percentages
+  const totalWidth = data.columns.reduce((sum, col) => sum + (col.width || 15), 0)
+  const colStyles = data.columns.map(col => {
+    const widthPercent = ((col.width || 15) / totalWidth) * 100
+    return `width: ${widthPercent.toFixed(1)}%`
+  })
+
   // Create printable HTML
   const html = `
     <!DOCTYPE html>
@@ -117,10 +124,13 @@ export function exportToPDF(data: ReportData, filename: string): void {
       <meta charset="UTF-8">
       <title>${data.title}</title>
       <style>
-        @page { margin: 1cm; }
+        @page {
+          margin: 1cm;
+          size: landscape;
+        }
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          font-size: 12px;
+          font-size: 11px;
           line-height: 1.4;
           color: #1f2937;
         }
@@ -131,56 +141,74 @@ export function exportToPDF(data: ReportData, filename: string): void {
           border-bottom: 2px solid #3b82f6;
         }
         .title {
-          font-size: 24px;
+          font-size: 22px;
           font-weight: bold;
           color: #1e40af;
           margin: 0;
         }
         .subtitle {
-          font-size: 14px;
+          font-size: 13px;
           color: #6b7280;
           margin: 5px 0;
         }
         .generated {
-          font-size: 11px;
+          font-size: 10px;
           color: #9ca3af;
         }
         table {
           width: 100%;
           border-collapse: collapse;
           margin-top: 15px;
+          table-layout: fixed;
         }
         th {
           background: #f3f4f6;
-          padding: 10px 8px;
+          padding: 8px 6px;
           text-align: left;
           font-weight: 600;
           border-bottom: 2px solid #d1d5db;
-          font-size: 11px;
+          font-size: 10px;
           text-transform: uppercase;
+          white-space: nowrap;
         }
         td {
-          padding: 8px;
+          padding: 8px 6px;
           border-bottom: 1px solid #e5e7eb;
+          vertical-align: top;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
-        tr:hover { background: #f9fafb; }
+        /* Description column - allow wrapping */
+        td.description-cell {
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          white-space: pre-wrap;
+          max-width: 0;
+        }
+        tr:nth-child(even) { background: #f9fafb; }
         .summary {
           margin-top: 20px;
           padding: 15px;
           background: #f3f4f6;
           border-radius: 8px;
+          page-break-inside: avoid;
         }
         .summary h3 {
           margin: 0 0 10px 0;
-          font-size: 14px;
+          font-size: 13px;
+          font-weight: 600;
         }
         .summary-item {
           display: flex;
           justify-content: space-between;
-          padding: 5px 0;
+          padding: 4px 0;
+          font-size: 11px;
         }
+        .summary-item span { color: #6b7280; }
+        .summary-item strong { color: #1f2937; }
         @media print {
           body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+          tr { page-break-inside: avoid; }
         }
       </style>
     </head>
@@ -192,6 +220,9 @@ export function exportToPDF(data: ReportData, filename: string): void {
       </div>
 
       <table>
+        <colgroup>
+          ${data.columns.map((col, i) => `<col style="${colStyles[i]}">`).join('')}
+        </colgroup>
         <thead>
           <tr>
             ${data.columns.map(col => `<th>${col.header}</th>`).join('')}
@@ -200,7 +231,11 @@ export function exportToPDF(data: ReportData, filename: string): void {
         <tbody>
           ${data.rows.map(row => `
             <tr>
-              ${data.columns.map(col => `<td>${row[col.key] ?? '-'}</td>`).join('')}
+              ${data.columns.map(col => {
+                const isDescription = col.key === 'description' || col.key === 'notes'
+                const cellClass = isDescription ? 'class="description-cell"' : ''
+                return `<td ${cellClass}>${row[col.key] ?? '-'}</td>`
+              }).join('')}
             </tr>
           `).join('')}
         </tbody>

@@ -401,7 +401,7 @@ export default function ReportsPage() {
         type: inc.incident_type || '-',
         severity: inc.severity || 'low',
         status: inc.status,
-        description: (inc.description || '-').substring(0, 50) + '...',
+        description: inc.description || '-', // Full description without truncation
       }
     })
 
@@ -413,11 +413,11 @@ export default function ReportsPage() {
       generatedAt: new Date(),
       columns: [
         { header: 'Fecha', key: 'date', width: 12 },
-        { header: 'Niño', key: 'child', width: 18 },
-        { header: 'Tipo', key: 'type', width: 15 },
-        { header: 'Severidad', key: 'severity', width: 12 },
+        { header: 'Niño', key: 'child', width: 15 },
+        { header: 'Tipo', key: 'type', width: 10 },
+        { header: 'Severidad', key: 'severity', width: 10 },
         { header: 'Estado', key: 'status', width: 10 },
-        { header: 'Descripción', key: 'description', width: 30 },
+        { header: 'Descripción', key: 'description', width: 50 },
       ],
       rows,
       summary: {
