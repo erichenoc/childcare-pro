@@ -348,22 +348,22 @@ export default function AccountingDashboardPage() {
             <GlassCardHeader>
               <GlassCardTitle>Acciones Rápidas</GlassCardTitle>
             </GlassCardHeader>
-            <GlassCardContent>
-              <div className="space-y-4">
-                <Link href="/dashboard/accounting/transactions">
-                  <GlassButton variant="secondary" className="w-full justify-start">
+            <GlassCardContent className="p-5">
+              <div className="flex flex-col gap-4">
+                <Link href="/dashboard/accounting/transactions" className="block">
+                  <GlassButton variant="secondary" className="w-full justify-start py-3">
                     <Receipt className="w-4 h-4 mr-2" />
                     Registrar Transacción
                   </GlassButton>
                 </Link>
-                <Link href="/dashboard/accounting/chart-of-accounts">
-                  <GlassButton variant="secondary" className="w-full justify-start">
+                <Link href="/dashboard/accounting/chart-of-accounts" className="block">
+                  <GlassButton variant="secondary" className="w-full justify-start py-3">
                     <BookOpen className="w-4 h-4 mr-2" />
                     Plan de Cuentas
                   </GlassButton>
                 </Link>
-                <Link href="/dashboard/accounting/reports">
-                  <GlassButton variant="secondary" className="w-full justify-start">
+                <Link href="/dashboard/accounting/reports" className="block">
+                  <GlassButton variant="secondary" className="w-full justify-start py-3">
                     <BarChart3 className="w-4 h-4 mr-2" />
                     Reportes Financieros
                   </GlassButton>
