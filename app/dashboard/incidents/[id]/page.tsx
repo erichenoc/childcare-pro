@@ -18,6 +18,8 @@ import {
   XCircle,
   Printer,
   Download,
+  Calendar,
+  ClipboardCheck,
 } from 'lucide-react'
 import { useTranslations, useI18n } from '@/shared/lib/i18n'
 import {
@@ -30,22 +32,26 @@ import {
   GlassAvatar,
 } from '@/shared/components/ui'
 import { incidentsService, type IncidentWithRelations } from '@/features/incidents/services/incidents.service'
+import { incidentsEnhancedService } from '@/features/incidents/services/incidents-enhanced.service'
 import { printIncidentReport, downloadIncidentHTML, type IncidentPDFData } from '@/features/incidents/utils/incident-pdf'
 import { organizationService, type Organization } from '@/features/organization/services/organization.service'
 
+// Synced with backend types from shared/types/incidents-expanded.ts
 const typeLabels: Record<string, string> = {
-  fall: 'Caida',
-  bite: 'Mordida',
+  injury: 'Lesión',
   illness: 'Enfermedad',
-  allergic_reaction: 'Reaccion Alergica',
   behavioral: 'Comportamiento',
+  medication: 'Medicamento',
+  property_damage: 'Daño a Propiedad',
+  security: 'Seguridad',
   other: 'Otro',
 }
 
 const severityLabels: Record<string, string> = {
-  low: 'Menor',
-  medium: 'Moderado',
-  high: 'Severo',
+  minor: 'Menor',
+  moderate: 'Moderado',
+  serious: 'Serio',
+  critical: 'Crítico',
 }
 
 export default function IncidentDetailPage() {
@@ -58,6 +64,7 @@ export default function IncidentDetailPage() {
   const [incident, setIncident] = useState<IncidentWithRelations | null>(null)
   const [organization, setOrganization] = useState<Organization | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isMarkingFollowUp, setIsMarkingFollowUp] = useState(false)
 
   useEffect(() => {
     loadIncident()
@@ -108,10 +115,25 @@ export default function IncidentDetailPage() {
     }
 
     try {
-      await incidentsService.update(incidentId, { status: 'inactive' })
+      // Use correct status value synced with backend
+      await incidentsService.update(incidentId, { status: 'closed' })
       loadIncident()
     } catch (error) {
       console.error('Error updating incident:', error)
+    }
+  }
+
+  async function handleMarkFollowUpComplete() {
+    if (!confirm('¿Está seguro de marcar el seguimiento como completado?')) return
+
+    try {
+      setIsMarkingFollowUp(true)
+      await incidentsEnhancedService.completeFollowUp(incidentId, 'current-user') // TODO: Get actual user ID
+      loadIncident()
+    } catch (error) {
+      console.error('Error marking follow-up complete:', error)
+    } finally {
+      setIsMarkingFollowUp(false)
     }
   }
 
@@ -272,29 +294,33 @@ export default function IncidentDetailPage() {
     ? `${incident.reporter.first_name} ${incident.reporter.last_name}`
     : 'Sistema'
 
+  // Synced with backend types
   const getSeverityVariant = (severity: string) => {
     switch (severity) {
-      case 'low': return 'success'
-      case 'medium': return 'warning'
-      case 'high': return 'error'
+      case 'minor': return 'success'
+      case 'moderate': return 'warning'
+      case 'serious': return 'error'
+      case 'critical': return 'error'
       default: return 'default'
     }
   }
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'pending': return 'error'
-      case 'active': return 'warning'
-      case 'inactive': return 'success'
+      case 'open': return 'error'
+      case 'pending_signature': return 'warning'
+      case 'pending_closure': return 'warning'
+      case 'closed': return 'success'
       default: return 'default'
     }
   }
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'pending': return 'Abierto'
-      case 'active': return 'En Revision'
-      case 'inactive': return 'Resuelto'
+      case 'open': return 'Abierto'
+      case 'pending_signature': return 'Pendiente Firma'
+      case 'pending_closure': return 'Pendiente Cierre'
+      case 'closed': return 'Cerrado'
       default: return status
     }
   }
@@ -324,7 +350,7 @@ export default function IncidentDetailPage() {
             <Download className="w-4 h-4 mr-2" />
             Descargar
           </GlassButton>
-          {incident.status !== 'inactive' && (
+          {incident.status !== 'closed' && (
             <GlassButton
               variant={(incident as Record<string, unknown>).parent_signed_at ? "primary" : "secondary"}
               onClick={handleMarkResolved}
@@ -361,11 +387,11 @@ export default function IncidentDetailPage() {
                 Informacion del Incidente
               </GlassCardTitle>
               <div className="flex gap-2">
-                <GlassBadge variant={getSeverityVariant(incident.severity || 'low')}>
-                  {severityLabels[incident.severity || 'low']}
+                <GlassBadge variant={getSeverityVariant(incident.severity || 'minor')}>
+                  {severityLabels[incident.severity || 'minor']}
                 </GlassBadge>
-                <GlassBadge variant={getStatusVariant(incident.status || 'pending')} dot>
-                  {getStatusLabel(incident.status || 'pending')}
+                <GlassBadge variant={getStatusVariant(incident.status || 'open')} dot>
+                  {getStatusLabel(incident.status || 'open')}
                 </GlassBadge>
               </div>
             </div>
@@ -491,6 +517,77 @@ export default function IncidentDetailPage() {
             )}
           </GlassCardContent>
         </GlassCard>
+
+        {/* Follow-up Section */}
+        {(() => {
+          const incidentData = incident as Record<string, unknown>
+          const followUpRequired = incidentData.follow_up_required as boolean
+          const followUpCompleted = incidentData.follow_up_completed as boolean
+          const followUpDate = incidentData.follow_up_date as string | null
+          const followUpCompletedAt = incidentData.follow_up_completed_at as string | null
+
+          if (!followUpRequired) return null
+
+          return (
+            <GlassCard className={`border-l-4 ${
+              followUpCompleted ? 'border-l-green-500' : 'border-l-blue-500'
+            }`}>
+              <GlassCardHeader>
+                <GlassCardTitle className="flex items-center gap-2">
+                  <ClipboardCheck className="w-5 h-5" />
+                  Seguimiento
+                </GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                {followUpCompleted ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Seguimiento Completado</p>
+                        <p className="text-sm text-gray-500">
+                          {followUpCompletedAt && `Completado el ${formatDate(followUpCompletedAt)}`}
+                        </p>
+                      </div>
+                    </div>
+                    <GlassBadge variant="success">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Completado
+                    </GlassBadge>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Calendar className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Seguimiento Pendiente</p>
+                        <p className="text-sm text-gray-500">
+                          {followUpDate ? (
+                            <>Programado para: {formatDate(followUpDate)}</>
+                          ) : (
+                            'Sin fecha programada'
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <GlassButton
+                      variant="primary"
+                      onClick={handleMarkFollowUpComplete}
+                      disabled={isMarkingFollowUp}
+                      leftIcon={isMarkingFollowUp ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                    >
+                      Marcar Completado
+                    </GlassButton>
+                  </div>
+                )}
+              </GlassCardContent>
+            </GlassCard>
+          )
+        })()}
       </div>
     </div>
   )

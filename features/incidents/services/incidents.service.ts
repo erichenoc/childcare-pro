@@ -179,9 +179,11 @@ export const incidentsService = {
 
     const incidents = data || []
     const total = incidents.length
-    const open = incidents.filter(i => i.status === 'pending' || i.status === 'active').length
-    const resolved = incidents.filter(i => i.status === 'inactive').length
-    const severe = incidents.filter(i => i.severity === 'high').length
+    // Synced with backend status types: open, pending_signature, pending_closure, closed
+    const open = incidents.filter(i => i.status === 'open' || i.status === 'pending_signature' || i.status === 'pending_closure').length
+    const resolved = incidents.filter(i => i.status === 'closed').length
+    // Synced with backend severity types: minor, moderate, serious, critical
+    const severe = incidents.filter(i => i.severity === 'serious' || i.severity === 'critical').length
 
     return { total, open, resolved, severe }
   },

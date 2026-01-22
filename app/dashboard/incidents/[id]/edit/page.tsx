@@ -19,24 +19,29 @@ import { incidentsService, type IncidentWithRelations } from '@/features/inciden
 import { childrenService } from '@/features/children/services/children.service'
 import { classroomsService } from '@/features/classrooms/services/classrooms.service'
 
+// Synced with backend types from shared/types/incidents-expanded.ts
 const incidentTypes = [
-  { value: 'injury', label: 'Lesion' },
+  { value: 'injury', label: 'Lesión' },
   { value: 'illness', label: 'Enfermedad' },
   { value: 'behavioral', label: 'Comportamiento' },
-  { value: 'accident', label: 'Accidente' },
+  { value: 'medication', label: 'Medicamento' },
+  { value: 'property_damage', label: 'Daño a Propiedad' },
+  { value: 'security', label: 'Seguridad' },
   { value: 'other', label: 'Otro' },
 ]
 
 const severityOptions = [
-  { value: 'low', label: 'Menor' },
-  { value: 'medium', label: 'Moderado' },
-  { value: 'high', label: 'Severo' },
+  { value: 'minor', label: 'Menor' },
+  { value: 'moderate', label: 'Moderado' },
+  { value: 'serious', label: 'Serio' },
+  { value: 'critical', label: 'Crítico' },
 ]
 
 const statusOptions = [
-  { value: 'pending', label: 'Abierto' },
-  { value: 'active', label: 'En Revision' },
-  { value: 'inactive', label: 'Resuelto' },
+  { value: 'open', label: 'Abierto' },
+  { value: 'pending_signature', label: 'Pendiente Firma' },
+  { value: 'pending_closure', label: 'Pendiente Cierre' },
+  { value: 'closed', label: 'Cerrado' },
 ]
 
 export default function EditIncidentPage() {
@@ -53,9 +58,9 @@ export default function EditIncidentPage() {
   const [formData, setFormData] = useState({
     child_id: '',
     classroom_id: '',
-    incident_type: 'fall',
-    severity: 'low',
-    status: 'pending',
+    incident_type: 'injury',
+    severity: 'minor',
+    status: 'open',
     description: '',
     location: '',
     action_taken: '',
@@ -80,8 +85,8 @@ export default function EditIncidentPage() {
           child_id: incident.child_id,
           classroom_id: incident.classroom_id || '',
           incident_type: incident.incident_type,
-          severity: incident.severity || 'low',
-          status: incident.status || 'pending',
+          severity: incident.severity || 'minor',
+          status: incident.status || 'open',
           description: incident.description,
           location: incident.location || '',
           action_taken: incident.action_taken || '',
@@ -115,9 +120,9 @@ export default function EditIncidentPage() {
       await incidentsService.update(incidentId, {
         child_id: formData.child_id,
         classroom_id: formData.classroom_id || null,
-        incident_type: formData.incident_type as 'injury' | 'illness' | 'behavioral' | 'accident' | 'other',
-        severity: formData.severity as 'low' | 'medium' | 'high',
-        status: formData.status as 'pending' | 'active' | 'inactive',
+        incident_type: formData.incident_type as 'injury' | 'illness' | 'behavioral' | 'medication' | 'property_damage' | 'security' | 'other',
+        severity: formData.severity as 'minor' | 'moderate' | 'serious' | 'critical',
+        status: formData.status as 'open' | 'pending_signature' | 'pending_closure' | 'closed',
         description: formData.description,
         location: formData.location || null,
         action_taken: formData.action_taken || null,

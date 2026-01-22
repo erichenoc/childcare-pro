@@ -56,42 +56,49 @@ export default function IncidentsPage() {
   const [incidents, setIncidents] = useState<IncidentDisplay[]>([])
   const [stats, setStats] = useState({ total: 0, open: 0, resolved: 0, severe: 0 })
 
-  // Build options with translations
+  // Build options with translations - synced with backend types
   const typeOptions = [
     { value: '', label: t.common.all },
     { value: 'injury', label: t.incidents.injury },
     { value: 'illness', label: t.incidents.illness },
     { value: 'behavioral', label: t.incidents.behavior },
-    { value: 'accident', label: t.incidents.accident },
+    { value: 'medication', label: 'Medicamento' },
+    { value: 'property_damage', label: 'Daño a Propiedad' },
+    { value: 'security', label: 'Seguridad' },
     { value: 'other', label: t.incidents.other },
   ]
 
   const severityOptions = [
     { value: '', label: t.common.all },
-    { value: 'low', label: t.incidents.minor },
-    { value: 'medium', label: t.incidents.moderate },
-    { value: 'high', label: t.incidents.severe },
+    { value: 'minor', label: t.incidents.minor },
+    { value: 'moderate', label: t.incidents.moderate },
+    { value: 'serious', label: 'Serio' },
+    { value: 'critical', label: t.incidents.severe },
   ]
 
   const statusOptions = [
     { value: '', label: t.common.allStatuses },
-    { value: 'pending', label: t.incidents.open },
-    { value: 'active', label: t.incidents.pendingReview },
-    { value: 'inactive', label: t.incidents.resolved },
+    { value: 'open', label: t.incidents.open },
+    { value: 'pending_signature', label: 'Pendiente Firma' },
+    { value: 'pending_closure', label: t.incidents.pendingReview },
+    { value: 'closed', label: t.incidents.resolved },
   ]
 
   const typeLabels: Record<string, string> = {
     injury: t.incidents.injury,
     illness: t.incidents.illness,
     behavioral: t.incidents.behavior,
-    accident: t.incidents.accident,
+    medication: 'Medicamento',
+    property_damage: 'Daño a Propiedad',
+    security: 'Seguridad',
     other: t.incidents.other,
   }
 
   const severityLabels: Record<string, string> = {
-    low: t.incidents.minor,
-    medium: t.incidents.moderate,
-    high: t.incidents.severe,
+    minor: t.incidents.minor,
+    moderate: t.incidents.moderate,
+    serious: 'Serio',
+    critical: t.incidents.severe,
   }
 
   useEffect(() => {
@@ -115,14 +122,14 @@ export default function IncidentsPage() {
           name: i.child ? `${i.child.first_name} ${i.child.last_name}` : t.common.noResults,
         },
         type: i.incident_type,
-        severity: i.severity || 'low',
+        severity: i.severity || 'minor',
         description: i.description,
         location: i.location || t.common.unassigned,
         date: i.occurred_at,
         reportedBy: {
           name: i.reporter ? `${i.reporter.first_name} ${i.reporter.last_name}` : t.communication.system,
         },
-        status: i.status || 'pending',
+        status: i.status || 'open',
         parentNotified: i.parent_notified || false,
         firstAid: i.action_taken,
       }))
@@ -151,24 +158,28 @@ export default function IncidentsPage() {
 
   const getSeverityBadge = (severity: string) => {
     switch (severity) {
-      case 'low':
+      case 'minor':
         return <GlassBadge variant="success" size="sm">{severityLabels[severity] || t.incidents.minor}</GlassBadge>
-      case 'medium':
+      case 'moderate':
         return <GlassBadge variant="warning" size="sm">{severityLabels[severity] || t.incidents.moderate}</GlassBadge>
-      case 'high':
+      case 'serious':
+        return <GlassBadge variant="error" size="sm">{severityLabels[severity] || 'Serio'}</GlassBadge>
+      case 'critical':
         return <GlassBadge variant="error" size="sm">{severityLabels[severity] || t.incidents.severe}</GlassBadge>
       default:
-        return <GlassBadge variant="default" size="sm">{severity}</GlassBadge>
+        return <GlassBadge variant="default" size="sm">{severityLabels[severity] || severity}</GlassBadge>
     }
   }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'pending':
+      case 'open':
         return <GlassBadge variant="error" dot>{t.incidents.open}</GlassBadge>
-      case 'active':
+      case 'pending_signature':
+        return <GlassBadge variant="warning" dot>Pendiente Firma</GlassBadge>
+      case 'pending_closure':
         return <GlassBadge variant="warning" dot>{t.incidents.pendingReview}</GlassBadge>
-      case 'inactive':
+      case 'closed':
         return <GlassBadge variant="success" dot>{t.incidents.resolved}</GlassBadge>
       default:
         return <GlassBadge variant="default">{status}</GlassBadge>

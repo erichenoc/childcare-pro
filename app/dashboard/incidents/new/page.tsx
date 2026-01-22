@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Loader2, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Loader2, AlertTriangle, FileText } from 'lucide-react'
 import { useTranslations } from '@/shared/lib/i18n'
 import {
   GlassCard,
@@ -16,21 +16,36 @@ import {
   GlassTextarea,
 } from '@/shared/components/ui'
 import { incidentsService } from '@/features/incidents/services/incidents.service'
+import { INCIDENT_TEMPLATES } from '@/features/incidents/services/incidents-enhanced.service'
 import { childrenService } from '@/features/children/services/children.service'
 import { classroomsService } from '@/features/classrooms/services/classrooms.service'
 
+// Synced with backend types from shared/types/incidents-expanded.ts
 const incidentTypes = [
-  { value: 'injury', label: 'Lesion' },
+  { value: 'injury', label: 'Lesión' },
   { value: 'illness', label: 'Enfermedad' },
   { value: 'behavioral', label: 'Comportamiento' },
-  { value: 'accident', label: 'Accidente' },
+  { value: 'medication', label: 'Medicamento' },
+  { value: 'property_damage', label: 'Daño a Propiedad' },
+  { value: 'security', label: 'Seguridad' },
   { value: 'other', label: 'Otro' },
 ]
 
 const severityOptions = [
-  { value: 'low', label: 'Menor' },
-  { value: 'medium', label: 'Moderado' },
-  { value: 'high', label: 'Severo' },
+  { value: 'minor', label: 'Menor' },
+  { value: 'moderate', label: 'Moderado' },
+  { value: 'serious', label: 'Serio' },
+  { value: 'critical', label: 'Crítico' },
+]
+
+// Template options for quick fill
+const templateOptions = [
+  { value: '', label: 'Seleccionar plantilla (opcional)...' },
+  { value: 'booboo', label: '🩹 Reporte Booboo (Lesión Menor)' },
+  { value: 'behavioral', label: '😤 Incidente Conductual' },
+  { value: 'illness', label: '🤒 Enfermedad/Síntomas' },
+  { value: 'medication', label: '💊 Administración de Medicamento' },
+  { value: 'accident', label: '🚨 Accidente Serio' },
 ]
 
 export default function NewIncidentPage() {
@@ -42,16 +57,33 @@ export default function NewIncidentPage() {
   const [children, setChildren] = useState<{ value: string; label: string }[]>([])
   const [classrooms, setClassrooms] = useState<{ value: string; label: string }[]>([])
 
+  const [selectedTemplate, setSelectedTemplate] = useState('')
   const [formData, setFormData] = useState({
     child_id: '',
     classroom_id: '',
     incident_type: 'injury' as const,
-    severity: 'low' as const,
+    severity: 'minor' as const,
     description: '',
     location: '',
     action_taken: '',
     parent_notified: false,
   })
+
+  function handleTemplateChange(templateKey: string) {
+    setSelectedTemplate(templateKey)
+    if (!templateKey) return
+
+    const template = INCIDENT_TEMPLATES[templateKey as keyof typeof INCIDENT_TEMPLATES]
+    if (template) {
+      setFormData(prev => ({
+        ...prev,
+        incident_type: template.incident_type,
+        severity: template.severity,
+        description: template.description_template,
+        action_taken: template.action_template,
+      }))
+    }
+  }
 
   useEffect(() => {
     loadData()
@@ -96,7 +128,7 @@ export default function NewIncidentPage() {
         action_taken: formData.action_taken || null,
         parent_notified: formData.parent_notified,
         occurred_at: new Date().toISOString(),
-        status: 'pending',
+        status: 'open',
       })
       router.push('/dashboard/incidents')
     } catch (error) {
@@ -129,6 +161,27 @@ export default function NewIncidentPage() {
       </div>
 
       <form onSubmit={handleSubmit}>
+        {/* Template Selector Card */}
+        <GlassCard className="mb-6">
+          <GlassCardHeader>
+            <GlassCardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-blue-500" />
+              Usar Plantilla (Opcional)
+            </GlassCardTitle>
+          </GlassCardHeader>
+          <GlassCardContent>
+            <p className="text-sm text-gray-500 mb-3">
+              Seleccione una plantilla para llenar el formulario rapidamente con campos pre-definidos.
+            </p>
+            <GlassSelect
+              options={templateOptions}
+              value={selectedTemplate}
+              onChange={(e) => handleTemplateChange(e.target.value)}
+              className="w-full"
+            />
+          </GlassCardContent>
+        </GlassCard>
+
         <GlassCard>
           <GlassCardHeader>
             <GlassCardTitle className="flex items-center gap-2">
