@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import Link from 'next/link'
 import {
   CalendarDays,
   Baby,
@@ -12,6 +13,9 @@ import {
   FileText,
   Layers,
   Filter,
+  UserCheck,
+  UserPlus,
+  AlertCircle,
 } from 'lucide-react'
 import {
   GlassCard,
@@ -34,6 +38,7 @@ import {
 } from '@/features/daily-activities/components'
 import { childrenService } from '@/features/children/services/children.service'
 import { classroomsService } from '@/features/classrooms/services/classrooms.service'
+import { attendanceService } from '@/features/attendance/services/attendance.service'
 import type {
   MealRecord,
   NapRecord,
@@ -69,6 +74,10 @@ export default function DailyActivitiesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [childActivityCounts, setChildActivityCounts] = useState<ChildActivityCounts>({})
 
+  // Attendance integration - only show children who are present today
+  const [showOnlyPresent, setShowOnlyPresent] = useState(true)
+  const [presentChildIds, setPresentChildIds] = useState<Set<string>>(new Set())
+
   // Modal states
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
@@ -84,6 +93,11 @@ export default function DailyActivitiesPage() {
   useEffect(() => {
     loadInitialData()
   }, [])
+
+  // Reload attendance when date changes
+  useEffect(() => {
+    loadTodayAttendance()
+  }, [selectedDate])
 
   useEffect(() => {
     loadActivities()
@@ -101,11 +115,32 @@ export default function DailyActivitiesPage() {
       ])
       setChildren(childrenData)
       setClassrooms(classroomsData.filter((c) => c.status === 'active'))
-      if (childrenData.length > 0 && !selectedChildId) {
-        setSelectedChildId(childrenData[0].id)
-      }
+
+      // Load today's attendance
+      await loadTodayAttendance()
     } catch (error) {
       console.error('Error loading initial data:', error)
+    }
+  }
+
+  const loadTodayAttendance = async () => {
+    try {
+      const attendance = await attendanceService.getByDate(selectedDate)
+      // Get IDs of children who checked in (present status)
+      const presentIds = new Set(
+        attendance
+          .filter(a => a.status === 'present' && a.check_in_time)
+          .map(a => a.child_id)
+      )
+      setPresentChildIds(presentIds)
+
+      // Auto-select first present child if none selected
+      if (presentIds.size > 0 && !selectedChildId) {
+        const firstPresentId = [...presentIds][0]
+        setSelectedChildId(firstPresentId)
+      }
+    } catch (error) {
+      console.error('Error loading attendance:', error)
     }
   }
 
@@ -212,7 +247,7 @@ export default function DailyActivitiesPage() {
     })
   }
 
-  // Filter children by search and classroom
+  // Filter children by search, classroom, and attendance
   const filteredChildren = useMemo(() => {
     return children.filter((child) => {
       const matchesSearch =
@@ -220,9 +255,15 @@ export default function DailyActivitiesPage() {
         `${child.first_name} ${child.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesClassroom =
         !selectedClassroomId || child.classroom_id === selectedClassroomId
-      return matchesSearch && matchesClassroom && child.status === 'active'
+      const matchesAttendance =
+        !showOnlyPresent || presentChildIds.has(child.id)
+      return matchesSearch && matchesClassroom && child.status === 'active' && matchesAttendance
     })
-  }, [children, searchTerm, selectedClassroomId])
+  }, [children, searchTerm, selectedClassroomId, showOnlyPresent, presentChildIds])
+
+  // Count of present children (for display)
+  const presentCount = children.filter(c => presentChildIds.has(c.id) && c.status === 'active').length
+  const totalActiveChildren = children.filter(c => c.status === 'active').length
 
   const selectedChild = children.find((c) => c.id === selectedChildId)
 
@@ -290,9 +331,16 @@ export default function DailyActivitiesPage() {
         <div className="lg:col-span-1">
           <GlassCard>
             <GlassCardHeader>
-              <GlassCardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary-500" />
-                Niños ({filteredChildren.length})
+              <GlassCardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-primary-500" />
+                  <span>Niños ({filteredChildren.length})</span>
+                </div>
+                {presentCount > 0 && (
+                  <span className="text-xs font-normal text-green-600 dark:text-green-400">
+                    {presentCount} presentes
+                  </span>
+                )}
               </GlassCardTitle>
             </GlassCardHeader>
             <GlassCardContent className="space-y-3">
@@ -319,12 +367,94 @@ export default function DailyActivitiesPage() {
                 />
               </div>
 
+              {/* Show Only Present Toggle */}
+              <button
+                onClick={() => setShowOnlyPresent(!showOnlyPresent)}
+                className={`flex items-center gap-2 w-full p-2 rounded-lg text-sm transition-all ${
+                  showOnlyPresent
+                    ? 'shadow-neu-inset dark:shadow-neu-dark-inset bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
+                    : 'shadow-neu dark:shadow-neu-dark text-gray-600 dark:text-gray-400 hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset'
+                }`}
+              >
+                <UserCheck className="w-4 h-4" />
+                <span className="flex-1 text-left">
+                  {showOnlyPresent ? 'Solo presentes' : 'Todos los niños'}
+                </span>
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                  showOnlyPresent
+                    ? 'bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200'
+                    : 'bg-gray-200 dark:bg-gray-700'
+                }`}>
+                  {showOnlyPresent ? presentCount : totalActiveChildren}
+                </span>
+              </button>
+
               {/* Children List */}
               <div className="space-y-2 max-h-[350px] overflow-y-auto">
                 {filteredChildren.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    <Baby className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No hay niños en este salón</p>
+                  <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                    {showOnlyPresent && presentCount === 0 ? (
+                      // No children checked in today
+                      <>
+                        <AlertCircle className="w-8 h-8 mx-auto mb-2 text-amber-500 opacity-70" />
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Sin asistencia registrada
+                        </p>
+                        <p className="text-xs mb-3">
+                          No hay niños con check-in para {selectedDate === new Date().toISOString().split('T')[0] ? 'hoy' : 'esta fecha'}
+                        </p>
+                        <div className="space-y-2">
+                          <Link href="/dashboard/attendance">
+                            <GlassButton variant="primary" size="sm" className="w-full">
+                              <UserCheck className="w-4 h-4 mr-1" />
+                              Ir a Asistencia
+                            </GlassButton>
+                          </Link>
+                          <GlassButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowOnlyPresent(false)}
+                            className="w-full"
+                          >
+                            Ver todos los niños
+                          </GlassButton>
+                        </div>
+                      </>
+                    ) : totalActiveChildren === 0 ? (
+                      // No children registered at all
+                      <>
+                        <Baby className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Sin niños registrados
+                        </p>
+                        <p className="text-xs mb-3">
+                          Registra niños para comenzar
+                        </p>
+                        <Link href="/dashboard/children/new">
+                          <GlassButton variant="primary" size="sm" className="w-full">
+                            <UserPlus className="w-4 h-4 mr-1" />
+                            Agregar Niño
+                          </GlassButton>
+                        </Link>
+                      </>
+                    ) : (
+                      // No children match filters
+                      <>
+                        <Baby className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No hay niños con estos filtros</p>
+                        <GlassButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSearchTerm('')
+                            setSelectedClassroomId('')
+                          }}
+                          className="mt-2"
+                        >
+                          Limpiar filtros
+                        </GlassButton>
+                      </>
+                    )}
                   </div>
                 ) : (
                   filteredChildren.map((child) => {
@@ -334,6 +464,7 @@ export default function DailyActivitiesPage() {
                       bathroom: 0,
                       moods: 0,
                     }
+                    const isPresent = presentChildIds.has(child.id)
                     return (
                       <button
                         key={child.id}
@@ -344,8 +475,17 @@ export default function DailyActivitiesPage() {
                             : 'shadow-neu dark:shadow-neu-dark hover:shadow-neu-inset dark:hover:shadow-neu-dark-inset'
                         }`}
                       >
-                        <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                        <div className="relative w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
                           <Baby className="w-5 h-5 text-primary-500" />
+                          {/* Presence indicator */}
+                          <span
+                            className={`absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${
+                              isPresent
+                                ? 'bg-green-500'
+                                : 'bg-gray-300 dark:bg-gray-600'
+                            }`}
+                            title={isPresent ? 'Presente' : 'Sin check-in'}
+                          />
                         </div>
                         <div className="text-left flex-1 min-w-0">
                           <div className="flex items-center gap-2">
@@ -356,6 +496,9 @@ export default function DailyActivitiesPage() {
                           </div>
                           <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                             {child.classroom?.name || 'Sin salón'}
+                            {!isPresent && !showOnlyPresent && (
+                              <span className="text-amber-500 ml-1">• Sin check-in</span>
+                            )}
                           </p>
                         </div>
                       </button>
@@ -479,13 +622,61 @@ export default function DailyActivitiesPage() {
           ) : (
             <GlassCard>
               <GlassCardContent className="py-12 text-center">
-                <Baby className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                  Selecciona un Niño
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Elige un niño de la lista para ver y registrar sus actividades diarias
-                </p>
+                {presentCount === 0 && showOnlyPresent ? (
+                  // No one checked in today
+                  <>
+                    <AlertCircle className="w-16 h-16 mx-auto text-amber-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                      Sin Asistencia Registrada
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                      No hay niños con check-in para {selectedDate === new Date().toISOString().split('T')[0] ? 'hoy' : 'esta fecha'}.
+                      Registra la asistencia primero para poder documentar actividades diarias.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Link href="/dashboard/attendance">
+                        <GlassButton variant="primary">
+                          <UserCheck className="w-4 h-4 mr-2" />
+                          Registrar Asistencia
+                        </GlassButton>
+                      </Link>
+                      <GlassButton
+                        variant="secondary"
+                        onClick={() => setShowOnlyPresent(false)}
+                      >
+                        Ver Todos los Niños
+                      </GlassButton>
+                    </div>
+                  </>
+                ) : filteredChildren.length === 0 ? (
+                  // No children match current filters
+                  <>
+                    <Baby className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                      Sin Niños
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">
+                      No se encontraron niños con los filtros actuales
+                    </p>
+                    <Link href="/dashboard/children/new">
+                      <GlassButton variant="primary">
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Agregar Niño
+                      </GlassButton>
+                    </Link>
+                  </>
+                ) : (
+                  // Children exist but none selected
+                  <>
+                    <Baby className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                      Selecciona un Niño
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Elige un niño de la lista para ver y registrar sus actividades diarias
+                    </p>
+                  </>
+                )}
               </GlassCardContent>
             </GlassCard>
           )}
