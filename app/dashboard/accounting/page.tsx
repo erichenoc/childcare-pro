@@ -349,7 +349,7 @@ export default function AccountingDashboardPage() {
               <GlassCardTitle>Acciones Rápidas</GlassCardTitle>
             </GlassCardHeader>
             <GlassCardContent>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <Link href="/dashboard/accounting/transactions">
                   <GlassButton variant="secondary" className="w-full justify-start">
                     <Receipt className="w-4 h-4 mr-2" />
