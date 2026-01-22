@@ -112,7 +112,7 @@ export default function DailyActivitiesPage() {
   const loadInitialData = async () => {
     try {
       const [childrenData, classroomsData] = await Promise.all([
-        childrenService.getChildren(),
+        childrenService.getAll(),
         classroomsService.getAll(),
       ])
       setChildren(childrenData)
@@ -152,7 +152,7 @@ export default function DailyActivitiesPage() {
     setIsLoading(true)
     try {
       const filters = { child_id: selectedChildId, date: selectedDate }
-      const [mealsData, napsData, bathroomData, activitiesData, moodsData, healthData, bottleFeedingsData] =
+      const [mealsData, napsData, bathroomData, activitiesData, moodsData, healthData] =
         await Promise.all([
           dailyActivitiesService.getMeals(filters),
           dailyActivitiesService.getNaps(filters),
@@ -160,8 +160,16 @@ export default function DailyActivitiesPage() {
           dailyActivitiesService.getActivities(filters),
           dailyActivitiesService.getMoods(filters),
           dailyActivitiesService.getHealthObservations(filters),
-          dailyActivitiesService.getBottleFeedings(filters),
         ])
+
+      // Load bottle feedings separately with error handling (table may not exist yet)
+      let bottleFeedingsData: BottleFeeding[] = []
+      try {
+        bottleFeedingsData = await dailyActivitiesService.getBottleFeedings(filters)
+      } catch {
+        // Table may not exist yet, ignore error
+        console.log('Bottle feedings table not available yet')
+      }
 
       setMeals(mealsData)
       setNaps(napsData)
