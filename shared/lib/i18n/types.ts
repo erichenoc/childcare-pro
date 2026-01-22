@@ -1414,6 +1414,15 @@ export interface Translations {
     childrenType: string
     familiesType: string
     staffType: string
+    // Compliance Summary
+    complianceOverview: string
+    noComplianceData: string
+    fullyCompliant: string
+    pendingReview: string
+    incomplete: string
+    overdue: string
+    overallComplianceRate: string
+    entitiesCompliant: string
   }
 
   // ============================================

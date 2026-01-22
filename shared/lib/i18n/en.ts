@@ -1528,6 +1528,15 @@ export const en: Translations = {
     childrenType: 'Children',
     familiesType: 'Families',
     staffType: 'Staff',
+    // Compliance Summary
+    complianceOverview: 'Document Compliance Overview',
+    noComplianceData: 'No compliance data available',
+    fullyCompliant: 'Fully Compliant',
+    pendingReview: 'Pending Review',
+    incomplete: 'Incomplete',
+    overdue: 'Overdue',
+    overallComplianceRate: 'Overall Compliance Rate',
+    entitiesCompliant: '{count} of {total} entities fully compliant',
   },
 
   // ============================================

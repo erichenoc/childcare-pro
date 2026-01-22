@@ -2,6 +2,7 @@
 
 import { FileText, CheckCircle, Clock, AlertTriangle, XCircle } from 'lucide-react'
 import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/shared/components/ui'
+import { useTranslations } from '@/shared/lib/i18n'
 import type { OrganizationDocumentSummary } from '@/shared/types/documents'
 
 interface DocumentSummaryCardProps {
@@ -10,13 +11,15 @@ interface DocumentSummaryCardProps {
 }
 
 export function DocumentSummaryCard({ summary, isLoading }: DocumentSummaryCardProps) {
+  const t = useTranslations()
+
   if (isLoading) {
     return (
       <GlassCard>
         <GlassCardHeader>
           <GlassCardTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary-500" />
-            Document Compliance Overview
+            {t.documents.complianceOverview}
           </GlassCardTitle>
         </GlassCardHeader>
         <GlassCardContent>
@@ -39,12 +42,12 @@ export function DocumentSummaryCard({ summary, isLoading }: DocumentSummaryCardP
         <GlassCardHeader>
           <GlassCardTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary-500" />
-            Document Compliance Overview
+            {t.documents.complianceOverview}
           </GlassCardTitle>
         </GlassCardHeader>
         <GlassCardContent>
           <p className="text-gray-500 dark:text-gray-400 text-center py-8">
-            No compliance data available
+            {t.documents.noComplianceData}
           </p>
         </GlassCardContent>
       </GlassCard>
@@ -53,28 +56,28 @@ export function DocumentSummaryCard({ summary, isLoading }: DocumentSummaryCardP
 
   const stats = [
     {
-      label: 'Fully Compliant',
+      label: t.documents.fullyCompliant,
       value: summary.fully_compliant,
       icon: CheckCircle,
       color: 'text-green-500',
       bgColor: 'bg-green-100 dark:bg-green-900/30',
     },
     {
-      label: 'Pending Review',
+      label: t.documents.pendingReview,
       value: summary.pending_review,
       icon: Clock,
       color: 'text-blue-500',
       bgColor: 'bg-blue-100 dark:bg-blue-900/30',
     },
     {
-      label: 'Incomplete',
+      label: t.documents.incomplete,
       value: summary.incomplete,
       icon: AlertTriangle,
       color: 'text-yellow-500',
       bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
     },
     {
-      label: 'Overdue',
+      label: t.documents.overdue,
       value: summary.overdue,
       icon: XCircle,
       color: 'text-red-500',
@@ -87,7 +90,7 @@ export function DocumentSummaryCard({ summary, isLoading }: DocumentSummaryCardP
       <GlassCardHeader>
         <GlassCardTitle className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-primary-500" />
-          Document Compliance Overview
+          {t.documents.complianceOverview}
         </GlassCardTitle>
       </GlassCardHeader>
       <GlassCardContent>
@@ -95,7 +98,7 @@ export function DocumentSummaryCard({ summary, isLoading }: DocumentSummaryCardP
         <div className="mb-6 p-4 rounded-xl shadow-neu-inset dark:shadow-neu-dark-inset">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-              Overall Compliance Rate
+              {t.documents.overallComplianceRate}
             </span>
             <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
               {summary.compliance_rate}%
@@ -108,7 +111,9 @@ export function DocumentSummaryCard({ summary, isLoading }: DocumentSummaryCardP
             />
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            {summary.fully_compliant} of {summary.total_entities} entities fully compliant
+            {t.documents.entitiesCompliant
+              .replace('{count}', String(summary.fully_compliant))
+              .replace('{total}', String(summary.total_entities))}
           </p>
         </div>
 
