@@ -36,37 +36,38 @@ import { familiesService } from '@/features/families/services/families.service'
 import type { ChildProgramType, ChildFormData } from '@/shared/types/children-extended'
 import { PROGRAM_TYPE_OPTIONS, isVPKProgram, isSRProgram } from '@/shared/types/children-extended'
 
-const genderOptions = [
-  { value: '', label: 'Seleccionar...' },
-  { value: 'male', label: 'Masculino' },
-  { value: 'female', label: 'Femenino' },
-]
-
-const scheduleTypeOptions = [
-  { value: 'full_time', label: 'Tiempo Completo' },
-  { value: 'part_time', label: 'Medio Tiempo' },
-  { value: 'drop_in', label: 'Drop-in (Por día)' },
-]
-
-const vpkScheduleOptions = [
-  { value: 'school_year', label: 'Año Escolar (540 horas)' },
-  { value: 'summer', label: 'Verano (300 horas)' },
-]
-
-const copayFrequencyOptions = [
-  { value: 'weekly', label: 'Semanal' },
-  { value: 'monthly', label: 'Mensual' },
-]
-
-const srRateTypeOptions = [
-  { value: 'full_time', label: 'Tiempo Completo (30+ hrs/sem)' },
-  { value: 'part_time', label: 'Medio Tiempo (15-29 hrs/sem)' },
-  { value: 'hourly', label: 'Por Hora' },
-]
-
 export default function NewChildPage() {
   const t = useTranslations()
   const router = useRouter()
+
+  // Options with translations (must be inside component to access t)
+  const genderOptions = [
+    { value: '', label: t.children.selectGender },
+    { value: 'male', label: t.children.male },
+    { value: 'female', label: t.children.female },
+  ]
+
+  const scheduleTypeOptions = [
+    { value: 'full_time', label: t.children.fullTimeSchedule },
+    { value: 'part_time', label: t.children.partTimeSchedule },
+    { value: 'drop_in', label: t.children.dropInSchedule },
+  ]
+
+  const vpkScheduleOptions = [
+    { value: 'school_year', label: t.children.vpkSchoolYear },
+    { value: 'summer', label: t.children.vpkSummer },
+  ]
+
+  const copayFrequencyOptions = [
+    { value: 'weekly', label: t.children.copayWeekly },
+    { value: 'monthly', label: t.children.copayMonthly },
+  ]
+
+  const srRateTypeOptions = [
+    { value: 'full_time', label: t.children.srFullTime },
+    { value: 'part_time', label: t.children.srPartTime },
+    { value: 'hourly', label: t.children.srHourly },
+  ]
 
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(true)
@@ -175,19 +176,19 @@ export default function NewChildPage() {
     e.preventDefault()
 
     if (!formData.first_name || !formData.last_name || !formData.family_id || !formData.date_of_birth) {
-      setError('Por favor complete los campos requeridos (nombre, apellido, fecha de nacimiento y familia)')
+      setError(t.children.requiredFieldsError)
       return
     }
 
     // Validate VPK fields
     if (isVPKProgram(formData.program_type) && !formData.vpk_certificate_number) {
-      setError('El número de certificado VPK es requerido para programas VPK')
+      setError(t.children.vpkCertificateRequired)
       return
     }
 
     // Validate SR fields
     if (isSRProgram(formData.program_type) && !formData.sr_case_number) {
-      setError('El número de caso SR es requerido para programas School Readiness')
+      setError(t.children.srCaseNumberRequired)
       return
     }
 
@@ -199,7 +200,7 @@ export default function NewChildPage() {
       if (formData.classroom_id) {
         const capacityCheck = await classroomsService.canAddChild(formData.classroom_id)
         if (!capacityCheck.allowed) {
-          setError(`No se puede agregar al salón: ${capacityCheck.message}`)
+          setError(`${t.children.classroomCapacityError}: ${capacityCheck.message}`)
           setIsLoading(false)
           return
         }
@@ -214,7 +215,7 @@ export default function NewChildPage() {
       router.push('/dashboard/children')
     } catch (err) {
       console.error('Error saving child:', err)
-      setError('Error al guardar. Por favor intente de nuevo.')
+      setError(t.children.saveError)
     } finally {
       setIsLoading(false)
     }
@@ -367,14 +368,14 @@ export default function NewChildPage() {
           <GlassCardHeader>
             <GlassCardTitle className="flex items-center gap-2">
               <GraduationCap className="w-5 h-5 text-green-500" />
-              Programa de Pago
+              {t.children.programPayment}
             </GlassCardTitle>
           </GlassCardHeader>
           <GlassCardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Tipo de Programa *
+                  {t.children.programType} *
                 </label>
                 <GlassSelect
                   name="program_type"
@@ -385,7 +386,7 @@ export default function NewChildPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Horario
+                  {t.children.scheduleType}
                 </label>
                 <GlassSelect
                   name="schedule_type"
@@ -399,21 +400,11 @@ export default function NewChildPage() {
             {/* Program Type Description */}
             <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                {formData.program_type === 'private' && (
-                  <>Pago privado: La familia paga la tarifa completa directamente.</>
-                )}
-                {formData.program_type === 'vpk' && (
-                  <>VPK: Programa estatal gratuito de 3 horas diarias para niños de 4 años.</>
-                )}
-                {formData.program_type === 'vpk_wraparound' && (
-                  <>VPK + Wrap-Around: VPK (3 hrs gratis) más horas adicionales pagadas por la familia.</>
-                )}
-                {formData.program_type === 'school_readiness' && (
-                  <>School Readiness: Programa subsidiado por el ELC. El costo es cubierto completamente.</>
-                )}
-                {formData.program_type === 'sr_copay' && (
-                  <>School Readiness + Co-Pay: Programa SR con co-pago parcial de la familia.</>
-                )}
+                {formData.program_type === 'private' && t.children.privatePayDescription}
+                {formData.program_type === 'vpk' && t.children.vpkDescription}
+                {formData.program_type === 'vpk_wraparound' && t.children.vpkWraparoundDescription}
+                {formData.program_type === 'school_readiness' && t.children.srDescription}
+                {formData.program_type === 'sr_copay' && t.children.srCopayDescription}
               </p>
             </div>
 
@@ -422,12 +413,12 @@ export default function NewChildPage() {
               <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 space-y-4">
                 <h4 className="font-medium text-green-800 dark:text-green-200 flex items-center gap-2">
                   <BookOpen className="w-4 h-4" />
-                  Información VPK
+                  {t.children.vpkInfo}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Número de Certificado VPK *
+                      {t.children.vpkCertificateNumber} *
                     </label>
                     <GlassInput
                       name="vpk_certificate_number"
@@ -439,7 +430,7 @@ export default function NewChildPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Tipo de Horario VPK
+                      {t.children.vpkScheduleType}
                     </label>
                     <GlassSelect
                       name="vpk_schedule_type"
@@ -451,7 +442,7 @@ export default function NewChildPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Fecha de Inicio VPK
+                    {t.children.vpkStartDate}
                   </label>
                   <GlassInput
                     type="date"
@@ -465,12 +456,12 @@ export default function NewChildPage() {
                   <div className="pt-4 border-t border-green-200 dark:border-green-700">
                     <h5 className="font-medium text-green-800 dark:text-green-200 mb-3 flex items-center gap-2">
                       <DollarSign className="w-4 h-4" />
-                      Tarifa Wrap-Around (Horas adicionales)
+                      {t.children.wrapAroundRate}
                     </h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Tarifa Semanal Wrap-Around ($)
+                          {t.children.weeklyWrapAroundRate}
                         </label>
                         <GlassInput
                           type="number"
@@ -484,7 +475,7 @@ export default function NewChildPage() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Tarifa por Hora ($)
+                          {t.children.hourlyRate}
                         </label>
                         <GlassInput
                           type="number"
@@ -507,12 +498,12 @@ export default function NewChildPage() {
               <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 space-y-4">
                 <h4 className="font-medium text-purple-800 dark:text-purple-200 flex items-center gap-2">
                   <BookOpen className="w-4 h-4" />
-                  Información School Readiness
+                  {t.children.srInfo}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Número de Caso SR *
+                      {t.children.srCaseNumber} *
                     </label>
                     <GlassInput
                       name="sr_case_number"
@@ -524,7 +515,7 @@ export default function NewChildPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Tipo de Tarifa
+                      {t.children.srRateType}
                     </label>
                     <GlassSelect
                       name="sr_rate_type"
@@ -539,7 +530,7 @@ export default function NewChildPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       <Clock className="w-4 h-4 inline mr-1" />
-                      Horas Autorizadas por Semana
+                      {t.children.authorizedHoursWeekly}
                     </label>
                     <GlassInput
                       type="number"
@@ -553,7 +544,7 @@ export default function NewChildPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Inicio de Elegibilidad
+                      {t.children.eligibilityStart}
                     </label>
                     <GlassInput
                       type="date"
@@ -567,7 +558,7 @@ export default function NewChildPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Fin de Elegibilidad
+                      {t.children.eligibilityEnd}
                     </label>
                     <GlassInput
                       type="date"
@@ -582,12 +573,12 @@ export default function NewChildPage() {
                   <div className="pt-4 border-t border-purple-200 dark:border-purple-700">
                     <h5 className="font-medium text-purple-800 dark:text-purple-200 mb-3 flex items-center gap-2">
                       <DollarSign className="w-4 h-4" />
-                      Co-Pago Familiar
+                      {t.children.familyCoPay}
                     </h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Monto de Co-Pago ($)
+                          {t.children.copayAmount}
                         </label>
                         <GlassInput
                           type="number"
@@ -601,7 +592,7 @@ export default function NewChildPage() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Frecuencia de Co-Pago
+                          {t.children.copayFrequency}
                         </label>
                         <GlassSelect
                           name="sr_copay_frequency"
@@ -621,12 +612,12 @@ export default function NewChildPage() {
               <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-4">
                 <h4 className="font-medium text-blue-800 dark:text-blue-200 flex items-center gap-2">
                   <DollarSign className="w-4 h-4" />
-                  Tarifas de Pago Privado
+                  {t.children.privatePayRates}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Tarifa Semanal ($)
+                      {t.children.weeklyRate}
                     </label>
                     <GlassInput
                       type="number"
@@ -640,7 +631,7 @@ export default function NewChildPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Tarifa por Hora ($)
+                      {t.children.hourlyRate}
                     </label>
                     <GlassInput
                       type="number"
@@ -761,7 +752,7 @@ export default function NewChildPage() {
             {isLoading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                Guardando...
+                {t.children.saving}
               </>
             ) : (
               <>

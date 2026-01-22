@@ -9,6 +9,7 @@ import {
 import { format, formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { createClient } from '@/shared/lib/supabase/client'
+import { useTranslations } from '@/shared/lib/i18n'
 
 interface Organization {
   id: string
@@ -44,6 +45,7 @@ const PLAN_CONFIG = {
 }
 
 export default function AdminOrganizationsPage() {
+  const t = useTranslations()
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -163,10 +165,10 @@ export default function AdminOrganizationsPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
               <Building2 className="w-7 h-7 text-blue-600" />
-              Organizaciones
+              {t.admin.organizations}
             </h1>
             <p className="text-gray-500 text-sm mt-1">
-              Gestiona todas las guarderías registradas
+              {t.admin.manageAllDaycares}
             </p>
           </div>
           <button
@@ -174,7 +176,7 @@ export default function AdminOrganizationsPage() {
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
             <RefreshCw className="w-4 h-4" />
-            Actualizar
+            {t.admin.refresh}
           </button>
         </div>
       </header>
@@ -188,7 +190,7 @@ export default function AdminOrganizationsPage() {
                 <Building2 className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Total</p>
+                <p className="text-sm text-gray-500">{t.admin.total}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
             </div>
@@ -200,7 +202,7 @@ export default function AdminOrganizationsPage() {
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Activas</p>
+                <p className="text-sm text-gray-500">{t.admin.activeFeminine}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
               </div>
             </div>
@@ -212,7 +214,7 @@ export default function AdminOrganizationsPage() {
                 <Clock className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">En Trial</p>
+                <p className="text-sm text-gray-500">{t.admin.inTrial}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.trial}</p>
               </div>
             </div>
@@ -224,7 +226,7 @@ export default function AdminOrganizationsPage() {
                 <span className="text-green-600 font-bold">$</span>
               </div>
               <div>
-                <p className="text-sm text-gray-500">MRR</p>
+                <p className="text-sm text-gray-500">{t.admin.mrr}</p>
                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.mrr)}</p>
               </div>
             </div>
@@ -242,7 +244,7 @@ export default function AdminOrganizationsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Buscar por nombre, email, ciudad, dueño..."
+                  placeholder={t.admin.searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -254,19 +256,19 @@ export default function AdminOrganizationsPage() {
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-3 py-2 border border-gray-200 rounded-lg appearance-none bg-white focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="all">Todos los estados</option>
-                  <option value="active">Activos</option>
+                  <option value="all">{t.admin.allStatuses}</option>
+                  <option value="active">{t.admin.activeMasculine}</option>
                   <option value="trial">Trial</option>
-                  <option value="suspended">Suspendidos</option>
-                  <option value="cancelled">Cancelados</option>
+                  <option value="suspended">{t.admin.suspended}</option>
+                  <option value="cancelled">{t.admin.cancelled}</option>
                 </select>
                 <select
                   value={planFilter}
                   onChange={(e) => setPlanFilter(e.target.value)}
                   className="px-3 py-2 border border-gray-200 rounded-lg appearance-none bg-white focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="all">Todos los planes</option>
-                  <option value="free">Gratis</option>
+                  <option value="all">{t.admin.allPlans}</option>
+                  <option value="free">{t.admin.free}</option>
                   <option value="starter">Starter</option>
                   <option value="professional">Professional</option>
                   <option value="enterprise">Enterprise</option>
@@ -284,20 +286,20 @@ export default function AdminOrganizationsPage() {
             ) : filteredOrganizations.length === 0 ? (
               <div className="text-center py-12">
                 <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No hay organizaciones para mostrar</p>
+                <p className="text-gray-500">{t.admin.noOrganizationsToShow}</p>
               </div>
             ) : (
               <table className="w-full">
                 <thead className="bg-gray-50 text-left">
                   <tr>
-                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Organización</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Dueño</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Ubicación</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Plan</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Métricas</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Fecha</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">{t.admin.organization}</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">{t.admin.owner}</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">{t.admin.location}</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">{t.admin.status}</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">{t.admin.plan}</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">{t.admin.metrics}</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">{t.admin.date}</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">{t.admin.actions}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -322,7 +324,7 @@ export default function AdminOrganizationsPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div>
-                            <p className="text-sm text-gray-900">{org.owner_name || 'Sin asignar'}</p>
+                            <p className="text-sm text-gray-900">{org.owner_name || t.admin.unassigned}</p>
                             {org.owner_email && (
                               <p className="text-xs text-gray-500">{org.owner_email}</p>
                             )}
@@ -379,7 +381,7 @@ export default function AdminOrganizationsPage() {
                                 setShowDetailsModal(true)
                               }}
                               className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
-                              title="Ver detalles"
+                              title={t.admin.viewDetails}
                             >
                               <Eye className="w-4 h-4" />
                             </button>
@@ -395,7 +397,7 @@ export default function AdminOrganizationsPage() {
                                     onClick={() => updateOrgStatus(org.id, 'active')}
                                     className="w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-green-50"
                                   >
-                                    Activar
+                                    {t.admin.activate}
                                   </button>
                                 )}
                                 {org.status !== 'suspended' && (
@@ -403,7 +405,7 @@ export default function AdminOrganizationsPage() {
                                     onClick={() => updateOrgStatus(org.id, 'suspended')}
                                     className="w-full px-4 py-2 text-left text-sm text-yellow-600 hover:bg-yellow-50"
                                   >
-                                    Suspender
+                                    {t.admin.suspend}
                                   </button>
                                 )}
                                 {org.status !== 'cancelled' && (
@@ -411,7 +413,7 @@ export default function AdminOrganizationsPage() {
                                     onClick={() => updateOrgStatus(org.id, 'cancelled')}
                                     className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
                                   >
-                                    Cancelar
+                                    {t.admin.cancel}
                                   </button>
                                 )}
                               </div>
@@ -433,7 +435,7 @@ export default function AdminOrganizationsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700">
-              <h2 className="text-lg font-semibold text-white">Detalles de Organización</h2>
+              <h2 className="text-lg font-semibold text-white">{t.admin.organizationDetails}</h2>
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="text-white/80 hover:text-white"
@@ -465,7 +467,7 @@ export default function AdminOrganizationsPage() {
                 {/* Contact Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-3">
-                    <h4 className="text-sm font-semibold text-gray-500 uppercase">Contacto</h4>
+                    <h4 className="text-sm font-semibold text-gray-500 uppercase">{t.admin.contact}</h4>
                     {selectedOrg.email && (
                       <p className="flex items-center gap-2 text-gray-600">
                         <Mail className="w-4 h-4" />
@@ -487,8 +489,8 @@ export default function AdminOrganizationsPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <h4 className="text-sm font-semibold text-gray-500 uppercase">Dueño</h4>
-                    <p className="text-gray-900 font-medium">{selectedOrg.owner_name || 'No asignado'}</p>
+                    <h4 className="text-sm font-semibold text-gray-500 uppercase">{t.admin.owner}</h4>
+                    <p className="text-gray-900 font-medium">{selectedOrg.owner_name || t.admin.notAssigned}</p>
                     {selectedOrg.owner_email && (
                       <p className="text-gray-600">{selectedOrg.owner_email}</p>
                     )}
@@ -497,37 +499,37 @@ export default function AdminOrganizationsPage() {
 
                 {/* Metrics */}
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">Métricas</h4>
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">{t.admin.metrics}</h4>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="bg-pink-50 rounded-xl p-4 text-center">
                       <Baby className="w-6 h-6 text-pink-500 mx-auto mb-2" />
                       <p className="text-2xl font-bold text-gray-900">{selectedOrg.children_count}</p>
-                      <p className="text-sm text-gray-500">Niños</p>
+                      <p className="text-sm text-gray-500">{t.admin.childrenLabel}</p>
                     </div>
                     <div className="bg-blue-50 rounded-xl p-4 text-center">
                       <Users className="w-6 h-6 text-blue-500 mx-auto mb-2" />
                       <p className="text-2xl font-bold text-gray-900">{selectedOrg.staff_count}</p>
-                      <p className="text-sm text-gray-500">Staff</p>
+                      <p className="text-sm text-gray-500">{t.admin.staffLabel}</p>
                     </div>
                     <div className="bg-purple-50 rounded-xl p-4 text-center">
                       <Building2 className="w-6 h-6 text-purple-500 mx-auto mb-2" />
                       <p className="text-2xl font-bold text-gray-900">{selectedOrg.classrooms_count}</p>
-                      <p className="text-sm text-gray-500">Salones</p>
+                      <p className="text-sm text-gray-500">{t.admin.classrooms}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Timeline */}
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">Timeline</h4>
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">{t.admin.timeline}</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2 text-gray-600">
                       <Calendar className="w-4 h-4" />
-                      Creado: {format(new Date(selectedOrg.created_at), 'PPP', { locale: es })}
+                      {t.admin.created}: {format(new Date(selectedOrg.created_at), 'PPP', { locale: es })}
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <Clock className="w-4 h-4" />
-                      Última actualización: {format(new Date(selectedOrg.updated_at), 'PPP', { locale: es })}
+                      {t.admin.lastUpdated}: {format(new Date(selectedOrg.updated_at), 'PPP', { locale: es })}
                     </div>
                   </div>
                 </div>
@@ -545,13 +547,13 @@ export default function AdminOrganizationsPage() {
                         : 'bg-green-100 text-green-700 hover:bg-green-200'
                     }`}
                   >
-                    {selectedOrg.status === 'active' ? 'Suspender' : 'Activar'}
+                    {selectedOrg.status === 'active' ? t.admin.suspend : t.admin.activate}
                   </button>
                   <button
                     onClick={() => setShowDetailsModal(false)}
                     className="flex-1 py-2 px-4 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition"
                   >
-                    Cerrar
+                    {t.admin.close}
                   </button>
                 </div>
               </div>

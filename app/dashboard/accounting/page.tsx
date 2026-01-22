@@ -29,8 +29,10 @@ import {
   GlassCardContent,
   GlassButton,
 } from '@/shared/components/ui'
+import { useTranslations } from '@/shared/lib/i18n'
 
 export default function AccountingDashboardPage() {
+  const t = useTranslations()
   const [monthlyPnL, setMonthlyPnL] = useState<MonthlyPnL | null>(null)
   const [recentIncome, setRecentIncome] = useState<IncomeTransaction[]>([])
   const [recentExpenses, setRecentExpenses] = useState<ExpenseTransaction[]>([])
@@ -103,16 +105,16 @@ export default function AccountingDashboardPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Contabilidad</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t.accounting.title}</h1>
           <p className="text-gray-500">
-            Gestiona las finanzas del centro
+            {t.accounting.subtitle}
           </p>
         </div>
         <div className="flex gap-2">
           <Link href="/dashboard/accounting/transactions">
             <GlassButton variant="secondary">
               <Receipt className="w-4 h-4 mr-2" />
-              Nueva Transacción
+              {t.accounting.recordTransaction}
             </GlassButton>
           </Link>
         </div>
@@ -127,7 +129,7 @@ export default function AccountingDashboardPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{formatCurrency(dashboardStats.monthlyIncome)}</p>
-              <p className="text-sm text-gray-500">Ingresos del Mes</p>
+              <p className="text-sm text-gray-500">{t.accounting.income}</p>
             </div>
           </div>
         </GlassCard>
@@ -139,7 +141,7 @@ export default function AccountingDashboardPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{formatCurrency(dashboardStats.monthlyExpenses)}</p>
-              <p className="text-sm text-gray-500">Gastos del Mes</p>
+              <p className="text-sm text-gray-500">{t.accounting.expenses}</p>
             </div>
           </div>
         </GlassCard>
@@ -151,7 +153,7 @@ export default function AccountingDashboardPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{formatCurrency(dashboardStats.pendingReceivables)}</p>
-              <p className="text-sm text-gray-500">Por Cobrar</p>
+              <p className="text-sm text-gray-500">{t.accounting.accountsReceivable}</p>
             </div>
           </div>
         </GlassCard>
@@ -171,7 +173,7 @@ export default function AccountingDashboardPage() {
               }`}>
                 {formatCurrency(dashboardStats.netProfit)}
               </p>
-              <p className="text-sm text-gray-500">Utilidad del Mes</p>
+              <p className="text-sm text-gray-500">{t.accounting.netProfit}</p>
             </div>
           </div>
         </GlassCard>
@@ -189,13 +191,13 @@ export default function AccountingDashboardPage() {
                     <PieChart className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <GlassCardTitle>Estado de Resultados</GlassCardTitle>
-                    <p className="text-sm text-gray-500">Este mes</p>
+                    <GlassCardTitle>{t.accounting.generalBalance}</GlassCardTitle>
+                    <p className="text-sm text-gray-500">{t.dashboard.thisMonth}</p>
                   </div>
                 </div>
                 <Link href="/dashboard/accounting/reports">
                   <GlassButton variant="ghost" size="sm">
-                    Ver Completo
+                    {t.common.view}
                   </GlassButton>
                 </Link>
               </div>
@@ -208,7 +210,7 @@ export default function AccountingDashboardPage() {
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                         <TrendingUp className="w-4 h-4 text-green-500" />
-                        Ingresos
+                        {t.accounting.income}
                       </h3>
                       <span className="font-bold text-green-600">
                         {formatCurrency(monthlyPnL.total_income)}
@@ -236,7 +238,7 @@ export default function AccountingDashboardPage() {
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                         <TrendingDown className="w-4 h-4 text-red-500" />
-                        Gastos
+                        {t.accounting.expenses}
                       </h3>
                       <span className="font-bold text-red-600">
                         {formatCurrency(monthlyPnL.total_expenses)}
@@ -263,7 +265,7 @@ export default function AccountingDashboardPage() {
                   <div className="pt-4 border-t border-gray-200">
                     <div className="flex items-center justify-between">
                       <span className="text-lg font-semibold text-gray-900">
-                        Utilidad Neta
+                        {t.accounting.netProfit}
                       </span>
                       <span className={`text-xl font-bold ${
                         monthlyPnL.net_profit >= 0 ? 'text-emerald-600' : 'text-red-600'
@@ -288,11 +290,11 @@ export default function AccountingDashboardPage() {
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
                     <Receipt className="w-5 h-5 text-white" />
                   </div>
-                  <GlassCardTitle>Transacciones Recientes</GlassCardTitle>
+                  <GlassCardTitle>{t.accounting.recentTransactions}</GlassCardTitle>
                 </div>
                 <Link href="/dashboard/accounting/transactions">
                   <GlassButton variant="ghost" size="sm">
-                    Ver Todas
+                    {t.common.view}
                   </GlassButton>
                 </Link>
               </div>
@@ -346,26 +348,26 @@ export default function AccountingDashboardPage() {
           {/* Quick Actions */}
           <GlassCard>
             <GlassCardHeader>
-              <GlassCardTitle>Acciones Rápidas</GlassCardTitle>
+              <GlassCardTitle>{t.dashboard.quickActions}</GlassCardTitle>
             </GlassCardHeader>
             <GlassCardContent className="p-5">
               <div className="flex flex-col gap-4">
                 <Link href="/dashboard/accounting/transactions" className="block">
                   <GlassButton variant="secondary" className="w-full justify-start py-3">
                     <Receipt className="w-4 h-4 mr-2" />
-                    Registrar Transacción
+                    {t.accounting.recordTransaction}
                   </GlassButton>
                 </Link>
                 <Link href="/dashboard/accounting/chart-of-accounts" className="block">
                   <GlassButton variant="secondary" className="w-full justify-start py-3">
                     <BookOpen className="w-4 h-4 mr-2" />
-                    Plan de Cuentas
+                    {t.accounting.chartOfAccounts}
                   </GlassButton>
                 </Link>
                 <Link href="/dashboard/accounting/reports" className="block">
                   <GlassButton variant="secondary" className="w-full justify-start py-3">
                     <BarChart3 className="w-4 h-4 mr-2" />
-                    Reportes Financieros
+                    {t.accounting.financialReports}
                   </GlassButton>
                 </Link>
               </div>
@@ -375,24 +377,24 @@ export default function AccountingDashboardPage() {
           {/* Account Types Summary */}
           <GlassCard>
             <GlassCardHeader>
-              <GlassCardTitle>Resumen por Tipo</GlassCardTitle>
+              <GlassCardTitle>{t.reports.summary}</GlassCardTitle>
             </GlassCardHeader>
             <GlassCardContent>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 rounded-lg bg-green-50">
-                  <span className="text-sm font-medium text-green-700">Ingresos (Mes)</span>
+                  <span className="text-sm font-medium text-green-700">{t.accounting.income}</span>
                   <span className="font-semibold text-green-800">
                     {formatCurrency(dashboardStats.monthlyIncome)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-red-50">
-                  <span className="text-sm font-medium text-red-700">Gastos (Mes)</span>
+                  <span className="text-sm font-medium text-red-700">{t.accounting.expenses}</span>
                   <span className="font-semibold text-red-800">
                     {formatCurrency(dashboardStats.monthlyExpenses)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50">
-                  <span className="text-sm font-medium text-blue-700">Por Cobrar</span>
+                  <span className="text-sm font-medium text-blue-700">{t.accounting.accountsReceivable}</span>
                   <span className="font-semibold text-blue-800">
                     {formatCurrency(dashboardStats.pendingReceivables)}
                   </span>
@@ -402,7 +404,7 @@ export default function AccountingDashboardPage() {
                 }`}>
                   <span className={`text-sm font-medium ${
                     dashboardStats.netProfit >= 0 ? 'text-emerald-700' : 'text-amber-700'
-                  }`}>Utilidad Neta</span>
+                  }`}>{t.accounting.netProfit}</span>
                   <span className={`font-semibold ${
                     dashboardStats.netProfit >= 0 ? 'text-emerald-800' : 'text-amber-800'
                   }`}>

@@ -190,6 +190,58 @@ export interface Translations {
     viewReports: string
     viewAttendance: string
     contactParent: string
+    // Program fields
+    programPayment: string
+    programType: string
+    scheduleType: string
+    fullTimeSchedule: string
+    partTimeSchedule: string
+    dropInSchedule: string
+    // Program descriptions
+    privatePayDescription: string
+    vpkDescription: string
+    vpkWraparoundDescription: string
+    srDescription: string
+    srCopayDescription: string
+    // VPK fields
+    vpkInfo: string
+    vpkCertificateNumber: string
+    vpkScheduleType: string
+    vpkSchoolYear: string
+    vpkSummer: string
+    vpkStartDate: string
+    wrapAroundRate: string
+    weeklyWrapAroundRate: string
+    hourlyRate: string
+    // School Readiness fields
+    srInfo: string
+    srCaseNumber: string
+    srRateType: string
+    srFullTime: string
+    srPartTime: string
+    srHourly: string
+    authorizedHoursWeekly: string
+    eligibilityStart: string
+    eligibilityEnd: string
+    familyCoPay: string
+    copayAmount: string
+    copayFrequency: string
+    copayWeekly: string
+    copayMonthly: string
+    // Private pay fields
+    privatePayRates: string
+    weeklyRate: string
+    // Form options
+    selectGender: string
+    selectFamily: string
+    noClassroom: string
+    // Validation messages
+    requiredFieldsError: string
+    vpkCertificateRequired: string
+    srCaseNumberRequired: string
+    classroomCapacityError: string
+    saveError: string
+    saving: string
   }
   families: {
     title: string
@@ -1153,5 +1205,204 @@ export interface Translations {
     // Time labels
     today: string
     yesterday: string
+  }
+  foodProgram: {
+    title: string
+    subtitle: string
+    recordMeals: string
+    today: string
+    mealsToday: string
+    childrenThisMonth: string
+    totalMonth: string
+    estimatedCACFP: string
+    dailyMeals: string
+    served: string
+    now: string
+    quickActions: string
+    cacfpReports: string
+    inventory: string
+    budget: string
+    milkCalculator: string
+    dietaryAlerts: string
+    more: string
+    monthlySummary: string
+    operatingDays: string
+    dailyAverage: string
+    meals: string
+    estimatedReimbursement: string
+    // Meal types
+    breakfast: string
+    amSnack: string
+    lunch: string
+    pmSnack: string
+    supper: string
+    // Time labels
+    breakfastTime: string
+    amSnackTime: string
+    lunchTime: string
+    pmSnackTime: string
+    supperTime: string
+  }
+  accounting: {
+    title: string
+    subtitle: string
+    generalBalance: string
+    income: string
+    expenses: string
+    netProfit: string
+    vsPreviousMonth: string
+    recordTransaction: string
+    chartOfAccounts: string
+    financialReports: string
+    recentTransactions: string
+    incomeType: string
+    expenseType: string
+    accountsReceivable: string
+    accountsPayable: string
+  }
+  notifications: {
+    title: string
+    subtitle: string
+    newNotification: string
+    sent: string
+    scheduled: string
+    drafts: string
+    history: string
+    searchPlaceholder: string
+    all: string
+    urgent: string
+    normal: string
+    low: string
+    byType: string
+    byStatus: string
+    byPriority: string
+    type: string
+    status: string
+    priority: string
+    recipients: string
+    date: string
+    announcement: string
+    reminder: string
+    alert: string
+    pending: string
+    sentStatus: string
+    failed: string
+    noNotifications: string
+    createFirstNotification: string
+    families: string
+    viewDetails: string
+  }
+
+  // ============================================
+  // IMMUNIZATIONS MODULE
+  // ============================================
+  immunizations: {
+    title: string
+    subtitle: string
+    export: string
+    dcfRequirements: string
+    totalChildren: string
+    complete: string
+    incomplete: string
+    overdue: string
+    exempt: string
+    complianceRate: string
+    childrenUpToDate: string
+    overdueVaccines: string
+    pendingVaccines: string
+    vaccinePending: string
+    vaccinesPending: string
+    moreChildrenPending: string
+    childrenList: string
+    children: string
+    all: string
+    pending: string
+    compliant: string
+    searchChild: string
+    noChildrenFiltered: string
+    noChildrenRegistered: string
+    next: string
+    yearsMonths: string
+  }
+
+  // ============================================
+  // ADMIN MODULE
+  // ============================================
+  admin: {
+    // Dashboard Admin
+    title: string
+    welcomeMessage: string
+    refresh: string
+    mrr: string
+    vsPreviousMonth: string
+    organizations: string
+    active: string
+    trial: string
+    totalLeads: string
+    thisWeek: string
+    conversionRate: string
+    pendingTrials: string
+    organizationsInTrial: string
+    estimatedARR: string
+    annualRecurringRevenue: string
+    quickActions: string
+    viewAllLeads: string
+    manageOrganizations: string
+    viewReports: string
+    recentLeads: string
+    viewAll: string
+    noRecentLeads: string
+    noName: string
+    noCompany: string
+    recentOrganizations: string
+    viewAllFeminine: string
+    noRecentOrganizations: string
+    children: string
+    pendingActions: string
+    trialsPendingFollowUp: string
+    upcomingRenewals: string
+
+    // Organizations Admin
+    manageAllDaycares: string
+    total: string
+    activeFeminine: string
+    inTrial: string
+    searchPlaceholder: string
+    allStatuses: string
+    activeMasculine: string
+    suspended: string
+    cancelled: string
+    allPlans: string
+    free: string
+    noOrganizationsToShow: string
+    organization: string
+    owner: string
+    location: string
+    status: string
+    plan: string
+    metrics: string
+    date: string
+    actions: string
+    unassigned: string
+    viewDetails: string
+    activate: string
+    suspend: string
+    cancel: string
+    organizationDetails: string
+    contact: string
+    notAssigned: string
+    childrenLabel: string
+    staffLabel: string
+    classrooms: string
+    timeline: string
+    created: string
+    lastUpdated: string
+    close: string
+
+    // Status labels
+    statusActive: string
+    statusTrial: string
+    statusSuspended: string
+    statusCancelled: string
   }
 }

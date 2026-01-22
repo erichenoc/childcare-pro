@@ -64,12 +64,18 @@ export function DropdownMenu({ items, trigger, align = 'right' }: DropdownMenuPr
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div
-          className={`absolute top-full mt-1 ${
-            align === 'right' ? 'right-0' : 'left-0'
-          } min-w-[160px] bg-neu-bg dark:bg-neu-bg-dark shadow-neu dark:shadow-neu-dark rounded-xl z-[100] py-1 animate-fade-in`}
-          role="menu"
-        >
+        <>
+          {/* Backdrop for mobile */}
+          <div
+            className="fixed inset-0 z-[99] md:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+          <div
+            className={`fixed md:absolute left-2 right-2 md:left-auto md:right-0 bottom-4 md:bottom-auto md:top-full md:mt-1 ${
+              align === 'right' ? 'md:right-0' : 'md:left-0'
+            } min-w-[160px] max-w-[calc(100vw-1rem)] bg-neu-bg dark:bg-neu-bg-dark shadow-neu dark:shadow-neu-dark rounded-xl z-[100] py-1 animate-fade-in`}
+            role="menu"
+          >
           {visibleItems.map((item, index) => (
             <button
               key={index}
@@ -86,6 +92,7 @@ export function DropdownMenu({ items, trigger, align = 'right' }: DropdownMenuPr
             </button>
           ))}
         </div>
+        </>
       )}
     </div>
   )

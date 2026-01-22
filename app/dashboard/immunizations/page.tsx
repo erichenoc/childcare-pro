@@ -35,8 +35,10 @@ import type {
   OverdueImmunization,
   ComplianceStatus,
 } from '@/shared/types/immunizations'
+import { useTranslations } from '@/shared/lib/i18n'
 
 export default function ImmunizationsPage() {
+  const t = useTranslations()
   const [isLoading, setIsLoading] = useState(true)
   const [summary, setSummary] = useState<OrganizationImmunizationSummary | null>(null)
   const [children, setChildren] = useState<ChildImmunizationStatus[]>([])
@@ -110,20 +112,20 @@ export default function ImmunizationsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
             <Syringe className="w-7 h-7 text-primary-600" />
-            Seguimiento de Vacunas
+            {t.immunizations.title}
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Control de cumplimiento DCF Florida
+            {t.immunizations.subtitle}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <GlassButton variant="ghost" leftIcon={<Download className="w-4 h-4" />}>
-            Exportar
+            {t.immunizations.export}
           </GlassButton>
           <Link href="/dashboard/immunizations/requirements">
             <GlassButton variant="primary" leftIcon={<FileText className="w-4 h-4" />}>
-              Requisitos DCF
+              {t.immunizations.dcfRequirements}
             </GlassButton>
           </Link>
         </div>
@@ -139,7 +141,7 @@ export default function ImmunizationsPage() {
             <p className="text-3xl font-bold text-gray-900 dark:text-white">
               {summary?.total_children || 0}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Total Niños</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t.immunizations.totalChildren}</p>
           </GlassCardContent>
         </GlassCard>
 
@@ -151,7 +153,7 @@ export default function ImmunizationsPage() {
             <p className="text-3xl font-bold text-green-600 dark:text-green-400">
               {summary?.fully_compliant || 0}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Completos</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t.immunizations.complete}</p>
           </GlassCardContent>
         </GlassCard>
 
@@ -163,7 +165,7 @@ export default function ImmunizationsPage() {
             <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
               {summary?.incomplete || 0}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Incompletos</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t.immunizations.incomplete}</p>
           </GlassCardContent>
         </GlassCard>
 
@@ -175,7 +177,7 @@ export default function ImmunizationsPage() {
             <p className="text-3xl font-bold text-red-600 dark:text-red-400">
               {summary?.overdue || 0}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Vencidos</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t.immunizations.overdue}</p>
           </GlassCardContent>
         </GlassCard>
 
@@ -187,7 +189,7 @@ export default function ImmunizationsPage() {
             <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
               {summary?.exempt || 0}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Exentos</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t.immunizations.exempt}</p>
           </GlassCardContent>
         </GlassCard>
       </div>
@@ -197,7 +199,7 @@ export default function ImmunizationsPage() {
         <GlassCardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Tasa de Cumplimiento General
+              {t.immunizations.complianceRate}
             </span>
             <span className="text-2xl font-bold text-gray-900 dark:text-white">
               {summary?.compliance_rate || 0}%
@@ -216,7 +218,10 @@ export default function ImmunizationsPage() {
             />
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            {summary?.fully_compliant || 0} de {summary?.total_children || 0} niños están al día con sus vacunas
+            {t.immunizations.childrenUpToDate
+              .replace('{count}', String(summary?.fully_compliant || 0))
+              .replace('{total}', String(summary?.total_children || 0))
+            }
           </p>
         </GlassCardContent>
       </GlassCard>
@@ -228,10 +233,10 @@ export default function ImmunizationsPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-red-500" />
-                <GlassCardTitle>Vacunas Vencidas - Acción Requerida</GlassCardTitle>
+                <GlassCardTitle>{t.immunizations.overdueVaccines}</GlassCardTitle>
               </div>
               <span className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 rounded-full">
-                {overdueList.length} vacunas pendientes
+                {overdueList.length} {t.immunizations.pendingVaccines}
               </span>
             </div>
           </GlassCardHeader>
@@ -252,7 +257,7 @@ export default function ImmunizationsPage() {
                         {data.name}
                       </p>
                       <p className="text-xs text-red-600 dark:text-red-400">
-                        {data.vaccines.length} vacuna{data.vaccines.length > 1 ? 's' : ''} pendiente{data.vaccines.length > 1 ? 's' : ''}
+                        {data.vaccines.length} {data.vaccines.length > 1 ? t.immunizations.vaccinesPending : t.immunizations.vaccinePending}
                       </p>
                     </div>
                   </div>
@@ -262,7 +267,7 @@ export default function ImmunizationsPage() {
             </div>
             {Object.keys(overdueByChild).length > 6 && (
               <p className="text-sm text-center text-gray-500 dark:text-gray-400 mt-4">
-                +{Object.keys(overdueByChild).length - 6} niños más con vacunas pendientes
+                {t.immunizations.moreChildrenPending.replace('{count}', String(Object.keys(overdueByChild).length - 6))}
               </p>
             )}
           </GlassCardContent>
@@ -274,9 +279,9 @@ export default function ImmunizationsPage() {
         <GlassCardHeader>
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <GlassCardTitle>Lista de Niños</GlassCardTitle>
+              <GlassCardTitle>{t.immunizations.childrenList}</GlassCardTitle>
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-500">{filteredChildren.length} niños</span>
+                <span className="text-gray-500">{filteredChildren.length} {t.immunizations.children}</span>
               </div>
             </div>
 
@@ -292,7 +297,7 @@ export default function ImmunizationsPage() {
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
-                  Todos
+                  {t.immunizations.all}
                 </button>
                 <button
                   onClick={() => setActiveTab('overdue')}
@@ -302,7 +307,7 @@ export default function ImmunizationsPage() {
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
-                  Pendientes
+                  {t.immunizations.pending}
                 </button>
                 <button
                   onClick={() => setActiveTab('compliant')}
@@ -312,7 +317,7 @@ export default function ImmunizationsPage() {
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
-                  Completos
+                  {t.immunizations.compliant}
                 </button>
               </div>
 
@@ -321,7 +326,7 @@ export default function ImmunizationsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Buscar niño..."
+                  placeholder={t.immunizations.searchChild}
                   className="w-full pl-10 pr-4 py-2 rounded-xl shadow-neu-inset dark:shadow-neu-dark-inset bg-neu-bg dark:bg-neu-bg-dark text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -336,8 +341,8 @@ export default function ImmunizationsPage() {
               <Syringe className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
               <p className="text-gray-500 dark:text-gray-400">
                 {searchTerm || activeTab !== 'all'
-                  ? 'No se encontraron niños con estos filtros'
-                  : 'No hay niños registrados'
+                  ? t.immunizations.noChildrenFiltered
+                  : t.immunizations.noChildrenRegistered
                 }
               </p>
             </div>
@@ -416,7 +421,7 @@ export default function ImmunizationsPage() {
 
                       {child.next_due_vaccine && child.compliance_status !== 'compliant' && (
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Próxima: {child.next_due_vaccine}
+                          {t.immunizations.next}: {child.next_due_vaccine}
                         </p>
                       )}
                     </div>

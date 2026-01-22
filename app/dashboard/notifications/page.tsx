@@ -38,23 +38,25 @@ import {
   GlassInput,
   GlassSelect,
 } from '@/shared/components/ui'
-
-const TYPE_INFO: Record<NotificationType, { label: string; color: string; icon: React.ElementType }> = {
-  email: { label: 'Email', color: 'bg-blue-100 text-blue-700', icon: Mail },
-  push: { label: 'Push', color: 'bg-purple-100 text-purple-700', icon: Bell },
-  sms: { label: 'SMS', color: 'bg-green-100 text-green-700', icon: Smartphone },
-  in_app: { label: 'In-App', color: 'bg-orange-100 text-orange-700', icon: MessageSquare },
-}
-
-const STATUS_INFO: Record<NotificationStatus, { label: string; color: string; icon: React.ElementType }> = {
-  pending: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
-  sent: { label: 'Enviado', color: 'bg-blue-100 text-blue-700', icon: Send },
-  delivered: { label: 'Entregado', color: 'bg-green-100 text-green-700', icon: CheckCircle },
-  failed: { label: 'Fallido', color: 'bg-red-100 text-red-700', icon: XCircle },
-  read: { label: 'Leído', color: 'bg-emerald-100 text-emerald-700', icon: Eye },
-}
+import { useTranslations } from '@/shared/lib/i18n'
 
 export default function NotificationsPage() {
+  const t = useTranslations()
+
+  const TYPE_INFO: Record<NotificationType, { label: string; color: string; icon: React.ElementType }> = {
+    email: { label: 'Email', color: 'bg-blue-100 text-blue-700', icon: Mail },
+    push: { label: 'Push', color: 'bg-purple-100 text-purple-700', icon: Bell },
+    sms: { label: 'SMS', color: 'bg-green-100 text-green-700', icon: Smartphone },
+    in_app: { label: 'In-App', color: 'bg-orange-100 text-orange-700', icon: MessageSquare },
+  }
+
+  const STATUS_INFO: Record<NotificationStatus, { label: string; color: string; icon: React.ElementType }> = {
+    pending: { label: t.notifications.pending, color: 'bg-yellow-100 text-yellow-700', icon: Clock },
+    sent: { label: t.notifications.sentStatus, color: 'bg-blue-100 text-blue-700', icon: Send },
+    delivered: { label: t.billing.sent, color: 'bg-green-100 text-green-700', icon: CheckCircle },
+    failed: { label: t.notifications.failed, color: 'bg-red-100 text-red-700', icon: XCircle },
+    read: { label: t.communication.read, color: 'bg-emerald-100 text-emerald-700', icon: Eye },
+  }
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [stats, setStats] = useState<NotificationStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -93,15 +95,15 @@ export default function NotificationsPage() {
   const getRecipientLabel = (notification: Notification) => {
     switch (notification.recipient_type) {
       case 'all':
-        return 'Todos'
+        return t.common.all
       case 'parents':
-        return 'Padres'
+        return t.communication.audienceParents
       case 'staff':
-        return 'Personal'
+        return t.staff.title
       case 'specific':
-        return `${notification.recipient_ids.length} destinatarios`
+        return `${notification.recipient_ids.length} ${t.notifications.recipients.toLowerCase()}`
       default:
-        return 'Desconocido'
+        return t.common.unassigned
     }
   }
 
@@ -128,22 +130,22 @@ export default function NotificationsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notificaciones</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t.notifications.title}</h1>
           <p className="text-gray-500">
-            Envía mensajes masivos a padres y personal
+            {t.notifications.subtitle}
           </p>
         </div>
         <div className="flex gap-2">
           <Link href="/dashboard/notifications/templates">
             <GlassButton variant="secondary">
               <FileText className="w-4 h-4 mr-2" />
-              Plantillas
+              {t.communication.compose}
             </GlassButton>
           </Link>
           <Link href="/dashboard/notifications/new">
             <GlassButton>
               <Plus className="w-4 h-4 mr-2" />
-              Nueva Notificación
+              {t.notifications.newNotification}
             </GlassButton>
           </Link>
         </div>
@@ -159,7 +161,7 @@ export default function NotificationsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">{stats.total_sent}</p>
-                <p className="text-sm text-gray-500">Enviadas</p>
+                <p className="text-sm text-gray-500">{t.notifications.sent}</p>
               </div>
             </div>
           </GlassCard>
@@ -210,7 +212,7 @@ export default function NotificationsPage() {
               <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
                 <Bell className="w-6 h-6 text-purple-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">Anuncio General</span>
+              <span className="text-sm font-medium text-gray-700">{t.notifications.announcement}</span>
             </div>
           </GlassCard>
         </Link>
@@ -221,7 +223,7 @@ export default function NotificationsPage() {
               <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
                 <Clock className="w-6 h-6 text-blue-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">Recordatorio</span>
+              <span className="text-sm font-medium text-gray-700">{t.notifications.reminder}</span>
             </div>
           </GlassCard>
         </Link>
@@ -243,7 +245,7 @@ export default function NotificationsPage() {
               <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">Emergencia</span>
+              <span className="text-sm font-medium text-gray-700">{t.notifications.alert}</span>
             </div>
           </GlassCard>
         </Link>
@@ -256,7 +258,7 @@ export default function NotificationsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <GlassInput
               type="text"
-              placeholder="Buscar notificaciones..."
+              placeholder={t.notifications.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -268,7 +270,7 @@ export default function NotificationsPage() {
               onChange={(e) => setFilterType(e.target.value as NotificationType | 'all')}
               className="w-32"
               options={[
-                { value: 'all', label: 'Todos' },
+                { value: 'all', label: t.notifications.all },
                 { value: 'email', label: 'Email' },
                 { value: 'push', label: 'Push' },
                 { value: 'sms', label: 'SMS' },
@@ -280,12 +282,12 @@ export default function NotificationsPage() {
               onChange={(e) => setFilterStatus(e.target.value as NotificationStatus | 'all')}
               className="w-36"
               options={[
-                { value: 'all', label: 'Todos' },
-                { value: 'pending', label: 'Pendiente' },
-                { value: 'sent', label: 'Enviado' },
-                { value: 'delivered', label: 'Entregado' },
-                { value: 'read', label: 'Leído' },
-                { value: 'failed', label: 'Fallido' },
+                { value: 'all', label: t.notifications.all },
+                { value: 'pending', label: t.notifications.pending },
+                { value: 'sent', label: t.notifications.sentStatus },
+                { value: 'delivered', label: t.billing.sent },
+                { value: 'read', label: t.communication.read },
+                { value: 'failed', label: t.notifications.failed },
               ]}
             />
           </div>
@@ -300,9 +302,9 @@ export default function NotificationsPage() {
               <Bell className="w-5 h-5 text-white" />
             </div>
             <div>
-              <GlassCardTitle>Historial de Notificaciones</GlassCardTitle>
+              <GlassCardTitle>{t.notifications.history}</GlassCardTitle>
               <p className="text-sm text-gray-500">
-                {filteredNotifications.length} notificaciones
+                {filteredNotifications.length} {t.notifications.title.toLowerCase()}
               </p>
             </div>
           </div>
@@ -331,12 +333,12 @@ export default function NotificationsPage() {
                           <div className="flex items-center gap-2 mb-1">
                             {notif.priority === 'urgent' && (
                               <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                                Urgente
+                                {t.notifications.urgent}
                               </span>
                             )}
                             {notif.priority === 'high' && (
                               <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                                Alta
+                                {t.notifications.normal}
                               </span>
                             )}
                             <h3 className="font-medium text-gray-900 dark:text-white truncate">{notif.subject}</h3>
@@ -349,10 +351,10 @@ export default function NotificationsPage() {
                             </span>
                             <span>
                               {notif.scheduled_at
-                                ? `Programado: ${formatDate(notif.scheduled_at)}`
+                                ? `${t.notifications.scheduled}: ${formatDate(notif.scheduled_at)}`
                                 : notif.sent_at
                                   ? formatDate(notif.sent_at)
-                                  : 'Sin enviar'
+                                  : t.notifications.pending
                               }
                             </span>
                           </div>
@@ -372,15 +374,15 @@ export default function NotificationsPage() {
               <div className="text-center py-8">
                 <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No hay notificaciones
+                  {t.notifications.noNotifications}
                 </h3>
                 <p className="text-gray-500 mb-4">
-                  No se encontraron notificaciones que coincidan con tus filtros.
+                  {t.common.noResults}
                 </p>
                 <Link href="/dashboard/notifications/new">
                   <GlassButton>
                     <Plus className="w-4 h-4 mr-2" />
-                    Crear Notificación
+                    {t.notifications.createFirstNotification}
                   </GlassButton>
                 </Link>
               </div>
@@ -393,26 +395,26 @@ export default function NotificationsPage() {
       <div className="grid md:grid-cols-2 gap-6">
         <GlassCard>
           <GlassCardHeader>
-            <GlassCardTitle>Acciones Rápidas</GlassCardTitle>
+            <GlassCardTitle>{t.dashboard.quickActions}</GlassCardTitle>
           </GlassCardHeader>
           <GlassCardContent>
             <div className="space-y-2">
               <Link href="/dashboard/notifications/new">
                 <GlassButton variant="secondary" className="w-full justify-start">
                   <Plus className="w-4 h-4 mr-2" />
-                  Nueva Notificación
+                  {t.notifications.newNotification}
                 </GlassButton>
               </Link>
               <Link href="/dashboard/notifications/templates">
                 <GlassButton variant="secondary" className="w-full justify-start">
                   <FileText className="w-4 h-4 mr-2" />
-                  Gestionar Plantillas
+                  {t.communication.compose}
                 </GlassButton>
               </Link>
               <Link href="/dashboard/notifications/history">
                 <GlassButton variant="secondary" className="w-full justify-start">
                   <BarChart3 className="w-4 h-4 mr-2" />
-                  Ver Reportes
+                  {t.notifications.history}
                 </GlassButton>
               </Link>
             </div>

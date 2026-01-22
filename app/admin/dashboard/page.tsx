@@ -10,6 +10,7 @@ import {
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { createClient } from '@/shared/lib/supabase/client'
+import { useTranslations } from '@/shared/lib/i18n'
 
 interface DashboardStats {
   totalOrganizations: number
@@ -47,6 +48,7 @@ interface RecentOrganization {
 }
 
 export default function AdminDashboardPage() {
+  const t = useTranslations()
   const [stats, setStats] = useState<DashboardStats>({
     totalOrganizations: 0,
     activeOrganizations: 0,
@@ -204,9 +206,9 @@ export default function AdminDashboardPage() {
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t.admin.title}</h1>
             <p className="text-gray-500 text-sm mt-1">
-              Bienvenido al panel de control de ChildCare Pro
+              {t.admin.welcomeMessage}
             </p>
           </div>
           <button
@@ -214,7 +216,7 @@ export default function AdminDashboardPage() {
             className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
           >
             <RefreshCw className="w-4 h-4" />
-            Actualizar
+            {t.admin.refresh}
           </button>
         </div>
       </header>
@@ -226,14 +228,14 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-medium">MRR</p>
+                <p className="text-sm text-gray-500 font-medium">{t.admin.mrr}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-1">
                   {formatCurrency(stats.mrr)}
                 </p>
                 <div className="flex items-center gap-1 mt-2 text-green-600">
                   <ArrowUpRight className="w-4 h-4" />
                   <span className="text-sm font-medium">{stats.revenueGrowth}%</span>
-                  <span className="text-sm text-gray-500">vs mes anterior</span>
+                  <span className="text-sm text-gray-500">{t.admin.vsPreviousMonth}</span>
                 </div>
               </div>
               <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center">
@@ -246,17 +248,17 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-medium">Organizaciones</p>
+                <p className="text-sm text-gray-500 font-medium">{t.admin.organizations}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-1">
                   {stats.totalOrganizations}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-sm text-green-600 font-medium">
-                    {stats.activeOrganizations} activas
+                    {stats.activeOrganizations} {t.admin.active}
                   </span>
                   <span className="text-sm text-gray-400">•</span>
                   <span className="text-sm text-blue-600 font-medium">
-                    {stats.trialOrganizations} trial
+                    {stats.trialOrganizations} {t.admin.trial}
                   </span>
                 </div>
               </div>
@@ -270,14 +272,14 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-medium">Total Leads</p>
+                <p className="text-sm text-gray-500 font-medium">{t.admin.totalLeads}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-1">
                   {stats.totalLeads}
                 </p>
                 <div className="flex items-center gap-1 mt-2 text-green-600">
                   <UserPlus className="w-4 h-4" />
                   <span className="text-sm font-medium">+{stats.newLeadsThisWeek}</span>
-                  <span className="text-sm text-gray-500">esta semana</span>
+                  <span className="text-sm text-gray-500">{t.admin.thisWeek}</span>
                 </div>
               </div>
               <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center">
@@ -290,7 +292,7 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-medium">Tasa de Conversión</p>
+                <p className="text-sm text-gray-500 font-medium">{t.admin.conversionRate}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-1">
                   {stats.conversionRate}%
                 </p>
@@ -316,10 +318,10 @@ export default function AdminDashboardPage() {
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100 text-sm font-medium">Trials Pendientes</p>
+                <p className="text-blue-100 text-sm font-medium">{t.admin.pendingTrials}</p>
                 <p className="text-4xl font-bold mt-1">{stats.pendingTrials}</p>
                 <p className="text-blue-100 text-sm mt-2">
-                  Organizaciones en período de prueba
+                  {t.admin.organizationsInTrial}
                 </p>
               </div>
               <Clock className="w-12 h-12 text-blue-200" />
@@ -330,10 +332,10 @@ export default function AdminDashboardPage() {
           <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-sm font-medium">ARR Estimado</p>
+                <p className="text-green-100 text-sm font-medium">{t.admin.estimatedARR}</p>
                 <p className="text-4xl font-bold mt-1">{formatCurrency(stats.totalRevenue)}</p>
                 <p className="text-green-100 text-sm mt-2">
-                  Ingresos anuales recurrentes
+                  {t.admin.annualRecurringRevenue}
                 </p>
               </div>
               <Activity className="w-12 h-12 text-green-200" />
@@ -343,7 +345,7 @@ export default function AdminDashboardPage() {
           {/* Quick Actions */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">
-              Acciones Rápidas
+              {t.admin.quickActions}
             </h3>
             <div className="space-y-2">
               <Link
@@ -352,7 +354,7 @@ export default function AdminDashboardPage() {
               >
                 <span className="flex items-center gap-2 text-gray-700">
                   <Users className="w-4 h-4" />
-                  Ver todos los leads
+                  {t.admin.viewAllLeads}
                 </span>
                 <ChevronRight className="w-4 h-4 text-gray-400" />
               </Link>
@@ -362,7 +364,7 @@ export default function AdminDashboardPage() {
               >
                 <span className="flex items-center gap-2 text-gray-700">
                   <Building2 className="w-4 h-4" />
-                  Gestionar organizaciones
+                  {t.admin.manageOrganizations}
                 </span>
                 <ChevronRight className="w-4 h-4 text-gray-400" />
               </Link>
@@ -372,7 +374,7 @@ export default function AdminDashboardPage() {
               >
                 <span className="flex items-center gap-2 text-gray-700">
                   <TrendingUp className="w-4 h-4" />
-                  Ver reportes
+                  {t.admin.viewReports}
                 </span>
                 <ChevronRight className="w-4 h-4 text-gray-400" />
               </Link>
@@ -385,18 +387,18 @@ export default function AdminDashboardPage() {
           {/* Recent Leads */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Leads Recientes</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t.admin.recentLeads}</h2>
               <Link
                 href="/admin/leads"
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
-                Ver todos
+                {t.admin.viewAll}
               </Link>
             </div>
             <div className="divide-y divide-gray-100">
               {recentLeads.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
-                  No hay leads recientes
+                  {t.admin.noRecentLeads}
                 </div>
               ) : (
                 recentLeads.map((lead) => (
@@ -410,9 +412,9 @@ export default function AdminDashboardPage() {
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">
-                            {lead.name || lead.email || 'Sin nombre'}
+                            {lead.name || lead.email || t.admin.noName}
                           </p>
-                          <p className="text-sm text-gray-500">{lead.company_name || 'Sin empresa'}</p>
+                          <p className="text-sm text-gray-500">{lead.company_name || t.admin.noCompany}</p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -431,18 +433,18 @@ export default function AdminDashboardPage() {
           {/* Recent Organizations */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Organizaciones Recientes</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t.admin.recentOrganizations}</h2>
               <Link
                 href="/admin/organizations"
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
-                Ver todas
+                {t.admin.viewAllFeminine}
               </Link>
             </div>
             <div className="divide-y divide-gray-100">
               {recentOrganizations.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
-                  No hay organizaciones recientes
+                  {t.admin.noRecentOrganizations}
                 </div>
               ) : (
                 recentOrganizations.map((org) => (
@@ -455,7 +457,7 @@ export default function AdminDashboardPage() {
                         <div>
                           <p className="font-medium text-gray-900">{org.name}</p>
                           <p className="text-sm text-gray-500">
-                            {org.children_count} niños • {org.plan_type || 'free'}
+                            {org.children_count} {t.admin.children} • {org.plan_type || 'free'}
                           </p>
                         </div>
                       </div>
@@ -479,13 +481,13 @@ export default function AdminDashboardPage() {
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-yellow-800">Acciones Pendientes</h3>
+                <h3 className="font-semibold text-yellow-800">{t.admin.pendingActions}</h3>
                 <ul className="mt-2 space-y-1 text-sm text-yellow-700">
                   {stats.pendingTrials > 0 && (
-                    <li>• {stats.pendingTrials} trial(s) pendiente(s) de seguimiento</li>
+                    <li>• {stats.pendingTrials} {t.admin.trialsPendingFollowUp}</li>
                   )}
                   {stats.upcomingRenewals > 0 && (
-                    <li>• {stats.upcomingRenewals} renovación(es) próxima(s)</li>
+                    <li>• {stats.upcomingRenewals} {t.admin.upcomingRenewals}</li>
                   )}
                 </ul>
               </div>

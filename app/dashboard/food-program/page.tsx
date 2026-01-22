@@ -37,18 +37,10 @@ import {
   GlassButton,
   GlassBadge,
 } from '@/shared/components/ui'
+import { useTranslations, useLocale } from '@/shared/lib/i18n'
 
 function formatDate(date: Date): string {
   return date.toISOString().split('T')[0]
-}
-
-function formatDisplayDate(dateStr: string): string {
-  return new Date(dateStr + 'T12:00:00').toLocaleDateString('es-ES', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
 }
 
 const MEAL_ICONS: Record<MealType, typeof Coffee> = {
@@ -60,6 +52,8 @@ const MEAL_ICONS: Record<MealType, typeof Coffee> = {
 }
 
 export default function FoodProgramPage() {
+  const t = useTranslations()
+  const locale = useLocale()
   const [selectedDate, setSelectedDate] = useState(() => formatDate(new Date()))
   const [mealAttendance, setMealAttendance] = useState<MealAttendance[]>([])
   const [childrenWithNeeds, setChildrenWithNeeds] = useState<{ id: string; name: string; allergies: string[]; dietary_restrictions: string | null }[]>([])
@@ -72,6 +66,18 @@ export default function FoodProgramPage() {
     daily_average: number
     operating_days: number
   } | null>(null)
+
+  const formatDisplayDate = (dateStr: string): string => {
+    return new Date(dateStr + 'T12:00:00').toLocaleDateString(
+      locale === 'es' ? 'es-ES' : 'en-US',
+      {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }
+    )
+  }
 
   useEffect(() => {
     loadData()
@@ -142,17 +148,17 @@ export default function FoodProgramPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <UtensilsCrossed className="w-7 h-7 text-primary-600" />
-            Food Program
+            {t.foodProgram.title}
           </h1>
           <p className="text-gray-500">
-            USDA CACFP - Registro de comidas
+            {t.foodProgram.subtitle}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <Link href="/dashboard/food-program/record">
             <GlassButton variant="primary" leftIcon={<CheckCircle className="w-4 h-4" />}>
-              Registrar Comidas
+              {t.foodProgram.recordMeals}
             </GlassButton>
           </Link>
         </div>
@@ -176,7 +182,7 @@ export default function FoodProgramPage() {
               </span>
               {selectedDate !== formatDate(new Date()) && (
                 <GlassButton variant="ghost" size="sm" onClick={goToToday}>
-                  Hoy
+                  {t.foodProgram.today}
                 </GlassButton>
               )}
             </div>
@@ -201,7 +207,7 @@ export default function FoodProgramPage() {
             </div>
             <div className="min-w-0">
               <p className="text-lg sm:text-2xl font-bold text-gray-900">{totalServedToday}</p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Comidas Hoy</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.foodProgram.mealsToday}</p>
             </div>
           </div>
         </GlassCard>
@@ -215,7 +221,7 @@ export default function FoodProgramPage() {
               <p className="text-lg sm:text-2xl font-bold text-gray-900">
                 {summary?.total_children_served || 0}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Niños Este Mes</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.foodProgram.childrenThisMonth}</p>
             </div>
           </div>
         </GlassCard>
@@ -229,7 +235,7 @@ export default function FoodProgramPage() {
               <p className="text-lg sm:text-2xl font-bold text-gray-900">
                 {summary?.total_meals_served || 0}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Total Mes</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.foodProgram.totalMonth}</p>
             </div>
           </div>
         </GlassCard>
@@ -243,7 +249,7 @@ export default function FoodProgramPage() {
               <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
                 {formatCurrency(summary?.estimated_reimbursement || 0)}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Est. CACFP</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.foodProgram.estimatedCACFP}</p>
             </div>
           </div>
         </GlassCard>
@@ -256,7 +262,7 @@ export default function FoodProgramPage() {
             <GlassCardHeader>
               <GlassCardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                Comidas del Día
+                {t.foodProgram.dailyMeals}
               </GlassCardTitle>
             </GlassCardHeader>
             <GlassCardContent className="space-y-3">
@@ -291,10 +297,10 @@ export default function FoodProgramPage() {
                         <div className="flex items-center gap-3">
                           <div className="text-right">
                             <p className="text-2xl font-bold text-gray-900">{count}</p>
-                            <p className="text-xs text-gray-500">servidos</p>
+                            <p className="text-xs text-gray-500">{t.foodProgram.served}</p>
                           </div>
                           {isCurrentMeal && (
-                            <GlassBadge variant="primary">Ahora</GlassBadge>
+                            <GlassBadge variant="primary">{t.foodProgram.now}</GlassBadge>
                           )}
                         </div>
                       </div>
@@ -308,33 +314,33 @@ export default function FoodProgramPage() {
           {/* Quick Actions */}
           <GlassCard>
             <GlassCardHeader>
-              <GlassCardTitle>Acciones Rápidas</GlassCardTitle>
+              <GlassCardTitle>{t.foodProgram.quickActions}</GlassCardTitle>
             </GlassCardHeader>
             <GlassCardContent>
               <div className="grid grid-cols-2 gap-3">
                 <Link href={`/dashboard/food-program/record?date=${selectedDate}`}>
                   <GlassButton variant="secondary" fullWidth leftIcon={<CheckCircle className="w-4 h-4" />}>
-                    Registrar Comidas
+                    {t.foodProgram.recordMeals}
                   </GlassButton>
                 </Link>
                 <Link href="/dashboard/food-program/reports">
                   <GlassButton variant="secondary" fullWidth leftIcon={<FileText className="w-4 h-4" />}>
-                    Reportes CACFP
+                    {t.foodProgram.cacfpReports}
                   </GlassButton>
                 </Link>
                 <Link href="/dashboard/food-program/inventory">
                   <GlassButton variant="secondary" fullWidth leftIcon={<Package className="w-4 h-4" />}>
-                    Inventario
+                    {t.foodProgram.inventory}
                   </GlassButton>
                 </Link>
                 <Link href="/dashboard/food-program/budget">
                   <GlassButton variant="secondary" fullWidth leftIcon={<DollarSign className="w-4 h-4" />}>
-                    Presupuesto
+                    {t.foodProgram.budget}
                   </GlassButton>
                 </Link>
                 <Link href="/dashboard/food-program/milk-calculator" className="col-span-2">
                   <GlassButton variant="secondary" fullWidth leftIcon={<Milk className="w-4 h-4" />}>
-                    Calculadora de Leche
+                    {t.foodProgram.milkCalculator}
                   </GlassButton>
                 </Link>
               </div>
@@ -350,7 +356,7 @@ export default function FoodProgramPage() {
               <GlassCardHeader>
                 <GlassCardTitle className="flex items-center gap-2 text-amber-700">
                   <AlertTriangle className="w-5 h-5" />
-                  Alertas Dietéticas
+                  {t.foodProgram.dietaryAlerts}
                 </GlassCardTitle>
               </GlassCardHeader>
               <GlassCardContent className="space-y-3">
@@ -381,7 +387,7 @@ export default function FoodProgramPage() {
                 ))}
                 {childrenWithNeeds.length > 5 && (
                   <p className="text-sm text-amber-600 text-center">
-                    +{childrenWithNeeds.length - 5} más
+                    +{childrenWithNeeds.length - 5} {t.foodProgram.more}
                   </p>
                 )}
               </GlassCardContent>
@@ -394,7 +400,7 @@ export default function FoodProgramPage() {
               <GlassCardHeader>
                 <GlassCardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Resumen del Mes
+                  {t.foodProgram.monthlySummary}
                 </GlassCardTitle>
               </GlassCardHeader>
               <GlassCardContent className="space-y-3">
@@ -412,20 +418,20 @@ export default function FoodProgramPage() {
 
                 <div className="pt-3 border-t border-gray-100 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Días Operados</span>
+                    <span className="text-gray-600">{t.foodProgram.operatingDays}</span>
                     <span className="font-medium text-gray-900">{summary.operating_days}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Promedio Diario</span>
+                    <span className="text-gray-600">{t.foodProgram.dailyAverage}</span>
                     <span className="font-medium text-gray-900">
-                      {summary.daily_average.toFixed(1)} comidas
+                      {summary.daily_average.toFixed(1)} {t.foodProgram.meals}
                     </span>
                   </div>
                 </div>
 
                 <div className="pt-3 border-t border-gray-100">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Reembolso Est.</span>
+                    <span className="text-sm text-gray-600">{t.foodProgram.estimatedReimbursement}</span>
                     <span className="text-lg font-bold text-emerald-600">
                       {formatCurrency(summary.estimated_reimbursement)}
                     </span>
