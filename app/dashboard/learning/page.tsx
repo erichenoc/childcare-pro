@@ -44,18 +44,19 @@ export default function LearningMilestonesPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: staff } = await supabase
-        .from('staff')
+      // Use profiles table (not staff) to get organization_id
+      const { data: profile } = await supabase
+        .from('profiles')
         .select('organization_id')
-        .eq('email', user.email)
+        .eq('id', user.id)
         .single()
 
-      if (!staff) return
+      if (!profile?.organization_id) return
 
       const { data } = await supabase
         .from('children')
         .select('id, first_name, last_name, date_of_birth')
-        .eq('organization_id', staff.organization_id)
+        .eq('organization_id', profile.organization_id)
         .eq('status', 'active')
         .order('first_name')
 

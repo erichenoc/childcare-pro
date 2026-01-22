@@ -85,7 +85,7 @@ export async function getChildMilestones(filters: MilestoneFilters = {}): Promis
         category:milestone_categories(*)
       ),
       category:milestone_categories(*),
-      observer:staff(id, first_name, last_name)
+      observer:profiles(id, first_name, last_name)
     `)
     .order('updated_at', { ascending: false })
 
@@ -115,7 +115,7 @@ export async function getChildMilestoneById(id: string): Promise<ChildMilestone 
         category:milestone_categories(*)
       ),
       category:milestone_categories(*),
-      observer:staff(id, first_name, last_name)
+      observer:profiles(id, first_name, last_name)
     `)
     .eq('id', id)
     .single()
@@ -130,20 +130,20 @@ export async function createChildMilestone(formData: ChildMilestoneFormData): Pr
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { data: staff } = await supabase
-    .from('staff')
+  const { data: profile } = await supabase
+    .from('profiles')
     .select('id, organization_id')
-    .eq('email', user.email)
+    .eq('id', user.id)
     .single()
 
-  if (!staff) throw new Error('Staff not found')
+  if (!profile) throw new Error('Profile not found')
 
   const { data, error } = await supabase
     .from('child_milestones')
     .insert({
       ...formData,
-      organization_id: staff.organization_id,
-      observed_by: formData.observed_date ? staff.id : null,
+      organization_id: profile.organization_id,
+      observed_by: formData.observed_date ? profile.id : null,
     })
     .select()
     .single()
@@ -162,13 +162,13 @@ export async function updateChildMilestone(id: string, formData: Partial<ChildMi
 
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      const { data: staff } = await supabase
-        .from('staff')
+      const { data: profile } = await supabase
+        .from('profiles')
         .select('id')
-        .eq('email', user.email)
+        .eq('id', user.id)
         .single()
-      if (staff) {
-        updateData.observed_by = staff.id
+      if (profile) {
+        updateData.observed_by = profile.id
       }
     }
   }
@@ -202,7 +202,7 @@ export async function getMilestoneObservations(childMilestoneId: string): Promis
     .from('milestone_observations')
     .select(`
       *,
-      recorder:staff(id, first_name, last_name)
+      recorder:profiles(id, first_name, last_name)
     `)
     .eq('child_milestone_id', childMilestoneId)
     .order('observation_date', { ascending: false })
@@ -217,20 +217,20 @@ export async function createMilestoneObservation(formData: MilestoneObservationF
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { data: staff } = await supabase
-    .from('staff')
+  const { data: profile } = await supabase
+    .from('profiles')
     .select('id, organization_id')
-    .eq('email', user.email)
+    .eq('id', user.id)
     .single()
 
-  if (!staff) throw new Error('Staff not found')
+  if (!profile) throw new Error('Profile not found')
 
   const { data, error } = await supabase
     .from('milestone_observations')
     .insert({
       ...formData,
-      organization_id: staff.organization_id,
-      recorded_by: staff.id,
+      organization_id: profile.organization_id,
+      recorded_by: profile.id,
       observation_date: formData.observation_date || new Date().toISOString(),
     })
     .select()
@@ -249,8 +249,8 @@ export async function getLearningPlans(childId?: string): Promise<LearningPlan[]
     .select(`
       *,
       child:children(id, first_name, last_name),
-      creator:staff!learning_plans_created_by_fkey(id, first_name, last_name),
-      approver:staff!learning_plans_approved_by_fkey(id, first_name, last_name),
+      creator:profiles!learning_plans_created_by_fkey(id, first_name, last_name),
+      approver:profiles!learning_plans_approved_by_fkey(id, first_name, last_name),
       plan_goals:learning_plan_goals(
         *,
         category:milestone_categories(*)
@@ -293,20 +293,20 @@ export async function createLearningPlan(formData: LearningPlanFormData): Promis
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { data: staff } = await supabase
-    .from('staff')
+  const { data: profile } = await supabase
+    .from('profiles')
     .select('id, organization_id')
-    .eq('email', user.email)
+    .eq('id', user.id)
     .single()
 
-  if (!staff) throw new Error('Staff not found')
+  if (!profile) throw new Error('Profile not found')
 
   const { data, error } = await supabase
     .from('learning_plans')
     .insert({
       ...formData,
-      organization_id: staff.organization_id,
-      created_by: staff.id,
+      organization_id: profile.organization_id,
+      created_by: profile.id,
       status: formData.status || 'draft',
     })
     .select()
@@ -335,19 +335,19 @@ export async function approveLearningPlan(id: string): Promise<LearningPlan> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { data: staff } = await supabase
-    .from('staff')
+  const { data: profile } = await supabase
+    .from('profiles')
     .select('id')
-    .eq('email', user.email)
+    .eq('id', user.id)
     .single()
 
-  if (!staff) throw new Error('Staff not found')
+  if (!profile) throw new Error('Profile not found')
 
   const { data, error } = await supabase
     .from('learning_plans')
     .update({
       status: 'active',
-      approved_by: staff.id,
+      approved_by: profile.id,
       approved_at: new Date().toISOString(),
     })
     .eq('id', id)
@@ -428,20 +428,20 @@ export async function createPortfolioEntry(formData: PortfolioEntryFormData): Pr
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { data: staff } = await supabase
-    .from('staff')
+  const { data: profile } = await supabase
+    .from('profiles')
     .select('id, organization_id')
-    .eq('email', user.email)
+    .eq('id', user.id)
     .single()
 
-  if (!staff) throw new Error('Staff not found')
+  if (!profile) throw new Error('Profile not found')
 
   const { data, error } = await supabase
     .from('portfolio_entries')
     .insert({
       ...formData,
-      organization_id: staff.organization_id,
-      recorded_by: staff.id,
+      organization_id: profile.organization_id,
+      recorded_by: profile.id,
       entry_date: formData.entry_date || new Date().toISOString().split('T')[0],
     })
     .select()
@@ -521,19 +521,19 @@ export async function createAssessmentPeriod(formData: AssessmentPeriodFormData)
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { data: staff } = await supabase
-    .from('staff')
+  const { data: profile } = await supabase
+    .from('profiles')
     .select('organization_id')
-    .eq('email', user.email)
+    .eq('id', user.id)
     .single()
 
-  if (!staff) throw new Error('Staff not found')
+  if (!profile) throw new Error('Profile not found')
 
   const { data, error } = await supabase
     .from('assessment_periods')
     .insert({
       ...formData,
-      organization_id: staff.organization_id,
+      organization_id: profile.organization_id,
     })
     .select()
     .single()
@@ -551,7 +551,7 @@ export async function getChildAssessments(childId?: string, periodId?: string): 
     .select(`
       *,
       child:children(id, first_name, last_name),
-      assessor:staff(id, first_name, last_name),
+      assessor:profiles(id, first_name, last_name),
       period:assessment_periods(*)
     `)
     .order('assessment_date', { ascending: false })
@@ -575,7 +575,7 @@ export async function getChildAssessmentById(id: string): Promise<ChildAssessmen
     .select(`
       *,
       child:children(id, first_name, last_name),
-      assessor:staff(id, first_name, last_name),
+      assessor:profiles(id, first_name, last_name),
       period:assessment_periods(*)
     `)
     .eq('id', id)
@@ -591,20 +591,20 @@ export async function createChildAssessment(formData: ChildAssessmentFormData): 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { data: staff } = await supabase
-    .from('staff')
+  const { data: profile } = await supabase
+    .from('profiles')
     .select('id, organization_id')
-    .eq('email', user.email)
+    .eq('id', user.id)
     .single()
 
-  if (!staff) throw new Error('Staff not found')
+  if (!profile) throw new Error('Profile not found')
 
   const { data, error } = await supabase
     .from('child_assessments')
     .insert({
       ...formData,
-      organization_id: staff.organization_id,
-      assessed_by: staff.id,
+      organization_id: profile.organization_id,
+      assessed_by: profile.id,
       assessment_date: formData.assessment_date || new Date().toISOString().split('T')[0],
       status: formData.status || 'draft',
     })
