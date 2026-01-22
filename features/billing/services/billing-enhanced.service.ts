@@ -191,8 +191,9 @@ export const billingEnhancedService = {
     const invoiceNumber = `INV-${year}-${String(nextNumber).padStart(4, '0')}`
 
     // Calculate period dates from billing_periods if not provided directly
-    const periodStart = data.start_date || data.billing_periods?.[0]?.week_start || null
-    const periodEnd = data.end_date || data.billing_periods?.[data.billing_periods.length - 1]?.week_end || null
+    const billingPeriods = data.billing_periods || []
+    const periodStart = data.start_date || billingPeriods[0]?.week_start || null
+    const periodEnd = data.end_date || billingPeriods[billingPeriods.length - 1]?.week_end || null
 
     // Calculate totals from line items
     const lineItems: InvoiceLineItem[] = []
@@ -200,7 +201,7 @@ export const billingEnhancedService = {
 
     // Add tuition for each child
     const children = data.children || data.child_rates || []
-    const numWeeks = data.billing_periods?.length || 1
+    const numWeeks = billingPeriods.length || 1
     for (const child of children) {
       const weeksIncluded: number = 'weeks_included' in child ? (child.weeks_included as number) : numWeeks
       const total = child.weekly_rate * weeksIncluded
