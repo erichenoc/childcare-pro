@@ -316,52 +316,55 @@ export default function NotificationsPage() {
               const StatusIcon = statusInfo.icon
 
               return (
-                <div
+                <Link
                   key={notif.id}
-                  className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                  href={`/dashboard/notifications/${notif.id}`}
+                  className="block"
                 >
-                  <div className={`w-10 h-10 rounded-lg ${typeInfo.color} flex items-center justify-center flex-shrink-0`}>
-                    <TypeIcon className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          {notif.priority === 'urgent' && (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                              Urgente
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                    <div className={`w-10 h-10 rounded-lg ${typeInfo.color} flex items-center justify-center flex-shrink-0`}>
+                      <TypeIcon className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            {notif.priority === 'urgent' && (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                                Urgente
+                              </span>
+                            )}
+                            {notif.priority === 'high' && (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                                Alta
+                              </span>
+                            )}
+                            <h3 className="font-medium text-gray-900 dark:text-white truncate">{notif.subject}</h3>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{notif.body}</p>
+                          <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            <span className="flex items-center gap-1">
+                              <Users className="w-3 h-3" />
+                              {getRecipientLabel(notif)}
                             </span>
-                          )}
-                          {notif.priority === 'high' && (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                              Alta
+                            <span>
+                              {notif.scheduled_at
+                                ? `Programado: ${formatDate(notif.scheduled_at)}`
+                                : notif.sent_at
+                                  ? formatDate(notif.sent_at)
+                                  : 'Sin enviar'
+                              }
                             </span>
-                          )}
-                          <h3 className="font-medium text-gray-900 truncate">{notif.subject}</h3>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-600 line-clamp-2">{notif.body}</p>
-                        <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            {getRecipientLabel(notif)}
-                          </span>
-                          <span>
-                            {notif.scheduled_at
-                              ? `Programado: ${formatDate(notif.scheduled_at)}`
-                              : notif.sent_at
-                                ? formatDate(notif.sent_at)
-                                : 'Sin enviar'
-                            }
-                          </span>
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 flex-shrink-0 ${statusInfo.color}`}>
+                          <StatusIcon className="w-3 h-3" />
+                          {statusInfo.label}
                         </div>
-                      </div>
-                      <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${statusInfo.color}`}>
-                        <StatusIcon className="w-3 h-3" />
-                        {statusInfo.label}
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               )
             })}
 
