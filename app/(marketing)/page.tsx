@@ -324,31 +324,43 @@ const EXPANDED_FEATURES = [
   },
 ]
 
-// Screenshots/Images of the system
+// Screenshots/Images REALES del sistema
 const SYSTEM_SCREENSHOTS = [
   {
     title: 'Dashboard Overview',
-    description: 'See your entire center at a glance - attendance, ratios, and key metrics',
-    image: '/images/screenshots/dashboard.png',
-    alt: 'ChildCare Pro Dashboard showing real-time attendance and DCF ratio monitoring',
+    description: 'See your entire center at a glance - attendance, ratios, DCF compliance, and key metrics all in one place',
+    image: '/docs/images/manual/03-dashboard-principal.png',
+    alt: 'ChildCare Pro Dashboard showing real-time attendance and DCF ratio monitoring for Florida daycares',
+  },
+  {
+    title: 'Children Management',
+    description: 'Complete child profiles with medical info, emergency contacts, immunization tracking, and development milestones',
+    image: '/docs/images/manual/04-gestion-ninos.png',
+    alt: 'Child management software for Florida childcare centers - DCF compliant profiles',
+  },
+  {
+    title: 'Family Portal',
+    description: 'Manage families, guardians, authorized pickups, and billing contacts with bilingual support',
+    image: '/docs/images/manual/05-gestion-familias.png',
+    alt: 'Family management portal for daycare centers in Florida',
   },
   {
     title: 'Attendance Tracking',
-    description: 'Easy check-in/check-out with kiosk mode and parent signatures',
-    image: '/images/screenshots/attendance.png',
-    alt: 'Digital attendance tracking system for Florida daycares',
+    description: 'Easy check-in/check-out with kiosk mode, parent signatures, and real-time DCF ratio monitoring',
+    image: '/docs/images/manual/06-asistencia.png',
+    alt: 'Digital attendance tracking system for Florida daycares - DCF ratio compliant',
   },
   {
     title: 'Billing & Payments',
-    description: 'Automated invoicing with Stripe integration for card payments',
-    image: '/images/screenshots/billing.png',
-    alt: 'Childcare billing software with payment processing',
+    description: 'Automated invoicing with Stripe integration, School Readiness subsidies, and VPK tracking',
+    image: '/docs/images/manual/07-facturacion.png',
+    alt: 'Childcare billing software with Stripe payments and Florida subsidy tracking',
   },
   {
-    title: 'Parent Communication',
-    description: 'Daily reports, photos, and messaging that parents love',
-    image: '/images/screenshots/communication.png',
-    alt: 'Parent communication portal for daycare centers',
+    title: 'Reports & Analytics',
+    description: 'Comprehensive reports for DCF inspections, CACFP meal tracking, and financial analytics',
+    image: '/docs/images/manual/09-reportes.png',
+    alt: 'Daycare reporting software - DCF compliance reports for Florida childcare',
   },
 ]
 
@@ -401,16 +413,14 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="neu rounded-neu-full px-4 sm:px-6 py-2 flex justify-between items-center">
             <Link href="/" className="flex items-center gap-3 group">
-              {/* MUCH BIGGER LOGO */}
-              <div className="neu-sm p-2 rounded-full transition-all duration-300 group-hover:shadow-neu">
-                <div className="relative w-14 h-14 sm:w-16 sm:h-16">
-                  <Image
-                    src={LOGO_URL}
-                    alt="ChildCare Pro"
-                    fill
-                    className="object-contain drop-shadow-lg"
-                  />
-                </div>
+              {/* LOGO - Sin círculo, más grande */}
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 transition-transform duration-300 group-hover:scale-105">
+                <Image
+                  src={LOGO_URL}
+                  alt="ChildCare Pro"
+                  fill
+                  className="object-contain drop-shadow-lg"
+                />
               </div>
             </Link>
 
@@ -1366,11 +1376,9 @@ export default function LandingPage() {
             <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary-500/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
             <div className="relative z-10">
-              {/* Logo */}
-              <div className="neu w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-8">
-                <div className="relative w-20 h-20">
-                  <Image src={LOGO_URL} alt="ChildCare Pro" fill className="object-contain" />
-                </div>
+              {/* Logo - Sin círculo */}
+              <div className="relative w-32 h-32 mx-auto mb-8">
+                <Image src={LOGO_URL} alt="ChildCare Pro" fill className="object-contain drop-shadow-lg" />
               </div>
 
               {/* Urgency */}
@@ -1419,12 +1427,13 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
               <div className="lg:col-span-1">
                 <Link href="/" className="flex items-center gap-3 mb-6">
-                  <div className="relative w-16 h-16">
+                  {/* Logo Footer - Mucho más grande */}
+                  <div className="relative w-40 h-40">
                     <Image
                       src={LOGO_URL}
                       alt="ChildCare Pro"
                       fill
-                      className="object-contain"
+                      className="object-contain drop-shadow-lg"
                     />
                   </div>
                 </Link>

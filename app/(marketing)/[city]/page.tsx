@@ -447,16 +447,14 @@ export default async function CityPage({ params }: PageProps) {
         <div className="max-w-6xl mx-auto">
           <div className="neu rounded-neu-full px-4 sm:px-6 py-2 flex justify-between items-center">
             <Link href="/" className="flex items-center gap-3 group">
-              {/* BIGGER LOGO - Standardized with Landing */}
-              <div className="neu-sm p-2 rounded-full transition-all duration-300 group-hover:shadow-neu">
-                <div className="relative w-14 h-14 sm:w-16 sm:h-16">
-                  <Image
-                    src={LOGO_URL}
-                    alt="ChildCare Pro"
-                    fill
-                    className="object-contain drop-shadow-lg"
-                  />
-                </div>
+              {/* LOGO - Sin círculo, más grande */}
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 transition-transform duration-300 group-hover:scale-105">
+                <Image
+                  src={LOGO_URL}
+                  alt="ChildCare Pro"
+                  fill
+                  className="object-contain drop-shadow-lg"
+                />
               </div>
             </Link>
 
@@ -975,13 +973,9 @@ export default async function CityPage({ params }: PageProps) {
             <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary-500/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
             <div className="relative z-10">
-              {/* Logo */}
-              <div className="neu p-4 rounded-full inline-block mb-6">
-                <div className="neu-inset w-16 h-16 rounded-full flex items-center justify-center">
-                  <div className="relative w-12 h-12">
-                    <Image src={LOGO_URL} alt="ChildCare Pro" fill className="object-contain" />
-                  </div>
-                </div>
+              {/* Logo - Sin círculo */}
+              <div className="relative w-28 h-28 mx-auto mb-6">
+                <Image src={LOGO_URL} alt="ChildCare Pro" fill className="object-contain drop-shadow-lg" />
               </div>
 
               {/* Urgency */}
@@ -1033,15 +1027,14 @@ export default async function CityPage({ params }: PageProps) {
               {/* Brand */}
               <div className="lg:w-1/3">
                 <Link href="/" className="flex items-center gap-3 mb-4">
-                  <div className="neu-sm p-2 rounded-full">
-                    <div className="relative w-12 h-12">
-                      <Image
-                        src={LOGO_URL}
-                        alt="ChildCare Pro"
-                        fill
-                        className="object-contain"
-                      />
-                    </div>
+                  {/* Logo Footer - Mucho más grande, sin círculo */}
+                  <div className="relative w-32 h-32">
+                    <Image
+                      src={LOGO_URL}
+                      alt="ChildCare Pro"
+                      fill
+                      className="object-contain drop-shadow-lg"
+                    />
                   </div>
                 </Link>
                 <p className="text-gray-600 mb-4 text-sm">
