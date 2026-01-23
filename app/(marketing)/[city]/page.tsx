@@ -12,9 +12,7 @@ import {
   Phone,
   Building2,
   Clock,
-  DollarSign,
   MessageCircle,
-  BarChart3,
   Heart,
   Zap,
   Play,
@@ -32,20 +30,23 @@ import {
   Award,
   Headphones,
   Camera,
-  Bell,
-  Calendar,
   UserCheck,
   CircleDollarSign,
   ClipboardCheck,
   AlertCircle,
-  Baby,
   FileText,
   Smartphone,
+  // Florida Programs icons
+  GraduationCap,
+  Utensils,
+  Languages,
+  Syringe,
+  School,
 } from 'lucide-react'
 
 const LOGO_URL = 'https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png'
 
-// City data for Florida Central
+// City data for Florida - Expanded for SEO
 const CITIES: Record<string, {
   name: string
   county: string
@@ -55,12 +56,179 @@ const CITIES: Record<string, {
   neighborhoods: string[]
   highlight: string
 }> = {
+  // South Florida
+  miami: {
+    name: 'Miami',
+    county: 'Miami-Dade County',
+    population: 442241,
+    daycares: 850,
+    description: 'Florida\'s largest metropolitan area with a diverse, bilingual community. VPK and School Readiness programs are essential here.',
+    neighborhoods: ['Downtown Miami', 'Brickell', 'Little Havana', 'Coconut Grove', 'Coral Gables', 'Kendall'],
+    highlight: 'Bilingual Hub',
+  },
+  hialeah: {
+    name: 'Hialeah',
+    county: 'Miami-Dade County',
+    population: 223109,
+    daycares: 380,
+    description: 'Predominantly Hispanic community where Spanish-first software is essential for parent engagement.',
+    neighborhoods: ['Palm Springs', 'Miami Lakes', 'Hialeah Gardens', 'Medley'],
+    highlight: '95% Hispanic',
+  },
+  'fort-lauderdale': {
+    name: 'Fort Lauderdale',
+    county: 'Broward County',
+    population: 182760,
+    daycares: 320,
+    description: 'Major urban center with high demand for quality childcare and VPK programs.',
+    neighborhoods: ['Downtown', 'Las Olas', 'Victoria Park', 'Wilton Manors', 'Oakland Park'],
+    highlight: 'Beach City',
+  },
+  'west-palm-beach': {
+    name: 'West Palm Beach',
+    county: 'Palm Beach County',
+    population: 117415,
+    daycares: 195,
+    description: 'Affluent area with families expecting premium childcare services and full program compliance.',
+    neighborhoods: ['Downtown', 'CityPlace', 'Palm Beach Gardens', 'Wellington', 'Royal Palm Beach'],
+    highlight: 'Palm Beach Area',
+  },
+  'pembroke-pines': {
+    name: 'Pembroke Pines',
+    county: 'Broward County',
+    population: 171178,
+    daycares: 210,
+    description: 'Family-oriented suburb with high demand for quality childcare and School Readiness programs.',
+    neighborhoods: ['Pembroke Lakes', 'Century Village', 'Silver Lakes', 'Pembroke Falls'],
+    highlight: 'Family Suburb',
+  },
+  hollywood: {
+    name: 'Hollywood',
+    county: 'Broward County',
+    population: 153067,
+    daycares: 175,
+    description: 'Diverse coastal community between Fort Lauderdale and Miami with growing childcare needs.',
+    neighborhoods: ['Hollywood Beach', 'Downtown Hollywood', 'Hallandale', 'Dania Beach'],
+    highlight: 'Coastal Living',
+  },
+  'coral-springs': {
+    name: 'Coral Springs',
+    county: 'Broward County',
+    population: 134394,
+    daycares: 145,
+    description: 'Planned community known for excellent schools and family-friendly environment.',
+    neighborhoods: ['Downtown Coral Springs', 'Parkland', 'Margate', 'Coconut Creek'],
+    highlight: 'Top Schools',
+  },
+  'boca-raton': {
+    name: 'Boca Raton',
+    county: 'Palm Beach County',
+    population: 99805,
+    daycares: 125,
+    description: 'Upscale community with families expecting premium childcare and comprehensive programs.',
+    neighborhoods: ['Downtown Boca', 'West Boca', 'Delray Beach', 'Boynton Beach'],
+    highlight: 'Upscale Market',
+  },
+  // Tampa Bay Area
+  tampa: {
+    name: 'Tampa',
+    county: 'Hillsborough County',
+    population: 387050,
+    daycares: 580,
+    description: 'Major Gulf Coast city with growing families and strong demand for VPK and CACFP programs.',
+    neighborhoods: ['Downtown Tampa', 'South Tampa', 'Westchase', 'Brandon', 'Riverview', 'Temple Terrace'],
+    highlight: 'Gulf Coast Hub',
+  },
+  'st-petersburg': {
+    name: 'St. Petersburg',
+    county: 'Pinellas County',
+    population: 258308,
+    daycares: 340,
+    description: 'Vibrant waterfront city with diverse neighborhoods and strong childcare demand.',
+    neighborhoods: ['Downtown St. Pete', 'Clearwater', 'Largo', 'Pinellas Park', 'Dunedin'],
+    highlight: 'Sunshine City',
+  },
+  sarasota: {
+    name: 'Sarasota',
+    county: 'Sarasota County',
+    population: 57738,
+    daycares: 110,
+    description: 'Cultural hub with growing families seeking quality childcare and educational programs.',
+    neighborhoods: ['Downtown Sarasota', 'Siesta Key', 'Bradenton', 'Venice', 'North Port'],
+    highlight: 'Arts & Culture',
+  },
+  lakeland: {
+    name: 'Lakeland',
+    county: 'Polk County',
+    population: 112641,
+    daycares: 155,
+    description: 'Central Florida city with affordable living attracting young families.',
+    neighborhoods: ['Downtown Lakeland', 'South Lakeland', 'Auburndale', 'Winter Haven'],
+    highlight: 'Affordable Living',
+  },
+  // North Florida
+  jacksonville: {
+    name: 'Jacksonville',
+    county: 'Duval County',
+    population: 949611,
+    daycares: 720,
+    description: 'Florida\'s largest city by area with diverse childcare needs across many neighborhoods.',
+    neighborhoods: ['Downtown Jacksonville', 'Riverside', 'San Marco', 'Mandarin', 'Orange Park', 'St. Augustine'],
+    highlight: 'Largest City',
+  },
+  tallahassee: {
+    name: 'Tallahassee',
+    county: 'Leon County',
+    population: 196169,
+    daycares: 185,
+    description: 'State capital with university families and government workers needing flexible childcare.',
+    neighborhoods: ['Downtown Tallahassee', 'Midtown', 'Killearn', 'Thomasville Road'],
+    highlight: 'State Capital',
+  },
+  gainesville: {
+    name: 'Gainesville',
+    county: 'Alachua County',
+    population: 141085,
+    daycares: 125,
+    description: 'University town with young families and diverse childcare needs.',
+    neighborhoods: ['Downtown Gainesville', 'Haile Plantation', 'Tioga', 'Newberry'],
+    highlight: 'University Town',
+  },
+  // Southwest Florida
+  naples: {
+    name: 'Naples',
+    county: 'Collier County',
+    population: 21750,
+    daycares: 85,
+    description: 'Affluent Gulf Coast community with families expecting top-tier childcare services.',
+    neighborhoods: ['Downtown Naples', 'Marco Island', 'Bonita Springs', 'Estero'],
+    highlight: 'Luxury Market',
+  },
+  'cape-coral': {
+    name: 'Cape Coral',
+    county: 'Lee County',
+    population: 194016,
+    daycares: 165,
+    description: 'One of Florida\'s fastest-growing cities with booming demand for childcare services.',
+    neighborhoods: ['Downtown Cape Coral', 'Fort Myers', 'Lehigh Acres', 'North Fort Myers'],
+    highlight: 'Fastest Growing',
+  },
+  'port-st-lucie': {
+    name: 'Port St. Lucie',
+    county: 'St. Lucie County',
+    population: 204851,
+    daycares: 145,
+    description: 'Rapidly expanding Treasure Coast city with young families moving in daily.',
+    neighborhoods: ['Downtown Port St. Lucie', 'Fort Pierce', 'Stuart', 'Jensen Beach'],
+    highlight: 'Treasure Coast',
+  },
+  // Central Florida
   orlando: {
     name: 'Orlando',
     county: 'Orange County',
     population: 307573,
     daycares: 450,
-    description: 'As the heart of Central Florida, Orlando is home to hundreds of childcare centers serving a diverse, growing population.',
+    description: 'Heart of Central Florida with hundreds of childcare centers serving a diverse, growing population.',
     neighborhoods: ['Downtown Orlando', 'Winter Park', 'Dr. Phillips', 'Lake Nona', 'Baldwin Park', 'College Park'],
     highlight: 'Theme Park Capital',
   },
@@ -69,9 +237,9 @@ const CITIES: Record<string, {
     county: 'Osceola County',
     population: 79226,
     daycares: 120,
-    description: 'One of the fastest-growing regions in Florida with a large Hispanic community.',
+    description: 'One of the fastest-growing regions in Florida with a large Hispanic community needing bilingual support.',
     neighborhoods: ['Downtown Kissimmee', 'Poinciana', 'St. Cloud', 'Celebration', 'BVL'],
-    highlight: 'Fastest Growing',
+    highlight: 'Hispanic Community',
   },
   sanford: {
     name: 'Sanford',
@@ -87,7 +255,7 @@ const CITIES: Record<string, {
     county: 'Orange County',
     population: 31435,
     daycares: 65,
-    description: 'Affluent community with families expecting premium childcare services.',
+    description: 'Affluent community with families expecting premium childcare services and full program compliance.',
     neighborhoods: ['Park Avenue', 'Maitland', 'Eatonville', 'Goldenrod'],
     highlight: 'Premium Market',
   },
@@ -96,7 +264,7 @@ const CITIES: Record<string, {
     county: 'Seminole County',
     population: 46458,
     daycares: 55,
-    description: 'Mix of residential and commercial areas with busy working parents.',
+    description: 'Mix of residential and commercial areas with busy working parents needing flexible childcare.',
     neighborhoods: ['Uptown Altamonte', 'Forest City', 'Casselberry'],
     highlight: 'Business Hub',
   },
@@ -105,7 +273,7 @@ const CITIES: Record<string, {
     county: 'Orange County',
     population: 51585,
     daycares: 40,
-    description: 'Rapidly growing suburb with young families moving in daily.',
+    description: 'Rapidly growing suburb with young families moving in daily seeking quality childcare.',
     neighborhoods: ['Downtown Ocoee', 'Clarcona', 'Windermere'],
     highlight: 'Young Families',
   },
@@ -123,7 +291,7 @@ const CITIES: Record<string, {
     county: 'Lake County',
     population: 43921,
     daycares: 50,
-    description: 'Suburban lifestyle with easy access to Orlando. High childcare demand.',
+    description: 'Suburban lifestyle with easy access to Orlando and high childcare demand.',
     neighborhoods: ['Downtown Clermont', 'Four Corners', 'Minneola', 'Groveland'],
     highlight: 'Lake County Hub',
   },
@@ -141,7 +309,7 @@ const CITIES: Record<string, {
     county: 'Seminole County',
     population: 17806,
     daycares: 35,
-    description: 'Premier business and residential community expecting top-tier services.',
+    description: 'Premier business and residential community expecting top-tier childcare services.',
     neighborhoods: ['Downtown Lake Mary', 'Heathrow', 'Colonial Town Park'],
     highlight: 'Tech Corridor',
   },
@@ -159,7 +327,7 @@ const CITIES: Record<string, {
     county: 'Volusia County',
     population: 72647,
     daycares: 95,
-    description: 'Unique market with seasonal fluctuations requiring flexible solutions.',
+    description: 'Unique beach market with seasonal fluctuations requiring flexible childcare solutions.',
     neighborhoods: ['Downtown Daytona', 'Ormond Beach', 'Port Orange', 'Holly Hill'],
     highlight: 'Beach Side',
   },
@@ -167,22 +335,45 @@ const CITIES: Record<string, {
 
 const FEATURES = [
   { icon: Shield, title: 'DCF Compliance', desc: 'Real-time ratio monitoring meets Florida requirements', tag: 'COMPLIANCE' },
+  { icon: GraduationCap, title: 'VPK Tracking', desc: '540-hour tracking & ELC reports for Florida VPK', tag: 'VPK' },
+  { icon: School, title: 'School Readiness', desc: 'Subsidy & copay management for ELC programs', tag: 'SUBSIDIES' },
+  { icon: Utensils, title: 'CACFP Meals', desc: 'Meal tracking & USDA reimbursement calculator', tag: 'FOOD' },
   { icon: CreditCard, title: 'Auto Billing', desc: 'Stripe integration with automatic invoicing', tag: 'REVENUE' },
   { icon: Camera, title: 'Parent App', desc: 'Daily updates, photos, and instant messaging', tag: 'ENGAGEMENT' },
   { icon: UserCheck, title: 'Attendance', desc: 'Digital check-in/out with kiosk mode', tag: 'TIME-SAVER' },
-  { icon: BarChart3, title: 'Reports', desc: 'Compliance analytics and custom reports', tag: 'INSIGHTS' },
-  { icon: Zap, title: 'Fast Setup', desc: '5 minutes to start, no training required', tag: 'EASY' },
+  { icon: Syringe, title: 'Immunizations', desc: 'Track vaccines, alerts & Form 680 reports', tag: 'HEALTH' },
+  { icon: Languages, title: '100% Bilingual', desc: 'Full Spanish/English support for families', tag: 'ESPAÑOL' },
 ]
 
 const FAQ = [
   {
     q: 'Is ChildCare Pro DCF compliant?',
-    a: 'Yes! Our software is designed specifically for Florida childcare centers and includes real-time DCF ratio monitoring for all age groups.',
+    a: 'Yes! Our software is designed specifically for Florida childcare centers and includes real-time DCF ratio monitoring, staff certification tracking, and inspection-ready reports.',
     icon: Shield,
   },
   {
+    q: 'Do you support VPK and School Readiness?',
+    a: 'Absolutely! We have full support for Florida VPK with automatic 540-hour tracking and ELC report generation. For School Readiness, we track subsidies, manage copayments, and generate all required ELC compliance reports.',
+    icon: GraduationCap,
+  },
+  {
+    q: 'Can you help with CACFP meal tracking?',
+    a: 'Yes! Our CACFP module tracks meals by type (breakfast, lunch, snacks), calculates estimated reimbursements, manages food allergies with visual alerts, and generates monthly reports for your sponsor.',
+    icon: Utensils,
+  },
+  {
+    q: '¿El sistema está disponible en español?',
+    a: '¡Sí! ChildCare Pro es 100% bilingüe. Todo el sistema, incluyendo el portal de padres, reportes y comunicaciones, está disponible en español e inglés. Nuestro equipo de soporte también habla español.',
+    icon: Languages,
+  },
+  {
+    q: 'How do you track immunizations?',
+    a: 'We track all Florida-required immunizations based on CDC/DCF schedules. The system alerts you when vaccines are due or overdue, and you can generate Form 680 compliance reports for inspections.',
+    icon: Syringe,
+  },
+  {
     q: 'How long is the free trial?',
-    a: 'You get a full 14 days to try ALL features with no credit card required. No strings attached.',
+    a: 'You get a full 14 days to try ALL features with no credit card required. No strings attached. Our Florida-based team will help you set everything up.',
     icon: Gift,
   },
   {
@@ -191,13 +382,8 @@ const FAQ = [
     icon: FileText,
   },
   {
-    q: 'Is there a contract?',
-    a: 'No long-term contracts ever. Pay monthly and cancel anytime with just one click.',
-    icon: Lock,
-  },
-  {
     q: 'Do parents need to download an app?',
-    a: 'No app download required! Parents access everything through a mobile-friendly web portal.',
+    a: 'No app download required! Parents access everything through a mobile-friendly web portal that works on any device.',
     icon: Smartphone,
   },
 ]
@@ -219,18 +405,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `Childcare Management Software in ${cityData.name}, FL | ChildCare Pro`,
-    description: `The #1 daycare management software for childcare centers in ${cityData.name}, Florida. DCF compliant, automated billing, parent communication. Serving ${cityData.county}. Start free trial.`,
+    title: `Childcare Management Software in ${cityData.name}, FL | VPK & DCF Compliant | ChildCare Pro`,
+    description: `The #1 daycare management software for childcare centers in ${cityData.name}, Florida. VPK tracking, School Readiness, CACFP meal program, DCF compliance, automated billing. 100% bilingual. Serving ${cityData.county}. Start FREE trial.`,
     keywords: [
       `childcare software ${cityData.name.toLowerCase()}`,
       `daycare management ${cityData.name.toLowerCase()}`,
-      `preschool software ${cityData.name.toLowerCase()} fl`,
+      `vpk tracking software ${cityData.name.toLowerCase()} fl`,
+      `school readiness software ${cityData.name.toLowerCase()}`,
+      `cacfp meal tracking ${cityData.name.toLowerCase()}`,
       `dcf compliance software ${cityData.name.toLowerCase()}`,
       `childcare center software ${cityData.county.toLowerCase()}`,
+      `bilingual daycare software florida`,
+      `software guarderia ${cityData.name.toLowerCase()}`,
     ],
     openGraph: {
-      title: `Childcare Software for ${cityData.name} Daycare Centers | ChildCare Pro`,
-      description: `Streamline your ${cityData.name} childcare center with automated billing, DCF compliance, and parent communication.`,
+      title: `Childcare Software for ${cityData.name} Daycare Centers | VPK & DCF Compliant`,
+      description: `Streamline your ${cityData.name} childcare center with VPK tracking, School Readiness, CACFP, automated billing, and DCF compliance. 100% bilingual Spanish/English.`,
       url: `https://childcareproai.com/${city}`,
     },
     alternates: {
@@ -247,7 +437,8 @@ export default async function CityPage({ params }: PageProps) {
     notFound()
   }
 
-  const spotsLeft = Math.floor(Math.random() * 5) + 3 // 3-7 spots
+  // Fixed value for FOMO - avoids hydration mismatch
+  const spotsLeft = 5
 
   return (
     <div className="min-h-screen bg-neu-bg">

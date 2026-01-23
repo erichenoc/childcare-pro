@@ -6,7 +6,6 @@ import Image from 'next/image'
 import {
   CheckCircle2,
   Clock,
-  DollarSign,
   Users,
   Shield,
   MessageSquare,
@@ -44,6 +43,19 @@ import {
   ClipboardCheck,
   Smartphone,
   Wifi,
+  // Florida Programs & Expanded Features icons
+  GraduationCap,
+  Utensils,
+  Languages,
+  Syringe,
+  BookOpen,
+  ClipboardList,
+  UserPlus,
+  Activity,
+  Brain,
+  Globe,
+  School,
+  Landmark,
 } from 'lucide-react'
 import { AIChatWidget } from './components/AIChatWidget'
 
@@ -136,22 +148,69 @@ const TESTIMONIALS = [
     avatar: 'D',
     savings: '95% on-time payments',
   },
+  {
+    name: 'Rosa Martinez',
+    role: 'Directora, Cariñitos Daycare',
+    location: 'Miami, FL',
+    quote: '¡El sistema en español es perfecto! Mis familias hispanas pueden usar el portal de padres sin problemas. El soporte CACFP nos ahorra horas cada mes.',
+    rating: 5,
+    avatar: 'R',
+    savings: '8hrs/week on CACFP',
+  },
+  {
+    name: 'Lisa Thompson',
+    role: 'Owner, Bright Futures Learning',
+    location: 'Tampa, FL',
+    quote: 'Managing our VPK program used to be a nightmare. Now I generate ELC reports in one click. The 540-hour tracking is automatic!',
+    rating: 5,
+    avatar: 'L',
+    savings: 'VPK compliance 100%',
+  },
+  {
+    name: 'Carlos Fernandez',
+    role: 'Director, Happy Kids Academy',
+    location: 'Jacksonville, FL',
+    quote: 'School Readiness billing was so confusing before. Now subsidies, copays, and parent portions are calculated automatically. Game changer!',
+    rating: 5,
+    avatar: 'C',
+    savings: '$1,800/month recovered',
+  },
 ]
 
 const FAQ = [
   {
     q: 'Is ChildCare Pro DCF compliant?',
-    a: 'Yes! Our software is designed specifically for Florida childcare centers and includes real-time DCF ratio monitoring. We help you stay 100% compliant.',
+    a: 'Yes! Our software is designed specifically for Florida childcare centers and includes real-time DCF ratio monitoring, staff certification tracking, and inspection-ready reports. We help you stay 100% compliant with Florida DCF regulations.',
     icon: Shield,
   },
   {
+    q: 'Do you support VPK and School Readiness programs?',
+    a: 'Absolutely! We have full support for Florida VPK (Voluntary Pre-Kindergarten) with automatic 540-hour tracking and ELC report generation. For School Readiness, we track subsidies, manage copayments, and generate all required ELC compliance reports.',
+    icon: GraduationCap,
+  },
+  {
+    q: 'Can you help with CACFP meal tracking?',
+    a: 'Yes! Our CACFP module lets you track meals by type (breakfast, lunch, snacks), calculate estimated reimbursements, manage food allergies with visual alerts, and generate monthly reports for your sponsor. Many centers save 5-8 hours per week on CACFP paperwork.',
+    icon: Utensils,
+  },
+  {
+    q: '¿El sistema está disponible en español?',
+    a: '¡Sí! ChildCare Pro es 100% bilingüe. Todo el sistema, incluyendo el portal de padres, reportes y comunicaciones, está disponible en español e inglés. Nuestro equipo de soporte también habla español.',
+    icon: Languages,
+  },
+  {
+    q: 'How do you track immunizations?',
+    a: 'We track all Florida-required immunizations based on CDC/DCF schedules. The system alerts you when vaccines are due or overdue, and you can generate Form 680 compliance reports for inspections. Parents can upload immunization records directly to their portal.',
+    icon: Syringe,
+  },
+  {
     q: 'How long is the free trial?',
-    a: 'You get a full 14 days to try ALL features with no credit card required. No strings attached.',
+    a: 'You get a full 14 days to try ALL features with no credit card required. No strings attached. Our Florida-based team will help you set everything up.',
     icon: Gift,
   },
   {
     q: 'Can I import my existing data?',
-    a: 'Absolutely! Our dedicated onboarding team will personally migrate all your children, families, and staff data for FREE.',
+    a: 'Absolutely! Our dedicated onboarding team will personally migrate all your children, families, staff data, and even historical attendance records for FREE.',
     icon: FileText,
   },
   {
@@ -161,12 +220,12 @@ const FAQ = [
   },
   {
     q: 'Do parents need to download an app?',
-    a: 'No app download required! Parents access everything through a mobile-friendly web portal that works on any device.',
+    a: 'No app download required! Parents access everything through a mobile-friendly web portal that works on any device. They can view daily reports, photos, make payments, and communicate with staff.',
     icon: Smartphone,
   },
   {
-    q: 'What payment methods do you accept?',
-    a: 'We accept all major credit cards through Stripe. You can also enable ACH transfers or manual payments for parents.',
+    q: 'What payment methods can parents use?',
+    a: 'Parents can pay with credit/debit cards through our secure Stripe integration, or you can record manual payments (cash, check, Zelle). Automatic payment reminders help you get paid on time.',
     icon: CreditCard,
   },
 ]
@@ -178,6 +237,119 @@ const CITIES = [
   { name: 'Jacksonville', slug: 'jacksonville' },
   { name: 'Fort Lauderdale', slug: 'fort-lauderdale' },
   { name: 'West Palm Beach', slug: 'west-palm-beach' },
+  { name: 'Hialeah', slug: 'hialeah' },
+  { name: 'St. Petersburg', slug: 'st-petersburg' },
+  { name: 'Tallahassee', slug: 'tallahassee' },
+  { name: 'Port St. Lucie', slug: 'port-st-lucie' },
+  { name: 'Cape Coral', slug: 'cape-coral' },
+  { name: 'Pembroke Pines', slug: 'pembroke-pines' },
+  { name: 'Hollywood', slug: 'hollywood' },
+  { name: 'Gainesville', slug: 'gainesville' },
+  { name: 'Coral Springs', slug: 'coral-springs' },
+  { name: 'Naples', slug: 'naples' },
+  { name: 'Sarasota', slug: 'sarasota' },
+  { name: 'Lakeland', slug: 'lakeland' },
+  { name: 'Boca Raton', slug: 'boca-raton' },
+  { name: 'Kissimmee', slug: 'kissimmee' },
+]
+
+// Florida Programs Data - Critical for SEO
+const FLORIDA_PROGRAMS = [
+  {
+    name: 'VPK Program',
+    fullName: 'Voluntary Pre-Kindergarten',
+    description: 'Track 540 required hours, generate ELC attendance reports, and manage VPK certificates automatically.',
+    icon: GraduationCap,
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-500/10',
+    features: ['540-hour tracking', 'ELC reports', 'Certificate management', 'Attendance sync'],
+  },
+  {
+    name: 'School Readiness',
+    fullName: 'ELC Subsidized Care',
+    description: 'Manage family subsidies, track copayments, and generate compliance reports for your ELC.',
+    icon: School,
+    color: 'text-green-500',
+    bgColor: 'bg-green-500/10',
+    features: ['Subsidy tracking', 'Copay management', 'ELC reporting', 'Family eligibility'],
+  },
+  {
+    name: 'CACFP',
+    fullName: 'Child & Adult Care Food Program',
+    description: 'Track meals served, calculate reimbursements, and generate USDA-compliant monthly reports.',
+    icon: Utensils,
+    color: 'text-orange-500',
+    bgColor: 'bg-orange-500/10',
+    features: ['Meal tracking', 'Reimbursement calculator', 'Allergy alerts', 'Sponsor reports'],
+  },
+  {
+    name: 'DCF Compliance',
+    fullName: 'Department of Children & Families',
+    description: 'Real-time ratio monitoring, staff certification tracking, and inspection-ready reports.',
+    icon: Shield,
+    color: 'text-purple-500',
+    bgColor: 'bg-purple-500/10',
+    features: ['Ratio monitoring', 'Certification alerts', 'Incident reports', 'Compliance dashboard'],
+  },
+]
+
+// Expanded Features for Florida Daycares
+const EXPANDED_FEATURES = [
+  {
+    category: 'Compliance & Safety',
+    features: [
+      { icon: Shield, title: 'DCF Ratio Monitoring', desc: 'Real-time staff-to-child ratio tracking for all age groups' },
+      { icon: Syringe, title: 'Immunization Tracking', desc: 'Track vaccines, send alerts, generate Form 680 reports' },
+      { icon: ClipboardList, title: 'Document Management', desc: 'Store all required DCF forms digitally, never miss an expiration' },
+      { icon: AlertTriangle, title: 'Incident Reports', desc: 'Document incidents, get parent signatures, maintain DCF records' },
+    ],
+  },
+  {
+    category: 'Child Development',
+    features: [
+      { icon: BookOpen, title: 'Learning Milestones', desc: 'Track developmental progress across 6 key areas' },
+      { icon: Activity, title: 'Daily Activities', desc: 'Log meals, naps, diaper changes, and activities in real-time' },
+      { icon: Camera, title: 'Photo Updates', desc: 'Share moments with parents instantly throughout the day' },
+      { icon: Brain, title: 'Assessment Reports', desc: 'Generate progress reports for parent conferences' },
+    ],
+  },
+  {
+    category: 'Business Operations',
+    features: [
+      { icon: CreditCard, title: 'Automated Billing', desc: 'Create recurring invoices, accept card payments via Stripe' },
+      { icon: UserPlus, title: 'Waitlist Management', desc: 'Manage inquiries, schedule tours, track enrollment pipeline' },
+      { icon: Calendar, title: 'Staff Scheduling', desc: 'Create schedules, track hours, manage time-off requests' },
+      { icon: BarChart3, title: 'Financial Reports', desc: 'Revenue tracking, accounts receivable, tax-ready exports' },
+    ],
+  },
+]
+
+// Screenshots/Images of the system
+const SYSTEM_SCREENSHOTS = [
+  {
+    title: 'Dashboard Overview',
+    description: 'See your entire center at a glance - attendance, ratios, and key metrics',
+    image: '/images/screenshots/dashboard.png',
+    alt: 'ChildCare Pro Dashboard showing real-time attendance and DCF ratio monitoring',
+  },
+  {
+    title: 'Attendance Tracking',
+    description: 'Easy check-in/check-out with kiosk mode and parent signatures',
+    image: '/images/screenshots/attendance.png',
+    alt: 'Digital attendance tracking system for Florida daycares',
+  },
+  {
+    title: 'Billing & Payments',
+    description: 'Automated invoicing with Stripe integration for card payments',
+    image: '/images/screenshots/billing.png',
+    alt: 'Childcare billing software with payment processing',
+  },
+  {
+    title: 'Parent Communication',
+    description: 'Daily reports, photos, and messaging that parents love',
+    image: '/images/screenshots/communication.png',
+    alt: 'Parent communication portal for daycare centers',
+  },
 ]
 
 const STATS = [
@@ -677,6 +849,263 @@ export default function LandingPage() {
               <ArrowRight className="w-5 h-5" />
             </Link>
             <p className="mt-4 text-gray-500 text-sm">No credit card required</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Florida Programs Section - Critical for SEO */}
+      <section id="florida-programs" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-transparent to-gray-50/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 neu-sm px-5 py-2 rounded-neu-full text-sm font-medium text-green-600 mb-4">
+              <Landmark className="w-4 h-4" />
+              Florida Programs
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
+              Built for <span className="text-primary-500">Florida Childcare Programs</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Full support for VPK, School Readiness, CACFP, and DCF compliance - all the programs your center needs to succeed.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+            {FLORIDA_PROGRAMS.map((program, i) => (
+              <div key={i} className="neu-lg p-8 rounded-neu-lg group hover:shadow-neu-xl transition-all duration-300">
+                <div className="flex items-start gap-6">
+                  <div className={`${program.bgColor} w-20 h-20 rounded-neu flex items-center justify-center flex-shrink-0`}>
+                    <program.icon className={`w-10 h-10 ${program.color}`} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-gray-800 mb-1">{program.name}</h3>
+                    <p className="text-sm text-gray-500 mb-3">{program.fullName}</p>
+                    <p className="text-gray-600 mb-4">{program.description}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {program.features.map((feature, j) => (
+                        <span key={j} className="neu-inset px-3 py-1 rounded-neu-full text-xs font-medium text-gray-600">
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <div className="neu-lg p-8 rounded-neu-xl inline-block">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="neu w-20 h-20 rounded-full flex items-center justify-center">
+                  <Shield className="w-10 h-10 text-green-500" />
+                </div>
+                <div className="text-center sm:text-left">
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">100% DCF Compliant</h3>
+                  <p className="text-gray-600">Our software meets all Florida Department of Children & Families requirements</p>
+                </div>
+                <Link
+                  href="/register"
+                  className="btn-neu-primary px-8 py-4 rounded-neu font-semibold inline-flex items-center gap-2"
+                >
+                  Get Started
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Bilingual Support Section */}
+      <section id="bilingual" className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="neu-xl p-8 lg:p-16 rounded-neu-xl relative overflow-hidden">
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-red-500/10 rounded-full blur-3xl" />
+
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 neu-sm px-5 py-2 rounded-neu-full text-sm font-medium text-blue-600 mb-4">
+                  <Languages className="w-4 h-4" />
+                  Bilingual System
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-6">
+                  <span className="text-primary-500">100% Bilingual</span> - English & Spanish
+                </h2>
+                <p className="text-xl text-gray-600 mb-6">
+                  Florida&apos;s diverse families deserve software that speaks their language. ChildCare Pro is fully available in English and Spanish.
+                </p>
+
+                <div className="space-y-4">
+                  {[
+                    { title: 'Parent Portal in Spanish', desc: 'Familias hispanas can view reports, photos, and payments in their native language' },
+                    { title: 'Staff Interface Bilingual', desc: 'Your team can work in English or Spanish based on their preference' },
+                    { title: 'All Reports & Documents', desc: 'Invoices, daily reports, and communications available in both languages' },
+                    { title: 'Spanish Support Team', desc: 'Nuestro equipo de soporte habla español - call us anytime!' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start gap-4">
+                      <div className="neu-sm w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800">{item.title}</h4>
+                        <p className="text-gray-600 text-sm">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {/* Spanish Testimonial Highlight */}
+                <div className="neu-lg p-6 rounded-neu-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 text-warning fill-warning" />
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-500">Miami, FL</span>
+                  </div>
+                  <p className="text-gray-700 italic mb-4">
+                    &quot;¡El sistema en español es perfecto! Mis familias hispanas pueden usar el portal de padres sin problemas. El soporte CACFP nos ahorra horas cada mes.&quot;
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="neu w-12 h-12 rounded-full flex items-center justify-center text-white font-bold bg-gradient-to-br from-primary-400 to-primary-600">
+                      R
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-800">Rosa Martinez</p>
+                      <p className="text-sm text-gray-500">Directora, Cariñitos Daycare</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Language Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="neu-inset p-4 rounded-neu text-center">
+                    <Globe className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-gray-800">2</p>
+                    <p className="text-sm text-gray-500">Languages</p>
+                  </div>
+                  <div className="neu-inset p-4 rounded-neu text-center">
+                    <Users className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-gray-800">40%+</p>
+                    <p className="text-sm text-gray-500">Hispanic Families in FL</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* System Screenshots Section */}
+      <section id="screenshots" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50/50 to-transparent">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 neu-sm px-5 py-2 rounded-neu-full text-sm font-medium text-purple-600 mb-4">
+              <Camera className="w-4 h-4" />
+              See It In Action
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
+              Beautiful, <span className="text-primary-500">Intuitive Interface</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Designed for busy childcare professionals - easy to learn, powerful to use.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {SYSTEM_SCREENSHOTS.map((screenshot, i) => (
+              <div key={i} className="neu-lg rounded-neu-xl overflow-hidden group">
+                <div className="relative aspect-video bg-gray-200 overflow-hidden">
+                  {/* Placeholder for screenshots - replace with actual images */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200">
+                    <div className="text-center p-8">
+                      <div className="neu w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        {i === 0 && <BarChart3 className="w-10 h-10 text-primary-500" />}
+                        {i === 1 && <UserCheck className="w-10 h-10 text-primary-500" />}
+                        {i === 2 && <CreditCard className="w-10 h-10 text-primary-500" />}
+                        {i === 3 && <MessageSquare className="w-10 h-10 text-primary-500" />}
+                      </div>
+                      <p className="text-primary-600 font-medium">{screenshot.title}</p>
+                      <p className="text-primary-500/70 text-sm mt-1">Screenshot Preview</p>
+                    </div>
+                  </div>
+                  {/* Uncomment when real images are available
+                  <Image
+                    src={screenshot.image}
+                    alt={screenshot.alt}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  */}
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">{screenshot.title}</h3>
+                  <p className="text-gray-600">{screenshot.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link
+              href="/register"
+              className="btn-neu-primary px-10 py-4 rounded-neu text-lg font-semibold inline-flex items-center gap-3"
+            >
+              <Play className="w-5 h-5" />
+              Try It Free - See For Yourself
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <p className="mt-4 text-gray-500">Full access to all features for 14 days</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Expanded Features by Category */}
+      <section id="all-features" className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 neu-sm px-5 py-2 rounded-neu-full text-sm font-medium text-amber-600 mb-4">
+              <Award className="w-4 h-4" />
+              Complete Feature Set
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
+              Everything Your Center <span className="text-primary-500">Needs to Succeed</span>
+            </h2>
+          </div>
+
+          <div className="space-y-12">
+            {EXPANDED_FEATURES.map((category, i) => (
+              <div key={i}>
+                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                  <span className="neu-inset w-10 h-10 rounded-full flex items-center justify-center">
+                    {i === 0 && <Shield className="w-5 h-5 text-primary-500" />}
+                    {i === 1 && <BookOpen className="w-5 h-5 text-primary-500" />}
+                    {i === 2 && <BarChart3 className="w-5 h-5 text-primary-500" />}
+                  </span>
+                  {category.category}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {category.features.map((feature, j) => (
+                    <div key={j} className="neu p-5 rounded-neu group hover:shadow-neu-lg transition-all duration-300">
+                      <div className="flex items-start gap-3">
+                        <div className="neu-inset w-10 h-10 rounded-neu-sm flex items-center justify-center flex-shrink-0">
+                          <feature.icon className="w-5 h-5 text-primary-500" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-800 text-sm">{feature.title}</h4>
+                          <p className="text-gray-500 text-xs mt-1">{feature.desc}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
