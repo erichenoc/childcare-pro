@@ -25,21 +25,21 @@ interface Message {
 const INITIAL_MESSAGE: Message = {
   id: '1',
   role: 'assistant',
-  content: `Hi! I'm Alex, your ChildCare Pro assistant. I can help you with:
+  content: `¡Hola! Soy Alex, tu asistente de ChildCare Pro. Tengo acceso a TODA la documentación del sistema y puedo ayudarte con:
 
-- **Navigation**: How to find things
-- **Tasks**: Step-by-step guides
-- **Troubleshooting**: Fix common issues
-- **Best practices**: Tips for efficiency
+- **📋 Guías paso a paso**: Te explico cómo hacer cualquier tarea
+- **🔧 Solución de problemas**: Resuelvo errores y dudas
+- **💡 Tips y atajos**: Optimiza tu trabajo diario
+- **📊 DCF & Ratios**: Todo sobre cumplimiento en Florida
 
-What can I help you with today?`,
+Solo pregúntame lo que necesites. ¿En qué puedo ayudarte hoy?`,
   timestamp: new Date(),
 }
 
 const QUICK_ACTIONS = [
-  { icon: BookOpen, label: 'How do I...', prompt: 'How do I check in a child?' },
-  { icon: Lightbulb, label: 'Tips for', prompt: 'What are best practices for attendance?' },
-  { icon: MessageCircle, label: 'Help with', prompt: 'I need help with billing' },
+  { icon: BookOpen, label: '¿Cómo hago...?', prompt: '¿Cómo hago check-in de un niño?' },
+  { icon: Lightbulb, label: 'Ratios DCF', prompt: '¿Cuáles son los ratios DCF de Florida?' },
+  { icon: MessageCircle, label: 'Facturación', prompt: '¿Cómo creo una factura?' },
 ]
 
 interface SupportChatWidgetProps {
@@ -129,13 +129,13 @@ export function SupportChatWidget({ userRole = 'staff' }: SupportChatWidgetProps
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `I'm having trouble connecting. Try:
+        content: `Tengo problemas de conexión. Intenta:
 
-- Refreshing the page
-- Checking your internet connection
-- Emailing support@childcareproai.com
+- Refrescar la página
+- Verificar tu conexión a internet
+- Escribir a support@childcareproai.com
 
-I'll be back shortly!`,
+¡Volveré pronto!`,
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, errorMessage])
@@ -188,10 +188,10 @@ I'll be back shortly!`,
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-indigo-500" />
             </div>
             <div className="flex-1">
-              <h3 className="text-white font-semibold">Alex - Support Assistant</h3>
+              <h3 className="text-white font-semibold">Alex - Asistente de Soporte</h3>
               <p className="text-indigo-100 text-sm flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
-                Here to help
+                Experto en ChildCare Pro
               </p>
             </div>
             <button
@@ -285,7 +285,7 @@ I'll be back shortly!`,
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask me anything..."
+                placeholder="Pregúntame lo que necesites..."
                 className="flex-1 bg-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 disabled={isLoading}
               />
