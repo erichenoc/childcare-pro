@@ -446,14 +446,15 @@ export default async function CityPage({ params }: PageProps) {
       <nav className="fixed top-0 left-0 right-0 z-50 px-4 py-3">
         <div className="max-w-6xl mx-auto">
           <div className="neu rounded-neu-full px-4 sm:px-6 py-2 flex justify-between items-center">
-            <Link href="/" className="flex items-center gap-3 group self-center">
-              {/* LOGO - Más grande y centrado */}
-              <div className="relative w-24 h-24 sm:w-28 sm:h-28 transition-transform duration-300 group-hover:scale-105">
+            <Link href="/" className="flex items-center gap-3 group">
+              {/* LOGO - Grande pero contenedor compacto */}
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16">
                 <Image
                   src={LOGO_URL}
                   alt="ChildCare Pro"
                   fill
-                  className="object-contain drop-shadow-lg"
+                  sizes="(max-width: 640px) 56px, 64px"
+                  className="object-contain drop-shadow-lg scale-150 transition-transform duration-300 group-hover:scale-[1.6]"
                 />
               </div>
             </Link>
