@@ -75,20 +75,21 @@ export default function FamilyPortalLoginPage() {
 
   if (magicLinkSent) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#e6e7ee] flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Send className="w-8 h-8 text-green-600 dark:text-green-400" />
+          {/* Magic Link Sent Card - Neumorphism */}
+          <div className="bg-[#e6e7ee] rounded-3xl shadow-[8px_8px_16px_#b8b9be,-8px_-8px_16px_#ffffff] p-6 sm:p-8 text-center">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#e6e7ee] shadow-[inset_4px_4px_8px_#b8b9be,inset_-4px_-4px_8px_#ffffff] rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <Send className="w-8 h-8 sm:w-10 sm:h-10 text-green-500" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-700 mb-2">
               Revisa tu correo
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Enviamos un enlace magico a <strong>{formData.email}</strong>.
+            <p className="text-gray-500 mb-4 sm:mb-6 text-sm sm:text-base">
+              Enviamos un enlace magico a <strong className="text-gray-700">{formData.email}</strong>.
               Haz clic en el enlace para iniciar sesion.
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
+            <p className="text-xs sm:text-sm text-gray-400 mb-4 sm:mb-6">
               El enlace expira en 1 hora. Revisa tu carpeta de spam si no lo encuentras.
             </p>
             <button
@@ -96,7 +97,7 @@ export default function FamilyPortalLoginPage() {
                 setMagicLinkSent(false)
                 setFormData({ email: '', password: '' })
               }}
-              className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+              className="bg-[#e6e7ee] rounded-xl shadow-[4px_4px_8px_#b8b9be,-4px_-4px_8px_#ffffff] hover:shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] px-6 py-3 text-blue-600 font-medium transition-shadow duration-200 text-sm sm:text-base"
             >
               Usar otro correo
             </button>
@@ -107,91 +108,87 @@ export default function FamilyPortalLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 flex items-center justify-center p-4">
-      {/* Background decorations */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-purple-400/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 right-1/3 w-72 h-72 bg-pink-400/15 rounded-full blur-3xl" />
-      </div>
-
-      <div className="w-full max-w-md relative z-10">
-        {/* Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 pt-8 pb-6 text-center">
+    <div className="min-h-screen bg-[#e6e7ee] flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Main Card - Neumorphism */}
+        <div className="bg-[#e6e7ee] rounded-3xl shadow-[12px_12px_24px_#b8b9be,-12px_-12px_24px_#ffffff] overflow-hidden">
+          {/* Header - Logo Section */}
+          <div className="p-6 sm:p-8 text-center">
+            {/* Logo with Neumorphism */}
             <div className="inline-flex items-center justify-center mb-4">
-              <Image
-                src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
-                alt="ChildCare Pro Logo"
-                width={80}
-                height={80}
-                className="drop-shadow-lg"
-              />
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-[#e6e7ee] rounded-2xl shadow-[6px_6px_12px_#b8b9be,-6px_-6px_12px_#ffffff] flex items-center justify-center">
+                <Image
+                  src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
+                  alt="ChildCare Pro Logo"
+                  width={64}
+                  height={64}
+                  className="w-12 h-12 sm:w-16 sm:h-16"
+                />
+              </div>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-700 mb-1">
               Portal de Padres
             </h1>
-            <p className="text-blue-100 text-sm">
+            <p className="text-gray-500 text-sm">
               Accede a la informacion de tus hijos
             </p>
           </div>
 
-          {/* Login Mode Selector */}
-          <div className="px-8 pt-6">
-            <div className="flex bg-gray-100 dark:bg-gray-700 rounded-xl p-1">
+          {/* Login Mode Selector - Neumorphism */}
+          <div className="px-6 sm:px-8">
+            <div className="bg-[#e6e7ee] rounded-xl shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] p-1 flex">
               <button
                 type="button"
                 onClick={() => setLoginMode('password')}
                 className={`
-                  flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all
+                  flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200
                   ${loginMode === 'password'
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400'
+                    ? 'bg-[#e6e7ee] shadow-[4px_4px_8px_#b8b9be,-4px_-4px_8px_#ffffff] text-gray-700'
+                    : 'text-gray-500'
                   }
                 `}
               >
-                <Lock className="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
+                <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline-block mr-1 sm:mr-1.5 -mt-0.5" />
                 Contrasena
               </button>
               <button
                 type="button"
                 onClick={() => setLoginMode('magic-link')}
                 className={`
-                  flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all
+                  flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200
                   ${loginMode === 'magic-link'
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400'
+                    ? 'bg-[#e6e7ee] shadow-[4px_4px_8px_#b8b9be,-4px_-4px_8px_#ffffff] text-gray-700'
+                    : 'text-gray-500'
                   }
                 `}
               >
-                <Sparkles className="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline-block mr-1 sm:mr-1.5 -mt-0.5" />
                 Magic Link
               </button>
             </div>
           </div>
 
           {/* Form Content */}
-          <div className="px-8 py-6">
-            <form onSubmit={loginMode === 'password' ? handlePasswordLogin : handleMagicLinkLogin} className="space-y-5">
+          <div className="px-6 sm:px-8 py-6">
+            <form onSubmit={loginMode === 'password' ? handlePasswordLogin : handleMagicLinkLogin} className="space-y-4 sm:space-y-5">
               {/* Error message */}
               {error && (
-                <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm flex items-center gap-2">
-                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <div className="p-3 sm:p-4 rounded-xl bg-[#e6e7ee] shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] border-l-4 border-red-500 text-red-600 text-xs sm:text-sm flex items-center gap-2">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
                   {error}
                 </div>
               )}
 
-              {/* Email */}
+              {/* Email Input - Neumorphism Inset */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-xs sm:text-sm font-semibold text-gray-600 mb-2">
                   Correo electronico
                 </label>
                 <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                    <Mail className="w-5 h-5" />
+                  <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                    <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <input
                     type="email"
@@ -201,20 +198,20 @@ export default function FamilyPortalLoginPage() {
                     onChange={handleInputChange}
                     required
                     autoComplete="email"
-                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 bg-[#e6e7ee] rounded-xl shadow-[inset_4px_4px_8px_#b8b9be,inset_-4px_-4px_8px_#ffffff] text-gray-700 placeholder-gray-400 outline-none focus:shadow-[inset_6px_6px_12px_#b8b9be,inset_-6px_-6px_12px_#ffffff] transition-shadow duration-200 text-sm sm:text-base"
                   />
                 </div>
               </div>
 
-              {/* Password (only for password mode) */}
+              {/* Password Input - Only for password mode */}
               {loginMode === 'password' && (
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-600 mb-2">
                     Contrasena
                   </label>
                   <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                      <Lock className="w-5 h-5" />
+                    <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                      <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -224,17 +221,17 @@ export default function FamilyPortalLoginPage() {
                       onChange={handleInputChange}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-12 pr-12 py-3.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-3 sm:py-4 bg-[#e6e7ee] rounded-xl shadow-[inset_4px_4px_8px_#b8b9be,inset_-4px_-4px_8px_#ffffff] text-gray-700 placeholder-gray-400 outline-none focus:shadow-[inset_6px_6px_12px_#b8b9be,inset_-6px_-6px_12px_#ffffff] transition-shadow duration-200 text-sm sm:text-base"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                      className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       {showPassword ? (
-                        <EyeOff className="w-5 h-5" />
+                        <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />
                       ) : (
-                        <Eye className="w-5 h-5" />
+                        <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                       )}
                     </button>
                   </div>
@@ -246,7 +243,7 @@ export default function FamilyPortalLoginPage() {
                 <div className="text-right">
                   <Link
                     href="/family-portal/forgot-password"
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors"
+                    className="text-xs sm:text-sm text-blue-500 hover:text-blue-600 font-medium transition-colors"
                   >
                     Olvidaste tu contrasena?
                   </Link>
@@ -255,23 +252,23 @@ export default function FamilyPortalLoginPage() {
 
               {/* Magic Link Info */}
               {loginMode === 'magic-link' && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-4">
-                  <p className="text-sm text-blue-800 dark:text-blue-300">
-                    <Sparkles className="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
+                <div className="bg-[#e6e7ee] shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] rounded-xl p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline-block mr-1.5 -mt-0.5 text-blue-500" />
                     Te enviaremos un enlace magico a tu correo. Solo haz clic para iniciar sesion sin contrasena.
                   </p>
                 </div>
               )}
 
-              {/* Submit button */}
+              {/* Submit button - Neumorphism */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-500/25"
+                className="w-full py-3 sm:py-4 px-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-xl shadow-[6px_6px_12px_#b8b9be,-6px_-6px_12px_#ffffff] hover:shadow-[8px_8px_16px_#b8b9be,-8px_-8px_16px_#ffffff] active:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base"
               >
                 {isLoading ? (
                   <>
-                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
@@ -280,7 +277,7 @@ export default function FamilyPortalLoginPage() {
                 ) : (
                   <>
                     <span>{loginMode === 'password' ? 'Iniciar Sesion' : 'Enviar Magic Link'}</span>
-                    {loginMode === 'password' ? <ArrowRight className="w-5 h-5" /> : <Send className="w-5 h-5" />}
+                    {loginMode === 'password' ? <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" /> : <Send className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </>
                 )}
               </button>
@@ -288,10 +285,10 @@ export default function FamilyPortalLoginPage() {
           </div>
 
           {/* Footer */}
-          <div className="px-8 pb-8 text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="px-6 sm:px-8 pb-6 sm:pb-8 text-center">
+            <p className="text-xs sm:text-sm text-gray-500">
               No tienes acceso?{' '}
-              <span className="text-gray-700 dark:text-gray-300">
+              <span className="text-gray-600 font-medium">
                 Contacta a tu guarderia
               </span>
             </p>
@@ -300,7 +297,7 @@ export default function FamilyPortalLoginPage() {
 
         {/* Footer decorativo */}
         <div className="text-center mt-6">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-gray-400">
             Protegido con encriptacion de ultima generacion
           </p>
         </div>

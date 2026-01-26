@@ -44,45 +44,48 @@ export function PortalSidebar({ guardian }: PortalSidebarProps) {
   }
 
   return (
-    <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 h-screen flex flex-col">
-      {/* Logo */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+    <aside className="w-64 bg-[#e6e7ee] h-screen flex flex-col shadow-[6px_0_12px_#b8b9be]">
+      {/* Logo - Neumorphic */}
+      <div className="p-5">
         <Link href="/family-portal" className="flex items-center gap-3">
-          <Image
-            src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
-            alt="ChildCare Pro"
-            width={40}
-            height={40}
-            className="rounded-xl"
-          />
+          <div className="w-11 h-11 bg-[#e6e7ee] rounded-xl shadow-[4px_4px_8px_#b8b9be,-4px_-4px_8px_#ffffff] flex items-center justify-center">
+            <Image
+              src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
+              alt="ChildCare Pro"
+              width={32}
+              height={32}
+            />
+          </div>
           <div>
-            <h1 className="font-bold text-gray-900 dark:text-white">Portal de Padres</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">ChildCare Pro</p>
+            <h1 className="font-bold text-gray-700">Portal de Padres</h1>
+            <p className="text-xs text-gray-500">ChildCare Pro</p>
           </div>
         </Link>
       </div>
 
-      {/* User Info */}
+      {/* User Info - Neumorphic */}
       {guardian && (
-        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-              {guardian.firstName[0]}{guardian.lastName[0]}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                {guardian.firstName} {guardian.lastName}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                {guardian.email}
-              </p>
+        <div className="px-4 pb-4">
+          <div className="bg-[#e6e7ee] rounded-xl shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold shadow-[2px_2px_4px_#b8b9be]">
+                {guardian.firstName[0]}{guardian.lastName[0]}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-700 truncate">
+                  {guardian.firstName} {guardian.lastName}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {guardian.email}
+                </p>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      {/* Navigation - Neumorphic */}
+      <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = pathname === item.href ||
             (item.href !== '/family-portal' && pathname?.startsWith(item.href))
@@ -92,28 +95,28 @@ export function PortalSidebar({ guardian }: PortalSidebarProps) {
               key={item.name}
               href={item.href}
               className={`
-                flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all
+                flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
                 ${isActive
-                  ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  ? 'bg-[#e6e7ee] shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] text-blue-600'
+                  : 'bg-[#e6e7ee] shadow-[4px_4px_8px_#b8b9be,-4px_-4px_8px_#ffffff] text-gray-600 hover:shadow-[inset_2px_2px_4px_#b8b9be,inset_-2px_-2px_4px_#ffffff]'
                 }
               `}
             >
-              <item.icon className={`w-5 h-5 ${isActive ? 'text-blue-600 dark:text-blue-400' : ''}`} />
+              <item.icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
               {item.name}
             </Link>
           )
         })}
       </nav>
 
-      {/* Sign Out */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+      {/* Sign Out - Neumorphic */}
+      <div className="p-4">
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+          className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium bg-[#e6e7ee] shadow-[4px_4px_8px_#b8b9be,-4px_-4px_8px_#ffffff] text-red-500 hover:shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] transition-all duration-200"
         >
           <LogOut className="w-5 h-5" />
-          Cerrar Sesión
+          Cerrar Sesion
         </button>
       </div>
     </aside>
