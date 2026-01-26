@@ -49,11 +49,12 @@ export function PortalSidebar({ guardian }: PortalSidebarProps) {
       <div className="p-5">
         <Link href="/family-portal" className="flex items-center gap-3">
           <Image
-            src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
+            src="https://res.cloudinary.com/dbftvu8ab/image/upload/q_auto:best,f_auto/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
             alt="ChildCare Pro"
-            width={40}
-            height={40}
-            className="w-10 h-10"
+            width={96}
+            height={96}
+            className="w-11 h-11"
+            priority
           />
           <div>
             <h1 className="font-bold text-gray-700">Portal de Padres</h1>
