@@ -52,14 +52,13 @@ export function PortalMobileNav({ isOpen, onClose, guardian }: PortalMobileNavPr
         {/* Header */}
         <div className="flex items-center justify-between p-4">
           <Link href="/family-portal" className="flex items-center gap-3" onClick={onClose}>
-            <div className="w-10 h-10 bg-[#e6e7ee] rounded-xl shadow-[3px_3px_6px_#b8b9be,-3px_-3px_6px_#ffffff] flex items-center justify-center">
-              <Image
-                src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
-                alt="ChildCare Pro"
-                width={28}
-                height={28}
-              />
-            </div>
+            <Image
+              src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
+              alt="ChildCare Pro"
+              width={36}
+              height={36}
+              className="w-9 h-9"
+            />
             <span className="font-bold text-gray-700">Portal de Padres</span>
           </Link>
           <button

@@ -114,17 +114,15 @@ export default function FamilyPortalLoginPage() {
         <div className="bg-[#e6e7ee] rounded-3xl shadow-[12px_12px_24px_#b8b9be,-12px_-12px_24px_#ffffff] overflow-hidden">
           {/* Header - Logo Section */}
           <div className="p-6 sm:p-8 text-center">
-            {/* Logo with Neumorphism */}
+            {/* Logo */}
             <div className="inline-flex items-center justify-center mb-4">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-[#e6e7ee] rounded-2xl shadow-[6px_6px_12px_#b8b9be,-6px_-6px_12px_#ffffff] flex items-center justify-center">
-                <Image
-                  src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
-                  alt="ChildCare Pro Logo"
-                  width={64}
-                  height={64}
-                  className="w-12 h-12 sm:w-16 sm:h-16"
-                />
-              </div>
+              <Image
+                src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
+                alt="ChildCare Pro Logo"
+                width={80}
+                height={80}
+                className="w-16 h-16 sm:w-20 sm:h-20"
+              />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-700 mb-1">
               Portal de Padres

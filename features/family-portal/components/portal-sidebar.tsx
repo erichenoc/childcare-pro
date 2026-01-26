@@ -48,14 +48,13 @@ export function PortalSidebar({ guardian }: PortalSidebarProps) {
       {/* Logo - Neumorphic */}
       <div className="p-5">
         <Link href="/family-portal" className="flex items-center gap-3">
-          <div className="w-11 h-11 bg-[#e6e7ee] rounded-xl shadow-[4px_4px_8px_#b8b9be,-4px_-4px_8px_#ffffff] flex items-center justify-center">
-            <Image
-              src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
-              alt="ChildCare Pro"
-              width={32}
-              height={32}
-            />
-          </div>
+          <Image
+            src="https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
+            alt="ChildCare Pro"
+            width={40}
+            height={40}
+            className="w-10 h-10"
+          />
           <div>
             <h1 className="font-bold text-gray-700">Portal de Padres</h1>
             <p className="text-xs text-gray-500">ChildCare Pro</p>
