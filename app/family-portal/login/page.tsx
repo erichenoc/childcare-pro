@@ -117,12 +117,13 @@ export default function FamilyPortalLoginPage() {
             {/* Logo */}
             <div className="inline-flex items-center justify-center mb-4">
               <Image
-                src="https://res.cloudinary.com/dbftvu8ab/image/upload/q_auto:best,f_auto/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
+                src="https://res.cloudinary.com/dbftvu8ab/image/upload/w_256,h_256,c_fit,q_100,f_png,e_sharpen:100/v1768428103/ChildCarePro_Logo_1_f0gqth.png"
                 alt="ChildCare Pro Logo"
-                width={160}
-                height={160}
-                className="w-20 h-20 sm:w-24 sm:h-24"
+                width={256}
+                height={256}
+                className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
                 priority
+                unoptimized
               />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-700 mb-1">
