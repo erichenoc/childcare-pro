@@ -75,7 +75,7 @@ Responde con el número.`,
 
 {{invoices_list}}
 
-*Balance total pendiente:* ${{total_balance}}
+*Balance total pendiente:* \${{total_balance}}
 
 ¿Deseas pagar alguna factura? Responde con el número.`,
     variables: ['family_name', 'invoices_list', 'total_balance'],

@@ -9,11 +9,7 @@ interface PortalHeaderProps {
 }
 
 export function PortalHeader({ onMenuClick, title }: PortalHeaderProps) {
-  const { theme, setTheme } = useTheme()
-
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark')
-  }
+  const { theme, toggleTheme } = useTheme()
 
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 lg:px-6">

@@ -191,7 +191,7 @@ function getDefaultTemplate(key: TemplateKey): string {
     menu: '¿Qué te gustaría saber?\n\n1️⃣ Resumen del día\n2️⃣ Estado de asistencia\n3️⃣ Ver facturas\n4️⃣ Ver fotos\n5️⃣ Hablar con alguien',
     select_child: 'Tienes varios hijos registrados. ¿Sobre cuál te gustaría información?\n\n{{children_list}}',
     daily_summary: '📋 *Resumen de {{child_name}}*\n\n{{summary_content}}',
-    invoice_status: '💰 *Estado de cuenta*\n\n{{invoices_list}}\n\nBalance total: ${{total_balance}}',
+    invoice_status: '💰 *Estado de cuenta*\n\n{{invoices_list}}\n\nBalance total: \\${{total_balance}}',
     attendance: '👶 *Asistencia de {{child_name}}*\n\nEstado: {{status}}',
     photos: '📸 *Fotos de {{child_name}}*\n\n{{photos_count}} foto(s) disponibles',
     incident: '⚠️ *Notificación Importante*\n\n{{incident_details}}',
