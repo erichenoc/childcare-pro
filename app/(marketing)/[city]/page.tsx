@@ -468,6 +468,13 @@ export default async function CityPage({ params }: PageProps) {
                 Home
               </Link>
               <Link
+                href="/family-portal/login"
+                className="hidden sm:flex items-center gap-2 text-purple-600 hover:text-purple-700 transition px-3 py-2 text-sm font-medium"
+              >
+                <Users className="w-4 h-4" />
+                Portal Padres
+              </Link>
+              <Link
                 href="/login"
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition px-3 py-2 text-sm font-medium"
               >

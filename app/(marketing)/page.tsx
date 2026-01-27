@@ -446,6 +446,13 @@ export default function LandingPage() {
 
             <div className="hidden md:flex items-center gap-3">
               <Link
+                href="/family-portal/login"
+                className="px-5 py-2.5 rounded-neu-sm text-purple-600 hover:text-purple-700 font-medium transition-all duration-200 hover:shadow-neu-inset-sm flex items-center gap-2"
+              >
+                <Users className="w-4 h-4" />
+                Portal Padres
+              </Link>
+              <Link
                 href="/login"
                 className="px-5 py-2.5 rounded-neu-sm text-gray-600 hover:text-gray-900 font-medium transition-all duration-200 hover:shadow-neu-inset-sm flex items-center gap-2"
               >
@@ -492,6 +499,10 @@ export default function LandingPage() {
                 </a>
               ))}
               <div className="h-px bg-gray-300 my-2" />
+              <Link href="/family-portal/login" className="px-4 py-3 rounded-neu-sm text-purple-600 flex items-center gap-3">
+                <Users className="w-5 h-5 text-purple-500" />
+                Portal de Padres
+              </Link>
               <Link href="/login" className="px-4 py-3 rounded-neu-sm text-gray-600 flex items-center gap-3">
                 <Lock className="w-5 h-5 text-gray-400" />
                 Sign In
