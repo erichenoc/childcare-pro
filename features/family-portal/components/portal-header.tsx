@@ -1,6 +1,8 @@
 'use client'
 
 import { Menu, Bell } from 'lucide-react'
+import { useI18n } from '@/shared/lib/i18n'
+import { NeumorphicLanguageSwitcher } from '@/shared/components/language-switcher'
 
 interface PortalHeaderProps {
   onMenuClick: () => void
@@ -8,6 +10,8 @@ interface PortalHeaderProps {
 }
 
 export function PortalHeader({ onMenuClick, title }: PortalHeaderProps) {
+  const { t } = useI18n()
+
   return (
     <header className="bg-[#e6e7ee] px-3 sm:px-4 lg:px-6 py-3 shadow-[0_4px_8px_#b8b9be]">
       <div className="flex items-center justify-between">
@@ -21,16 +25,18 @@ export function PortalHeader({ onMenuClick, title }: PortalHeaderProps) {
 
         {/* Page Title */}
         <h1 className="text-lg sm:text-xl font-semibold text-gray-700 hidden lg:block">
-          {title || 'Portal de Padres'}
+          {title || t.parentPortal.title}
         </h1>
 
         {/* Mobile title */}
         <h1 className="text-base sm:text-lg font-semibold text-gray-700 lg:hidden">
-          {title || 'Portal'}
+          {title || t.parentPortal.title}
         </h1>
 
         {/* Right side actions */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Language Switcher */}
+          <NeumorphicLanguageSwitcher />
           {/* Notifications - Neumorphic */}
           <button className="relative p-2.5 rounded-xl bg-[#e6e7ee] shadow-[4px_4px_8px_#b8b9be,-4px_-4px_8px_#ffffff] hover:shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] text-gray-600 transition-all duration-200">
             <Bell className="w-4 h-4 sm:w-5 sm:h-5" />

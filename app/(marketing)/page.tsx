@@ -58,6 +58,8 @@ import {
   Landmark,
 } from 'lucide-react'
 import { AIChatWidget } from './components/AIChatWidget'
+import { LanguageSwitcher } from '@/shared/components/language-switcher'
+import { useI18n } from '@/shared/lib/i18n'
 
 // Official Logo URL - ONLY USE THIS
 const LOGO_URL = 'https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png'
@@ -401,6 +403,7 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [spotsLeft] = useState(7) // FOMO element
+  const { t, locale } = useI18n()
 
   useEffect(() => {
     setIsVisible(true)
@@ -445,12 +448,13 @@ export default function LandingPage() {
             </div>
 
             <div className="hidden md:flex items-center gap-3">
+              <LanguageSwitcher variant="compact" />
               <Link
                 href="/family-portal/login"
                 className="px-5 py-2.5 rounded-neu-sm text-purple-600 hover:text-purple-700 font-medium transition-all duration-200 hover:shadow-neu-inset-sm flex items-center gap-2"
               >
                 <Users className="w-4 h-4" />
-                Portal Padres
+                {t.parentPortal.title}
               </Link>
               <Link
                 href="/login"
@@ -499,9 +503,13 @@ export default function LandingPage() {
                 </a>
               ))}
               <div className="h-px bg-gray-300 my-2" />
+              <div className="px-4 py-3 flex items-center justify-between">
+                <span className="text-sm text-gray-500">{locale === 'en' ? 'Language' : 'Idioma'}</span>
+                <LanguageSwitcher variant="pill" />
+              </div>
               <Link href="/family-portal/login" className="px-4 py-3 rounded-neu-sm text-purple-600 flex items-center gap-3">
                 <Users className="w-5 h-5 text-purple-500" />
-                Portal de Padres
+                {t.parentPortal.title}
               </Link>
               <Link href="/login" className="px-4 py-3 rounded-neu-sm text-gray-600 flex items-center gap-3">
                 <Lock className="w-5 h-5 text-gray-400" />

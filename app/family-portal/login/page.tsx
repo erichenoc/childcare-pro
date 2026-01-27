@@ -6,11 +6,14 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles, Send } from 'lucide-react'
 import { guardianAuthService } from '@/features/family-portal/services/guardian-auth.service'
+import { useI18n } from '@/shared/lib/i18n'
+import { NeumorphicLanguageSwitcher } from '@/shared/components/language-switcher'
 
 type LoginMode = 'password' | 'magic-link'
 
 export default function FamilyPortalLoginPage() {
   const router = useRouter()
+  const { t } = useI18n()
 
   const [loginMode, setLoginMode] = useState<LoginMode>('password')
   const [formData, setFormData] = useState({
@@ -31,14 +34,14 @@ export default function FamilyPortalLoginPage() {
       const result = await guardianAuthService.signIn(formData.email, formData.password)
 
       if (!result.success) {
-        setError(result.error?.message || 'Credenciales incorrectas')
+        setError(result.error?.message || t.auth.invalidCredentials)
         return
       }
 
       router.push('/family-portal')
       router.refresh()
     } catch {
-      setError('Error al iniciar sesion. Intenta de nuevo.')
+      setError(`${t.errors.somethingWentWrong}. ${t.errors.tryAgain}`)
     } finally {
       setIsLoading(false)
     }
@@ -53,13 +56,13 @@ export default function FamilyPortalLoginPage() {
       const result = await guardianAuthService.sendMagicLink(formData.email)
 
       if (!result.success) {
-        setError(result.error?.message || 'Error al enviar el enlace')
+        setError(result.error?.message || t.errors.somethingWentWrong)
         return
       }
 
       setMagicLinkSent(true)
     } catch {
-      setError('Error al enviar el enlace. Intenta de nuevo.')
+      setError(`${t.errors.somethingWentWrong}. ${t.errors.tryAgain}`)
     } finally {
       setIsLoading(false)
     }
@@ -76,6 +79,10 @@ export default function FamilyPortalLoginPage() {
   if (magicLinkSent) {
     return (
       <div className="min-h-screen bg-[#e6e7ee] flex items-center justify-center p-4">
+        {/* Language Switcher - Top Right */}
+        <div className="fixed top-4 right-4 z-50">
+          <NeumorphicLanguageSwitcher />
+        </div>
         <div className="w-full max-w-md">
           {/* Magic Link Sent Card - Neumorphism */}
           <div className="bg-[#e6e7ee] rounded-3xl shadow-[8px_8px_16px_#b8b9be,-8px_-8px_16px_#ffffff] p-6 sm:p-8 text-center">
@@ -83,14 +90,13 @@ export default function FamilyPortalLoginPage() {
               <Send className="w-8 h-8 sm:w-10 sm:h-10 text-green-500" />
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-700 mb-2">
-              Revisa tu correo
+              {t.auth.checkYourEmail}
             </h2>
             <p className="text-gray-500 mb-4 sm:mb-6 text-sm sm:text-base">
-              Enviamos un enlace magico a <strong className="text-gray-700">{formData.email}</strong>.
-              Haz clic en el enlace para iniciar sesion.
+              {t.auth.passwordResetSent} <strong className="text-gray-700">{formData.email}</strong>
             </p>
             <p className="text-xs sm:text-sm text-gray-400 mb-4 sm:mb-6">
-              El enlace expira en 1 hora. Revisa tu carpeta de spam si no lo encuentras.
+              Check your spam folder if you don&apos;t see it.
             </p>
             <button
               onClick={() => {
@@ -99,7 +105,7 @@ export default function FamilyPortalLoginPage() {
               }}
               className="bg-[#e6e7ee] rounded-xl shadow-[4px_4px_8px_#b8b9be,-4px_-4px_8px_#ffffff] hover:shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] px-6 py-3 text-blue-600 font-medium transition-shadow duration-200 text-sm sm:text-base"
             >
-              Usar otro correo
+              Use different email
             </button>
           </div>
         </div>
@@ -109,6 +115,10 @@ export default function FamilyPortalLoginPage() {
 
   return (
     <div className="min-h-screen bg-[#e6e7ee] flex items-center justify-center p-4">
+      {/* Language Switcher - Top Right */}
+      <div className="fixed top-4 right-4 z-50">
+        <NeumorphicLanguageSwitcher />
+      </div>
       <div className="w-full max-w-md">
         {/* Main Card - Neumorphism */}
         <div className="bg-[#e6e7ee] rounded-3xl shadow-[12px_12px_24px_#b8b9be,-12px_-12px_24px_#ffffff] overflow-hidden">
@@ -127,10 +137,10 @@ export default function FamilyPortalLoginPage() {
               />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-700 mb-1">
-              Portal de Padres
+              {t.parentPortal.title}
             </h1>
             <p className="text-gray-500 text-sm">
-              Accede a la informacion de tus hijos
+              {t.parentPortal.welcome}
             </p>
           </div>
 
@@ -149,7 +159,7 @@ export default function FamilyPortalLoginPage() {
                 `}
               >
                 <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline-block mr-1 sm:mr-1.5 -mt-0.5" />
-                Contrasena
+                {t.auth.password}
               </button>
               <button
                 type="button"
@@ -184,7 +194,7 @@ export default function FamilyPortalLoginPage() {
               {/* Email Input - Neumorphism Inset */}
               <div>
                 <label className="block text-xs sm:text-sm font-semibold text-gray-600 mb-2">
-                  Correo electronico
+                  {t.auth.email}
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -207,7 +217,7 @@ export default function FamilyPortalLoginPage() {
               {loginMode === 'password' && (
                 <div>
                   <label className="block text-xs sm:text-sm font-semibold text-gray-600 mb-2">
-                    Contrasena
+                    {t.auth.password}
                   </label>
                   <div className="relative">
                     <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -216,7 +226,7 @@ export default function FamilyPortalLoginPage() {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       name="password"
-                      placeholder="Tu contrasena"
+                      placeholder={t.auth.enterYourPassword}
                       value={formData.password}
                       onChange={handleInputChange}
                       required
@@ -245,7 +255,7 @@ export default function FamilyPortalLoginPage() {
                     href="/family-portal/forgot-password"
                     className="text-xs sm:text-sm text-blue-500 hover:text-blue-600 font-medium transition-colors"
                   >
-                    Olvidaste tu contrasena?
+                    {t.auth.forgotPassword}?
                   </Link>
                 </div>
               )}
@@ -255,7 +265,7 @@ export default function FamilyPortalLoginPage() {
                 <div className="bg-[#e6e7ee] shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] rounded-xl p-3 sm:p-4">
                   <p className="text-xs sm:text-sm text-gray-500">
                     <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline-block mr-1.5 -mt-0.5 text-blue-500" />
-                    Te enviaremos un enlace magico a tu correo. Solo haz clic para iniciar sesion sin contrasena.
+                    {t.kiosk.welcomeMessage ? 'We\'ll send a magic link to your email. Just click to sign in without a password.' : 'We\'ll send a magic link to your email. Just click to sign in without a password.'}
                   </p>
                 </div>
               )}
@@ -272,11 +282,11 @@ export default function FamilyPortalLoginPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    <span>{loginMode === 'password' ? 'Entrando...' : 'Enviando...'}</span>
+                    <span>{t.common.loading}</span>
                   </>
                 ) : (
                   <>
-                    <span>{loginMode === 'password' ? 'Iniciar Sesion' : 'Enviar Magic Link'}</span>
+                    <span>{loginMode === 'password' ? t.auth.signIn : 'Send Magic Link'}</span>
                     {loginMode === 'password' ? <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" /> : <Send className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </>
                 )}
@@ -287,9 +297,9 @@ export default function FamilyPortalLoginPage() {
           {/* Footer */}
           <div className="px-6 sm:px-8 pb-6 sm:pb-8 text-center">
             <p className="text-xs sm:text-sm text-gray-500">
-              No tienes acceso?{' '}
+              {t.auth.dontHaveAccount}{' '}
               <span className="text-gray-600 font-medium">
-                Contacta a tu guarderia
+                {t.parentPortal.contactUs}
               </span>
             </p>
           </div>
@@ -298,7 +308,7 @@ export default function FamilyPortalLoginPage() {
         {/* Footer decorativo */}
         <div className="text-center mt-6">
           <p className="text-xs text-gray-400">
-            Protegido con encriptacion de ultima generacion
+            {t.landing.footerTagline}
           </p>
         </div>
       </div>

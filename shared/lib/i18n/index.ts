@@ -1,10 +1,10 @@
-// Sistema de Internacionalización - ChildCare Pro
-// Español por defecto, con soporte para inglés
+// Internationalization System - ChildCare Pro
+// English by default, with Spanish support
 
-export type Locale = 'es' | 'en'
+export type Locale = 'en' | 'es'
 
-export const DEFAULT_LOCALE: Locale = 'es'
-export const SUPPORTED_LOCALES: Locale[] = ['es', 'en']
+export const DEFAULT_LOCALE: Locale = 'en'
+export const SUPPORTED_LOCALES: Locale[] = ['en', 'es']
 
 export const LOCALE_NAMES: Record<Locale, string> = {
   es: 'Español',
