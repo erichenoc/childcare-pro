@@ -557,6 +557,11 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
     }
   },
 
+  async staff_create(args) {
+    // This requires confirmation - return pending action
+    return { pending_confirmation: true, action: 'staff_create', args }
+  },
+
   // =====================================================
   // INCIDENTS
   // =====================================================
@@ -1053,6 +1058,79 @@ async function sendCommunicationEmail(params: Record<string, unknown>): Promise<
   }
 }
 
+async function createStaffMember(params: Record<string, unknown>): Promise<{ success: boolean; message: string; staff_id?: string }> {
+  if (!currentContext) throw new Error('No execution context available')
+  const { supabase, organizationId } = currentContext
+
+  const firstName = params.first_name as string
+  const lastName = params.last_name as string
+  const role = params.role as string
+
+  if (!firstName || !lastName || !role) {
+    return { success: false, message: 'Nombre, apellido y rol son requeridos' }
+  }
+
+  // Generate a temporary email if not provided
+  const email = (params.email as string) || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@temp.local`
+
+  // Parse certifications if provided
+  const certificationsStr = params.certifications as string
+  const certifications = certificationsStr
+    ? certificationsStr.split(',').map(c => c.trim())
+    : null
+
+  // Create the staff member in profiles table
+  const { data, error } = await supabase
+    .from('profiles')
+    .insert({
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone: (params.phone as string) || null,
+      role,
+      status: 'active',
+      hire_date: (params.hire_date as string) || new Date().toISOString().split('T')[0],
+      certifications,
+      emergency_contact: (params.emergency_contact as string) || null,
+      organization_id: organizationId,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('[Staff Create] Error:', error)
+    return { success: false, message: `Error al crear empleado: ${error.message}` }
+  }
+
+  // Log the action
+  await supabase.from('activity_log').insert({
+    action: 'staff_created',
+    entity_type: 'profile',
+    entity_id: data.id,
+    organization_id: organizationId,
+    new_values: {
+      first_name: firstName,
+      last_name: lastName,
+      role,
+      created_via: 'ai_assistant',
+      created_at: new Date().toISOString(),
+    },
+  })
+
+  const roleLabels: Record<string, string> = {
+    teacher: 'Maestro/a',
+    lead_teacher: 'Lead Teacher',
+    assistant: 'Asistente',
+    director: 'Director/a',
+  }
+
+  return {
+    success: true,
+    message: `${roleLabels[role] || role} "${firstName} ${lastName}" creado exitosamente`,
+    staff_id: data.id,
+  }
+}
+
 // =====================================================
 // MAIN EXECUTOR
 // =====================================================
@@ -1183,6 +1261,9 @@ export async function executeConfirmedAction(
 
     case 'communication_send_email':
       return sendCommunicationEmail(params)
+
+    case 'staff_create':
+      return createStaffMember(params)
 
     default:
       throw new Error(`Acción no soportada: ${actionType}`)

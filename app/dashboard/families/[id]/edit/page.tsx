@@ -8,7 +8,9 @@ import {
   Loader2,
   User,
   Phone,
+  Mail,
   MapPin,
+  UserCheck,
 } from 'lucide-react'
 import { useTranslations } from '@/shared/lib/i18n'
 import {
@@ -41,12 +43,18 @@ export default function EditFamilyPage() {
     primary_contact_name: '',
     primary_contact_phone: '',
     primary_contact_email: '',
+    address: '',
     secondary_contact_name: '',
     secondary_contact_phone: '',
     secondary_contact_email: '',
-    address: '',
     status: 'active',
     notes: '',
+  })
+
+  const [authorizedPickup, setAuthorizedPickup] = useState({
+    name: '',
+    phone: '',
+    relationship: '',
   })
 
   useEffect(() => {
@@ -63,13 +71,23 @@ export default function EditFamilyPage() {
           primary_contact_name: family.primary_contact_name,
           primary_contact_phone: family.primary_contact_phone || '',
           primary_contact_email: family.primary_contact_email || '',
+          address: family.address || '',
           secondary_contact_name: family.secondary_contact_name || '',
           secondary_contact_phone: family.secondary_contact_phone || '',
           secondary_contact_email: family.secondary_contact_email || '',
-          address: family.address || '',
           status: family.status || 'active',
           notes: family.notes || '',
         })
+
+        // Load authorized pickups if available
+        const pickups = family.authorized_pickups as Array<{ name: string; phone: string; relationship: string }> | null
+        if (pickups && pickups.length > 0) {
+          setAuthorizedPickup({
+            name: pickups[0].name || '',
+            phone: pickups[0].phone || '',
+            relationship: pickups[0].relationship || '',
+          })
+        }
       }
     } catch (error) {
       console.error('Error loading family:', error)
@@ -85,14 +103,20 @@ export default function EditFamilyPage() {
     try {
       setIsSaving(true)
 
+      // Build authorized_pickups array if data provided
+      const authorized_pickups = authorizedPickup.name
+        ? [authorizedPickup]
+        : []
+
       await familiesService.update(familyId, {
         primary_contact_name: formData.primary_contact_name,
         primary_contact_phone: formData.primary_contact_phone || null,
         primary_contact_email: formData.primary_contact_email || null,
+        address: formData.address || null,
         secondary_contact_name: formData.secondary_contact_name || null,
         secondary_contact_phone: formData.secondary_contact_phone || null,
         secondary_contact_email: formData.secondary_contact_email || null,
-        address: formData.address || null,
+        authorized_pickups,
         status: formData.status as 'active' | 'inactive',
         notes: formData.notes || null,
       })
@@ -138,7 +162,7 @@ export default function EditFamilyPage() {
           </GlassCardHeader>
           <GlassCardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t.families.primaryContactName} *
                 </label>
@@ -152,18 +176,6 @@ export default function EditFamilyPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t.families.phone}
-                </label>
-                <GlassInput
-                  type="tel"
-                  placeholder="(305) 555-0000"
-                  value={formData.primary_contact_phone}
-                  onChange={(e) => setFormData({ ...formData, primary_contact_phone: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t.families.email}
                 </label>
                 <GlassInput
@@ -171,6 +183,32 @@ export default function EditFamilyPage() {
                   placeholder="email@ejemplo.com"
                   value={formData.primary_contact_email}
                   onChange={(e) => setFormData({ ...formData, primary_contact_email: e.target.value })}
+                  leftIcon={<Mail className="w-5 h-5" />}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t.families.phone}
+                </label>
+                <GlassInput
+                  type="tel"
+                  placeholder="(305) 555-0000"
+                  value={formData.primary_contact_phone}
+                  onChange={(e) => setFormData({ ...formData, primary_contact_phone: e.target.value })}
+                  leftIcon={<Phone className="w-5 h-5" />}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t.families.address}
+                </label>
+                <GlassInput
+                  placeholder="123 Main St, Miami, FL 33101"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  leftIcon={<MapPin className="w-5 h-5" />}
                 />
               </div>
             </div>
@@ -181,7 +219,7 @@ export default function EditFamilyPage() {
         <GlassCard>
           <GlassCardHeader>
             <GlassCardTitle className="flex items-center gap-2">
-              <Phone className="w-5 h-5" />
+              <User className="w-5 h-5" />
               {t.families.secondaryContact}
             </GlassCardTitle>
           </GlassCardHeader>
@@ -200,18 +238,6 @@ export default function EditFamilyPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t.families.phone}
-                </label>
-                <GlassInput
-                  type="tel"
-                  placeholder="(305) 555-0000"
-                  value={formData.secondary_contact_phone}
-                  onChange={(e) => setFormData({ ...formData, secondary_contact_phone: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t.families.email}
                 </label>
                 <GlassInput
@@ -219,34 +245,84 @@ export default function EditFamilyPage() {
                   placeholder="email@ejemplo.com"
                   value={formData.secondary_contact_email}
                   onChange={(e) => setFormData({ ...formData, secondary_contact_email: e.target.value })}
+                  leftIcon={<Mail className="w-5 h-5" />}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t.families.phone}
+                </label>
+                <GlassInput
+                  type="tel"
+                  placeholder="(305) 555-0000"
+                  value={formData.secondary_contact_phone}
+                  onChange={(e) => setFormData({ ...formData, secondary_contact_phone: e.target.value })}
+                  leftIcon={<Phone className="w-5 h-5" />}
                 />
               </div>
             </div>
           </GlassCardContent>
         </GlassCard>
 
-        {/* Address & Status */}
+        {/* Authorized Pickup Person */}
         <GlassCard>
           <GlassCardHeader>
             <GlassCardTitle className="flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              {t.families.addressInfo}
+              <UserCheck className="w-5 h-5" />
+              Persona Autorizada para Recoger (Opcional)
             </GlassCardTitle>
           </GlassCardHeader>
-          <GlassCardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
+          <GlassCardContent>
+            <p className="text-sm text-gray-500 mb-4">
+              Esta persona podrá recoger al niño(a) en caso de que los padres no puedan hacerlo.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t.families.address}
+                  Nombre Completo
                 </label>
-                <GlassTextarea
-                  rows={2}
-                  placeholder="123 Main St, Miami, FL 33101"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                <GlassInput
+                  placeholder="Ej: María García"
+                  value={authorizedPickup.name}
+                  onChange={(e) => setAuthorizedPickup({ ...authorizedPickup, name: e.target.value })}
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Teléfono
+                </label>
+                <GlassInput
+                  type="tel"
+                  placeholder="(000) 000-0000"
+                  value={authorizedPickup.phone}
+                  onChange={(e) => setAuthorizedPickup({ ...authorizedPickup, phone: e.target.value })}
+                  leftIcon={<Phone className="w-5 h-5" />}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Relación con el Niño
+                </label>
+                <GlassInput
+                  placeholder="Ej: Abuela, Tío, Niñera"
+                  value={authorizedPickup.relationship}
+                  onChange={(e) => setAuthorizedPickup({ ...authorizedPickup, relationship: e.target.value })}
+                />
+              </div>
+            </div>
+          </GlassCardContent>
+        </GlassCard>
+
+        {/* Additional Info */}
+        <GlassCard>
+          <GlassCardHeader>
+            <GlassCardTitle>Información Adicional</GlassCardTitle>
+          </GlassCardHeader>
+          <GlassCardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t.common.status}

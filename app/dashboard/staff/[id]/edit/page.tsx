@@ -19,7 +19,7 @@ import { staffService } from '@/features/staff/services/staff.service'
 
 const roleOptions = [
   { value: 'teacher', label: 'Maestro/a' },
-  { value: 'lead_teacher', label: 'Maestro/a Principal' },
+  { value: 'lead_teacher', label: 'Lead Teacher' },
   { value: 'assistant', label: 'Asistente' },
   { value: 'director', label: 'Director/a' },
 ]

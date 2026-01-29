@@ -226,7 +226,7 @@ export const staffTools: ToolDefinition[] = [
       parameters: {
         type: 'object',
         properties: {
-          role: { type: 'string', description: 'Filtrar por rol', enum: ['teacher', 'assistant', 'director', 'admin'] },
+          role: { type: 'string', description: 'Filtrar por rol', enum: ['teacher', 'lead_teacher', 'assistant', 'director', 'admin'] },
           status: { type: 'string', description: 'Estado del empleado', enum: ['active', 'inactive'] },
         },
       },
@@ -243,6 +243,27 @@ export const staffTools: ToolDefinition[] = [
           staff_id: { type: 'string', description: 'ID del empleado' },
         },
         required: ['staff_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'staff_create',
+      description: 'Crea un nuevo miembro del personal (maestro, asistente, director). REQUIERE CONFIRMACIÓN.',
+      parameters: {
+        type: 'object',
+        properties: {
+          first_name: { type: 'string', description: 'Nombre del empleado' },
+          last_name: { type: 'string', description: 'Apellido del empleado' },
+          email: { type: 'string', description: 'Email del empleado (opcional)' },
+          phone: { type: 'string', description: 'Teléfono del empleado (opcional)' },
+          role: { type: 'string', description: 'Rol del empleado', enum: ['teacher', 'lead_teacher', 'assistant', 'director'] },
+          hire_date: { type: 'string', description: 'Fecha de contratación (YYYY-MM-DD)' },
+          certifications: { type: 'string', description: 'Certificaciones separadas por coma (ej: CPR, First Aid, CDA)' },
+          emergency_contact: { type: 'string', description: 'Contacto de emergencia (nombre y teléfono)' },
+        },
+        required: ['first_name', 'last_name', 'role'],
       },
     },
   },
@@ -503,9 +524,10 @@ export const toolMetadata: Record<string, ToolMetadata> = {
   classrooms_get_ratios: { name: 'Ver Ratios', category: 'classrooms', description: 'Ratios DCF', requiresConfirmation: false, isReadOnly: true },
   classrooms_check_compliance: { name: 'Verificar Cumplimiento', category: 'compliance', description: 'Cumplimiento DCF', requiresConfirmation: false, isReadOnly: true },
 
-  // Staff - Read only
+  // Staff - Mixed
   staff_list: { name: 'Listar Personal', category: 'staff', description: 'Lista empleados', requiresConfirmation: false, isReadOnly: true },
   staff_get: { name: 'Ver Empleado', category: 'staff', description: 'Detalles de empleado', requiresConfirmation: false, isReadOnly: true },
+  staff_create: { name: 'Crear Personal', category: 'staff', description: 'Agregar nuevo empleado', requiresConfirmation: true, isReadOnly: false },
 
   // Incidents - Mixed
   incidents_list: { name: 'Listar Incidentes', category: 'incidents', description: 'Lista incidentes', requiresConfirmation: false, isReadOnly: true },

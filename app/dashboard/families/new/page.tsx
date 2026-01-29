@@ -11,6 +11,7 @@ import {
   Mail,
   MapPin,
   AlertCircle,
+  UserCheck,
 } from 'lucide-react'
 import { useTranslations } from '@/shared/lib/i18n'
 import { familiesService } from '@/features/families/services/families.service'
@@ -39,17 +40,28 @@ export default function NewFamilyPage() {
     primary_contact_name: '',
     primary_contact_email: '',
     primary_contact_phone: '',
+    address: '',
     secondary_contact_name: '',
     secondary_contact_email: '',
     secondary_contact_phone: '',
-    address: '',
     notes: '',
     status: 'active' as const,
+  })
+
+  const [authorizedPickup, setAuthorizedPickup] = useState({
+    name: '',
+    phone: '',
+    relationship: '',
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleAuthorizedPickupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setAuthorizedPickup(prev => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,7 +70,15 @@ export default function NewFamilyPage() {
     setError(null)
 
     try {
-      await familiesService.create(formData)
+      // Build authorized_pickups array if data provided
+      const authorized_pickups = authorizedPickup.name
+        ? [authorizedPickup]
+        : []
+
+      await familiesService.create({
+        ...formData,
+        authorized_pickups,
+      })
       router.push('/dashboard/families')
     } catch (err) {
       console.error('Error creating family:', err)
@@ -106,7 +126,6 @@ export default function NewFamilyPage() {
               value={formData.primary_contact_name}
               onChange={handleChange}
               required
-              className="sm:col-span-2"
             />
             <GlassInput
               label="Email"
@@ -123,6 +142,13 @@ export default function NewFamilyPage() {
               onChange={handleChange}
               leftIcon={<Phone className="w-5 h-5" />}
               required
+            />
+            <GlassInput
+              label="Dirección"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              leftIcon={<MapPin className="w-5 h-5" />}
             />
           </GlassCardContent>
         </GlassCard>
@@ -161,22 +187,42 @@ export default function NewFamilyPage() {
           </GlassCardContent>
         </GlassCard>
 
-        {/* Address */}
+        {/* Authorized Pickup Person */}
         <GlassCard>
           <GlassCardHeader>
             <GlassCardTitle className="flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Dirección
+              <UserCheck className="w-5 h-5" />
+              Persona Autorizada para Recoger (Opcional)
             </GlassCardTitle>
           </GlassCardHeader>
           <GlassCardContent>
-            <GlassInput
-              label="Dirección"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              leftIcon={<MapPin className="w-5 h-5" />}
-            />
+            <p className="text-sm text-gray-500 mb-4">
+              Esta persona podrá recoger al niño(a) en caso de que los padres no puedan hacerlo.
+            </p>
+            <div className="grid sm:grid-cols-3 gap-4">
+              <GlassInput
+                label="Nombre Completo"
+                name="name"
+                value={authorizedPickup.name}
+                onChange={handleAuthorizedPickupChange}
+                placeholder="Ej: María García"
+              />
+              <GlassInput
+                label="Teléfono"
+                name="phone"
+                value={authorizedPickup.phone}
+                onChange={handleAuthorizedPickupChange}
+                leftIcon={<Phone className="w-5 h-5" />}
+                placeholder="(000) 000-0000"
+              />
+              <GlassInput
+                label="Relación con el Niño"
+                name="relationship"
+                value={authorizedPickup.relationship}
+                onChange={handleAuthorizedPickupChange}
+                placeholder="Ej: Abuela, Tío, Niñera"
+              />
+            </div>
           </GlassCardContent>
         </GlassCard>
 

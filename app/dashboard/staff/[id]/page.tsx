@@ -37,7 +37,7 @@ import { certificationService, type ComplianceResult } from '@/features/staff/se
 
 const roleLabels: Record<string, string> = {
   teacher: 'Maestro/a',
-  lead_teacher: 'Maestro/a Principal',
+  lead_teacher: 'Lead Teacher',
   assistant: 'Asistente',
   director: 'Director/a',
   owner: 'Propietario',
