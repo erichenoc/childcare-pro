@@ -14,6 +14,8 @@ import {
   Receipt,
   BarChart3,
   Loader2,
+  Calculator,
+  Sun,
 } from 'lucide-react'
 import {
   accountingService,
@@ -352,6 +354,18 @@ export default function AccountingDashboardPage() {
             </GlassCardHeader>
             <GlassCardContent className="p-5">
               <div className="flex flex-col gap-4">
+                <Link href="/dashboard/accounting/program-income" className="block">
+                  <GlassButton variant="primary" className="w-full justify-start py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700">
+                    <Calculator className="w-4 h-4 mr-2" />
+                    Ingresos por Programa
+                  </GlassButton>
+                </Link>
+                <Link href="/dashboard/accounting/summer-camp" className="block">
+                  <GlassButton variant="secondary" className="w-full justify-start py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white hover:from-yellow-500 hover:to-orange-600">
+                    <Sun className="w-4 h-4 mr-2" />
+                    Summer Camp
+                  </GlassButton>
+                </Link>
                 <Link href="/dashboard/accounting/transactions" className="block">
                   <GlassButton variant="secondary" className="w-full justify-start py-3">
                     <Receipt className="w-4 h-4 mr-2" />

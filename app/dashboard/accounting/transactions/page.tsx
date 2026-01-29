@@ -22,6 +22,7 @@ import {
   type AccountCategory,
   type IncomeSourceType,
   type ExpenseType,
+  type PaymentMethod,
 } from '@/features/accounting/services/accounting.service'
 import {
   GlassCard,
@@ -47,6 +48,19 @@ export default function TransactionsPage() {
     end: '',
   })
   const [selectedTransaction, setSelectedTransaction] = useState<CombinedTransaction | null>(null)
+  const [showNewModal, setShowNewModal] = useState(false)
+  const [newTransactionType, setNewTransactionType] = useState<'income' | 'expense'>('income')
+  const [newTransaction, setNewTransaction] = useState({
+    date: new Date().toISOString().split('T')[0],
+    amount: '',
+    description: '',
+    source_type: 'tuition' as IncomeSourceType,
+    expense_type: 'supplies' as ExpenseType,
+    payer_name: '',
+    vendor_name: '',
+    payment_method: 'cash' as PaymentMethod,
+    is_tax_deductible: false,
+  })
 
   useEffect(() => {
     loadData()
@@ -116,29 +130,96 @@ export default function TransactionsPage() {
     .filter(t => t._type === 'expense')
     .reduce((sum, t) => sum + t.total_amount, 0)
 
+  const handleCreateTransaction = () => {
+    const amount = parseFloat(newTransaction.amount)
+    if (isNaN(amount) || amount <= 0) {
+      alert('Por favor ingrese un monto válido')
+      return
+    }
+
+    const baseTransaction = {
+      id: `new-${Date.now()}`,
+      organization_id: 'org-1',
+      date: newTransaction.date,
+      amount: amount,
+      tax_amount: 0,
+      total_amount: amount,
+      description: newTransaction.description,
+      status: 'completed' as const,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+
+    if (newTransactionType === 'income') {
+      const incomeTransaction: IncomeTransaction = {
+        ...baseTransaction,
+        category_id: 'cat-income',
+        category_name: sourceLabels[newTransaction.source_type],
+        source_type: newTransaction.source_type,
+        payer_name: newTransaction.payer_name || undefined,
+        payment_method: newTransaction.payment_method,
+      }
+      setIncomeTransactions(prev => [incomeTransaction, ...prev])
+    } else {
+      const expenseTransaction: ExpenseTransaction = {
+        ...baseTransaction,
+        category_id: 'cat-expense',
+        category_name: expenseLabels[newTransaction.expense_type],
+        expense_type: newTransaction.expense_type,
+        vendor_name: newTransaction.vendor_name || 'Sin proveedor',
+        is_tax_deductible: newTransaction.is_tax_deductible,
+      }
+      setExpenseTransactions(prev => [expenseTransaction, ...prev])
+    }
+
+    // Reset form
+    setNewTransaction({
+      date: new Date().toISOString().split('T')[0],
+      amount: '',
+      description: '',
+      source_type: 'tuition',
+      expense_type: 'supplies',
+      payer_name: '',
+      vendor_name: '',
+      payment_method: 'cash',
+      is_tax_deductible: false,
+    })
+    setShowNewModal(false)
+  }
+
+  const sourceLabels: Record<IncomeSourceType, string> = {
+    tuition: 'Tuition',
+    registration: 'Registro',
+    late_fee: 'Multa',
+    vpk: 'VPK',
+    sr: 'School Readiness',
+    food_program: 'Alimentación',
+    other: 'Otro',
+  }
+
+  const expenseLabels: Record<ExpenseType, string> = {
+    payroll: 'Nómina',
+    rent: 'Alquiler',
+    utilities: 'Servicios',
+    supplies: 'Suministros',
+    food: 'Alimentación',
+    insurance: 'Seguro',
+    maintenance: 'Mantenimiento',
+    other: 'Otro',
+  }
+
+  const paymentMethodLabels: Record<PaymentMethod, string> = {
+    cash: 'Efectivo',
+    check: 'Cheque',
+    card: 'Tarjeta',
+    transfer: 'Transferencia',
+    ach: 'ACH',
+  }
+
   const getSourceTypeLabel = (txn: CombinedTransaction) => {
     if (txn._type === 'income') {
-      const sourceLabels: Record<IncomeSourceType, string> = {
-        tuition: 'Tuition',
-        registration: 'Registro',
-        late_fee: 'Multa',
-        vpk: 'VPK',
-        sr: 'School Readiness',
-        food_program: 'Alimentación',
-        other: 'Otro',
-      }
       return sourceLabels[(txn as IncomeTransaction).source_type] || 'Otro'
     } else {
-      const expenseLabels: Record<ExpenseType, string> = {
-        payroll: 'Nómina',
-        rent: 'Alquiler',
-        utilities: 'Servicios',
-        supplies: 'Suministros',
-        food: 'Alimentación',
-        insurance: 'Seguro',
-        maintenance: 'Mantenimiento',
-        other: 'Otro',
-      }
       return expenseLabels[(txn as ExpenseTransaction).expense_type] || 'Otro'
     }
   }
@@ -173,7 +254,7 @@ export default function TransactionsPage() {
             <Download className="w-4 h-4 mr-2" />
             Exportar
           </GlassButton>
-          <GlassButton>
+          <GlassButton onClick={() => setShowNewModal(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Nueva Transacción
           </GlassButton>
@@ -379,6 +460,193 @@ export default function TransactionsPage() {
           )}
         </GlassCardContent>
       </GlassCard>
+
+      {/* New Transaction Modal */}
+      {showNewModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <GlassCard className="w-full max-w-lg max-h-[90vh] overflow-auto">
+            <GlassCardHeader>
+              <div className="flex items-center justify-between">
+                <GlassCardTitle>Nueva Transacción</GlassCardTitle>
+                <GlassButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowNewModal(false)}
+                >
+                  <X className="w-4 h-4" />
+                </GlassButton>
+              </div>
+            </GlassCardHeader>
+            <GlassCardContent>
+              <div className="space-y-4">
+                {/* Transaction Type Toggle */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo de Transacción
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setNewTransactionType('income')}
+                      className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                        newTransactionType === 'income'
+                          ? 'bg-green-100 text-green-700 border-2 border-green-500'
+                          : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
+                      }`}
+                    >
+                      <ArrowUpRight className="w-4 h-4 inline mr-1" />
+                      Ingreso
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewTransactionType('expense')}
+                      className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                        newTransactionType === 'expense'
+                          ? 'bg-red-100 text-red-700 border-2 border-red-500'
+                          : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
+                      }`}
+                    >
+                      <ArrowDownRight className="w-4 h-4 inline mr-1" />
+                      Gasto
+                    </button>
+                  </div>
+                </div>
+
+                {/* Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Fecha
+                  </label>
+                  <GlassInput
+                    type="date"
+                    value={newTransaction.date}
+                    onChange={(e) => setNewTransaction(prev => ({ ...prev, date: e.target.value }))}
+                  />
+                </div>
+
+                {/* Amount */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Monto ($)
+                  </label>
+                  <GlassInput
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={newTransaction.amount}
+                    onChange={(e) => setNewTransaction(prev => ({ ...prev, amount: e.target.value }))}
+                  />
+                </div>
+
+                {/* Category based on type */}
+                {newTransactionType === 'income' ? (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Fuente de Ingreso
+                      </label>
+                      <GlassSelect
+                        value={newTransaction.source_type}
+                        onChange={(e) => setNewTransaction(prev => ({ ...prev, source_type: e.target.value as IncomeSourceType }))}
+                        options={Object.entries(sourceLabels).map(([value, label]) => ({ value, label }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nombre del Pagador
+                      </label>
+                      <GlassInput
+                        type="text"
+                        placeholder="Ej: Familia García"
+                        value={newTransaction.payer_name}
+                        onChange={(e) => setNewTransaction(prev => ({ ...prev, payer_name: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Método de Pago
+                      </label>
+                      <GlassSelect
+                        value={newTransaction.payment_method}
+                        onChange={(e) => setNewTransaction(prev => ({ ...prev, payment_method: e.target.value as PaymentMethod }))}
+                        options={Object.entries(paymentMethodLabels).map(([value, label]) => ({ value, label }))}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Tipo de Gasto
+                      </label>
+                      <GlassSelect
+                        value={newTransaction.expense_type}
+                        onChange={(e) => setNewTransaction(prev => ({ ...prev, expense_type: e.target.value as ExpenseType }))}
+                        options={Object.entries(expenseLabels).map(([value, label]) => ({ value, label }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nombre del Proveedor
+                      </label>
+                      <GlassInput
+                        type="text"
+                        placeholder="Ej: Office Depot"
+                        value={newTransaction.vendor_name}
+                        onChange={(e) => setNewTransaction(prev => ({ ...prev, vendor_name: e.target.value }))}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="is_tax_deductible"
+                        checked={newTransaction.is_tax_deductible}
+                        onChange={(e) => setNewTransaction(prev => ({ ...prev, is_tax_deductible: e.target.checked }))}
+                        className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                      <label htmlFor="is_tax_deductible" className="text-sm text-gray-700">
+                        Deducible de impuestos
+                      </label>
+                    </div>
+                  </>
+                )}
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Descripción (opcional)
+                  </label>
+                  <GlassInput
+                    type="text"
+                    placeholder="Descripción de la transacción"
+                    value={newTransaction.description}
+                    onChange={(e) => setNewTransaction(prev => ({ ...prev, description: e.target.value }))}
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <GlassButton
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={() => setShowNewModal(false)}
+                  >
+                    Cancelar
+                  </GlassButton>
+                  <GlassButton
+                    className="flex-1"
+                    onClick={handleCreateTransaction}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Crear Transacción
+                  </GlassButton>
+                </div>
+              </div>
+            </GlassCardContent>
+          </GlassCard>
+        </div>
+      )}
 
       {/* Transaction Detail Modal */}
       {selectedTransaction && (

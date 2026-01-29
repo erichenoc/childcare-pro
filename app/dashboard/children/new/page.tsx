@@ -18,6 +18,8 @@ import {
   DollarSign,
   BookOpen,
   Clock,
+  Sun,
+  Check,
 } from 'lucide-react'
 import { useTranslations } from '@/shared/lib/i18n'
 import {
@@ -35,6 +37,7 @@ import { classroomsService } from '@/features/classrooms/services/classrooms.ser
 import { familiesService } from '@/features/families/services/families.service'
 import type { ChildProgramType, ChildFormData } from '@/shared/types/children-extended'
 import { PROGRAM_TYPE_OPTIONS, isVPKProgram, isSRProgram } from '@/shared/types/children-extended'
+import { programIncomeService, type SummerCampWeek } from '@/features/accounting/services/program-income.service'
 
 export default function NewChildPage() {
   const t = useTranslations()
@@ -77,6 +80,11 @@ export default function NewChildPage() {
   const [classroomOptions, setClassroomOptions] = useState<{ value: string; label: string }[]>([])
   const [familyOptions, setFamilyOptions] = useState<{ value: string; label: string }[]>([])
 
+  // Summer Camp state
+  const [summerCampWeeks, setSummerCampWeeks] = useState<SummerCampWeek[]>([])
+  const [enrollInSummerCamp, setEnrollInSummerCamp] = useState(false)
+  const [selectedSummerWeeks, setSelectedSummerWeeks] = useState<string[]>([])
+
   const [formData, setFormData] = useState<ChildFormData>({
     first_name: '',
     last_name: '',
@@ -116,9 +124,11 @@ export default function NewChildPage() {
   async function loadOptions() {
     try {
       setIsLoadingData(true)
-      const [classrooms, families] = await Promise.all([
+      const currentYear = new Date().getFullYear()
+      const [classrooms, families, summerWeeks] = await Promise.all([
         classroomsService.getAll(),
         familiesService.getAll(),
+        programIncomeService.getSummerCampWeeks(currentYear),
       ])
 
       setClassroomOptions([
@@ -129,6 +139,7 @@ export default function NewChildPage() {
         { value: '', label: 'Seleccionar familia...' },
         ...families.map(f => ({ value: f.id, label: f.primary_contact_name })),
       ])
+      setSummerCampWeeks(summerWeeks)
     } catch (err) {
       console.error('Error loading options:', err)
     } finally {
@@ -171,6 +182,27 @@ export default function NewChildPage() {
   const removeAllergy = (allergy: string) => {
     setAllergies(allergies.filter((a) => a !== allergy))
   }
+
+  const toggleSummerWeek = (weekId: string) => {
+    setSelectedSummerWeeks(prev =>
+      prev.includes(weekId)
+        ? prev.filter(id => id !== weekId)
+        : [...prev, weekId]
+    )
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount)
+  }
+
+  const summerCampTotal = selectedSummerWeeks.length > 0
+    ? summerCampWeeks
+        .filter(w => selectedSummerWeeks.includes(w.id))
+        .reduce((sum, w) => sum + w.weekly_rate, 0)
+    : 0
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -644,6 +676,114 @@ export default function NewChildPage() {
                     />
                   </div>
                 </div>
+              </div>
+            )}
+          </GlassCardContent>
+        </GlassCard>
+
+        {/* Summer Camp Enrollment */}
+        <GlassCard>
+          <GlassCardHeader>
+            <GlassCardTitle className="flex items-center gap-2">
+              <Sun className="w-5 h-5 text-yellow-500" />
+              Summer Camp (Opcional)
+            </GlassCardTitle>
+          </GlassCardHeader>
+          <GlassCardContent className="space-y-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="enroll_summer_camp"
+                checked={enrollInSummerCamp}
+                onChange={(e) => {
+                  setEnrollInSummerCamp(e.target.checked)
+                  if (!e.target.checked) setSelectedSummerWeeks([])
+                }}
+                className="w-5 h-5 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+              />
+              <label htmlFor="enroll_summer_camp" className="text-gray-700 dark:text-gray-300">
+                Inscribir en Summer Camp {new Date().getFullYear()}
+              </label>
+            </div>
+
+            {enrollInSummerCamp && (
+              <div className="space-y-4">
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">
+                    <strong>Programa de Verano:</strong> 10 semanas de actividades temáticas (Junio - Agosto).
+                    Selecciona las semanas en las que deseas inscribir al niño.
+                  </p>
+                  <p className="text-xs text-yellow-600 dark:text-yellow-300">
+                    Tarifa: $275/semana • Incluye actividades, meriendas y excursiones locales
+                  </p>
+                </div>
+
+                {/* Week Selection Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {summerCampWeeks.map((week) => {
+                    const isSelected = selectedSummerWeeks.includes(week.id)
+                    const isFull = week.current_enrollment >= week.max_capacity
+
+                    return (
+                      <button
+                        key={week.id}
+                        type="button"
+                        onClick={() => !isFull && toggleSummerWeek(week.id)}
+                        disabled={isFull}
+                        className={`p-3 rounded-lg border-2 text-left transition-all ${
+                          isSelected
+                            ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/30'
+                            : isFull
+                            ? 'border-gray-200 bg-gray-100 opacity-50 cursor-not-allowed'
+                            : 'border-gray-200 hover:border-yellow-300 hover:bg-yellow-50/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-medium text-gray-500">Sem {week.week_number}</span>
+                          {isSelected && <Check className="w-4 h-4 text-yellow-600" />}
+                        </div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {week.theme}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(week.start_date).toLocaleDateString('es-US', { month: 'short', day: 'numeric' })}
+                        </p>
+                        <p className="text-xs mt-1">
+                          <span className={`${
+                            isFull ? 'text-red-600' : week.current_enrollment >= week.max_capacity * 0.8 ? 'text-yellow-600' : 'text-green-600'
+                          }`}>
+                            {week.current_enrollment}/{week.max_capacity}
+                          </span>
+                        </p>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Summary */}
+                {selectedSummerWeeks.length > 0 && (
+                  <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-green-800 dark:text-green-200">
+                          <strong>{selectedSummerWeeks.length}</strong> semanas seleccionadas
+                        </p>
+                        <p className="text-xs text-green-600 dark:text-green-300 mt-1">
+                          {summerCampWeeks
+                            .filter(w => selectedSummerWeeks.includes(w.id))
+                            .map(w => `Sem ${w.week_number}`)
+                            .join(', ')}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-green-700 dark:text-green-300">
+                          {formatCurrency(summerCampTotal)}
+                        </p>
+                        <p className="text-xs text-green-600 dark:text-green-400">Total a cobrar</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </GlassCardContent>
