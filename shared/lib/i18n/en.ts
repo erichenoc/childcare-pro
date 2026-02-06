@@ -1645,4 +1645,59 @@ export const en: Translations = {
     statusSuspended: 'Suspended',
     statusCancelled: 'Cancelled',
   },
+
+  // ============================================
+  // WORKFLOW & UX ENHANCEMENTS
+  // ============================================
+  workflow: {
+    // Billing
+    billingCreate: 'Create',
+    billingSend: 'Send',
+    billingCollect: 'Collect',
+    billingReconcile: 'Reconcile',
+    // Food Program
+    foodRecord: 'Record',
+    foodInventory: 'Inventory',
+    foodCacfpReport: 'Report',
+    foodReimbursement: 'Reimburse',
+    // Programs (VPK/SR)
+    programsEnroll: 'Enroll',
+    programsTrackHours: 'Hours',
+    programsReports: 'Reports',
+    programsFunding: 'Funding',
+    // Accounting
+    accountingIncome: 'Income',
+    accountingExpenses: 'Expenses',
+    accountingReconcile: 'Reconcile',
+    accountingReports: 'Reports',
+    // Staff
+    staffHire: 'Hire',
+    staffCredentials: 'Credentials',
+    staffTraining: 'Training',
+    staffAssign: 'Assign',
+  },
+  emptyStates: {
+    billingTitle: 'No invoices yet',
+    billingAction: 'Create Invoice',
+    foodTitle: 'No meals recorded',
+    foodAction: 'Record Meal',
+    programsTitle: 'No enrollments',
+    programsAction: 'Enroll Child',
+    accountingTitle: 'No transactions',
+    accountingAction: 'Record Transaction',
+    staffTitle: 'No staff registered',
+    staffAction: 'Add Staff',
+  },
+  contextHelp: {
+    cacfpTitle: 'CACFP',
+    cacfpContent: 'Child and Adult Care Food Program — federal USDA program that reimburses nutritious meals served in childcare centers.',
+    vpkTitle: 'VPK',
+    vpkContent: 'Voluntary Pre-Kindergarten — free Florida program: 540 hours (school year) or 300 hours (summer) for 4-year-olds.',
+    srTitle: 'School Readiness',
+    srContent: 'ELC subsidized program covering childcare for income-eligible families.',
+    dcfTitle: 'DCF',
+    dcfContent: 'Department of Children & Families — Florida childcare regulator. Defines ratios, licenses and staff requirements.',
+    elcTitle: 'ELC',
+    elcContent: 'Early Learning Coalition — administers VPK and School Readiness funds at county level in Florida.',
+  },
 }

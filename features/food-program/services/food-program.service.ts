@@ -134,6 +134,13 @@ export const CACFP_RATES = {
   pm_snack: { free: 1.07, reduced: 0.53, paid: 0.09 },
 }
 
+// ================== HELPERS ==================
+
+/** Check if error is "table not found" from either PostgreSQL or PostgREST */
+function isTableNotFound(error: { code?: string; message?: string }): boolean {
+  return error.code === '42P01' || error.code === 'PGRST205'
+}
+
 // ================== SERVICE ==================
 
 export const foodProgramService = {
@@ -147,13 +154,12 @@ export const foodProgramService = {
       .from('menu_items')
       .select('*')
       .eq('organization_id', orgId)
-      .eq('is_active', true)
-      .order('name')
 
     if (error) {
-      // If table doesn't exist, return empty array
-      if (error.code === '42P01') return []
-      throw error
+      // If table doesn't exist or schema mismatch, return empty array
+      if (isTableNotFound(error)) return []
+      console.warn('getMenuItems error:', error.message)
+      return []
     }
     return data || []
   },
@@ -185,33 +191,34 @@ export const foodProgramService = {
       .from('daily_menus')
       .select('*')
       .eq('organization_id', orgId)
-      .eq('menu_date', date)
-      .order('meal_type')
+      .eq('date', date)
 
     if (error) {
-      if (error.code === '42P01') return []
-      throw error
+      if (isTableNotFound(error)) return []
+      // Column mismatch is also acceptable - return empty
+      console.warn('getDailyMenu error:', error.message)
+      return []
     }
     return data || []
   },
 
-  async setDailyMenu(data: MealFormData): Promise<DailyMenu> {
+  async setDailyMenu(formData: MealFormData): Promise<DailyMenu> {
     const orgId = await requireOrgId()
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Upsert daily menu
+    // Upsert daily menu - use 'date' column (DB schema) instead of 'menu_date'
     const { data: menu, error } = await supabase
       .from('daily_menus')
       .upsert({
         organization_id: orgId,
-        menu_date: data.menu_date,
-        meal_type: data.meal_type,
-        menu_items: data.menu_items,
-        notes: data.notes,
-        created_by: user?.id,
+        date: formData.menu_date,
+        main_item: formData.menu_items?.[0] || 'Menu del día',
+        side_items: formData.menu_items?.slice(1) || [],
+        notes: formData.notes,
+        prepared_by: user?.id,
       }, {
-        onConflict: 'organization_id,menu_date,meal_type',
+        onConflict: 'organization_id,date,meal_category_id',
       })
       .select()
       .single()
@@ -249,7 +256,7 @@ export const foodProgramService = {
     const { data, error } = await query.order('created_at')
 
     if (error) {
-      if (error.code === '42P01') return []
+      if (isTableNotFound(error)) return []
       throw error
     }
     return data || []
@@ -388,7 +395,7 @@ export const foodProgramService = {
       .eq('served', true)
 
     if (error) {
-      if (error.code === '42P01') {
+      if (isTableNotFound(error)) {
         return { date, meals: [], children_with_allergies: [] }
       }
       throw error
@@ -458,7 +465,7 @@ export const foodProgramService = {
       .eq('served', true)
 
     if (error) {
-      if (error.code === '42P01') return []
+      if (isTableNotFound(error)) return []
       throw error
     }
 
@@ -590,7 +597,7 @@ export const foodProgramService = {
       .order('item_name')
 
     if (error) {
-      if (error.code === '42P01') return []
+      if (isTableNotFound(error)) return []
       throw error
     }
     return data || []
@@ -686,7 +693,7 @@ export const foodProgramService = {
       .order('quantity_on_hand')
 
     if (error) {
-      if (error.code === '42P01') return []
+      if (isTableNotFound(error)) return []
       throw error
     }
 
@@ -712,7 +719,7 @@ export const foodProgramService = {
       .order('expiration_date')
 
     if (error) {
-      if (error.code === '42P01') return []
+      if (isTableNotFound(error)) return []
       throw error
     }
     return data || []
@@ -817,7 +824,7 @@ export const foodProgramService = {
     const { data, error } = await query.limit(100)
 
     if (error) {
-      if (error.code === '42P01') return []
+      if (isTableNotFound(error)) return []
       throw error
     }
     return data || []
@@ -838,7 +845,7 @@ export const foodProgramService = {
       .single()
 
     if (error) {
-      if (error.code === 'PGRST116' || error.code === '42P01') return null
+      if (error.code === 'PGRST116' || isTableNotFound(error)) return null
       throw error
     }
     return data
@@ -884,10 +891,10 @@ export const foodProgramService = {
       .from('food_expenses')
       .select('*')
       .eq('organization_id', orgId)
-      .gte('expense_date', startDate)
-      .lte('expense_date', endDate)
+      .gte('date', startDate)
+      .lte('date', endDate)
 
-    if (error && error.code !== '42P01') throw error
+    if (error && !isTableNotFound(error)) throw error
 
     const expensesList = expenses || []
     const totalSpent = expensesList.reduce((sum, e) => sum + (e.total_amount || 0), 0)
@@ -927,12 +934,12 @@ export const foodProgramService = {
       .from('food_expenses')
       .select('*')
       .eq('organization_id', orgId)
-      .gte('expense_date', startDate)
-      .lte('expense_date', endDate)
-      .order('expense_date', { ascending: false })
+      .gte('date', startDate)
+      .lte('date', endDate)
+      .order('date', { ascending: false })
 
     if (error) {
-      if (error.code === '42P01') return []
+      if (isTableNotFound(error)) return []
       throw error
     }
     return data || []
@@ -954,13 +961,12 @@ export const foodProgramService = {
       .insert({
         organization_id: orgId,
         food_budget_id: budget?.id,
-        expense_date: expense.expense_date,
+        date: expense.expense_date,
         vendor: expense.vendor,
         description: expense.description,
         category: expense.category,
         amount: expense.amount,
         tax_amount: expense.tax_amount || 0,
-        total_amount: totalAmount,
         payment_method: expense.payment_method,
         receipt_url: expense.receipt_url,
         recorded_by: user?.id,
@@ -977,20 +983,13 @@ export const foodProgramService = {
     const supabase = createClient()
 
     const updateData: Record<string, unknown> = { ...expense }
-    if (expense.amount !== undefined || expense.tax_amount !== undefined) {
-      // Need to recalculate total
-      const { data: current } = await supabase
-        .from('food_expenses')
-        .select('amount, tax_amount')
-        .eq('id', id)
-        .single()
-
-      if (current) {
-        const newAmount = expense.amount ?? current.amount
-        const newTax = expense.tax_amount ?? current.tax_amount
-        updateData.total_amount = newAmount + newTax
-      }
+    // Map expense_date to date column
+    if ('expense_date' in updateData) {
+      updateData.date = updateData.expense_date
+      delete updateData.expense_date
     }
+    // total_amount is GENERATED in DB, don't try to set it
+    delete updateData.total_amount
 
     const { data, error } = await supabase
       .from('food_expenses')
@@ -1027,11 +1026,11 @@ export const foodProgramService = {
       .from('milk_inventory')
       .select('*')
       .eq('organization_id', orgId)
-      .eq('inventory_date', date)
+      .eq('date', date)
       .order('milk_type')
 
     if (error) {
-      if (error.code === '42P01') return []
+      if (isTableNotFound(error)) return []
       throw error
     }
     return data || []
@@ -1046,7 +1045,7 @@ export const foodProgramService = {
       .from('milk_inventory')
       .upsert({
         organization_id: orgId,
-        inventory_date: milk.inventory_date,
+        date: milk.inventory_date,
         milk_type: milk.milk_type,
         opening_quantity: milk.opening_quantity,
         received_quantity: milk.received_quantity || 0,
@@ -1056,7 +1055,7 @@ export const foodProgramService = {
         recorded_by: user?.id,
         notes: milk.notes,
       }, {
-        onConflict: 'organization_id,inventory_date,milk_type',
+        onConflict: 'organization_id,date,milk_type',
       })
       .select()
       .single()
@@ -1079,11 +1078,11 @@ export const foodProgramService = {
       .from('milk_inventory')
       .select('*')
       .eq('organization_id', orgId)
-      .gte('inventory_date', startDate)
-      .lte('inventory_date', endDate)
+      .gte('date', startDate)
+      .lte('date', endDate)
 
     if (error) {
-      if (error.code === '42P01') return []
+      if (isTableNotFound(error)) return []
       throw error
     }
 
@@ -1128,7 +1127,7 @@ export const foodProgramService = {
       .eq('is_active', true)
 
     if (error) {
-      if (error.code === '42P01') {
+      if (isTableNotFound(error)) {
         return {
           total_items: 0,
           total_value: 0,

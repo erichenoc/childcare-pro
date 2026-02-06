@@ -22,6 +22,8 @@ import {
   Milk,
   Package,
   DollarSign,
+  ClipboardList,
+  FileBarChart,
 } from 'lucide-react'
 import {
   foodProgramService,
@@ -36,6 +38,9 @@ import {
   GlassCardContent,
   GlassButton,
   GlassBadge,
+  GlassWorkflowStepper,
+  type WorkflowStep,
+  GlassContextualHelp,
 } from '@/shared/components/ui'
 import { useTranslations, useLocale } from '@/shared/lib/i18n'
 
@@ -164,6 +169,39 @@ export default function FoodProgramPage() {
         </div>
       </div>
 
+      {/* Food Program Workflow */}
+      <div className="flex items-center gap-2">
+        <GlassWorkflowStepper
+          steps={[
+            {
+              key: 'record',
+              label: t.workflow.foodRecord,
+              icon: <ClipboardList className="w-4 h-4" />,
+              status: 'current',
+            },
+            {
+              key: 'inventory',
+              label: t.workflow.foodInventory,
+              icon: <Package className="w-4 h-4" />,
+              status: 'upcoming',
+            },
+            {
+              key: 'report',
+              label: t.workflow.foodCacfpReport,
+              icon: <FileBarChart className="w-4 h-4" />,
+              status: 'upcoming',
+            },
+            {
+              key: 'reimburse',
+              label: t.workflow.foodReimbursement,
+              icon: <DollarSign className="w-4 h-4" />,
+              status: 'upcoming',
+            },
+          ]}
+          className="flex-1"
+        />
+      </div>
+
       {/* Date Navigation */}
       <GlassCard>
         <GlassCardContent className="py-4">
@@ -249,7 +287,14 @@ export default function FoodProgramPage() {
               <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
                 {formatCurrency(summary?.estimated_reimbursement || 0)}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">{t.foodProgram.estimatedCACFP}</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate flex items-center gap-1">
+                {t.foodProgram.estimatedCACFP}
+                <GlassContextualHelp
+                  title={t.contextHelp.cacfpTitle}
+                  content={t.contextHelp.cacfpContent}
+                  position="bottom"
+                />
+              </p>
             </div>
           </div>
         </GlassCard>

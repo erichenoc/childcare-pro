@@ -19,6 +19,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   ChevronRight,
+  UserPlus,
+  FileCheck,
+  BookOpen,
+  Users,
 } from 'lucide-react'
 import { useTranslations, useI18n } from '@/shared/lib/i18n'
 import { staffService } from '@/features/staff/services/staff.service'
@@ -41,6 +45,10 @@ import {
   GlassTableHead,
   GlassTableCell,
   GlassTableEmpty,
+  GlassWorkflowStepper,
+  type WorkflowStep,
+  GlassSmartEmptyState,
+  GlassContextualHelp,
 } from '@/shared/components/ui'
 
 export default function StaffPage() {
@@ -152,6 +160,38 @@ export default function StaffPage() {
         </div>
       </div>
 
+      {/* Staff Workflow */}
+      <GlassWorkflowStepper
+        steps={[
+          {
+            key: 'hire',
+            label: t.workflow.staffHire,
+            icon: <UserPlus className="w-4 h-4" />,
+            status: stats.total > 0 ? 'completed' : 'current',
+            count: stats.total || undefined,
+          },
+          {
+            key: 'credentials',
+            label: t.workflow.staffCredentials,
+            icon: <FileCheck className="w-4 h-4" />,
+            status: complianceStats.expiringSoon > 0 || complianceStats.missingTraining > 0 ? 'warning' : stats.total > 0 ? 'completed' : 'upcoming',
+            count: complianceStats.expiringSoon + complianceStats.missingTraining || undefined,
+          },
+          {
+            key: 'training',
+            label: t.workflow.staffTraining,
+            icon: <BookOpen className="w-4 h-4" />,
+            status: complianceStats.complianceRate >= 100 ? 'completed' : stats.total > 0 ? 'current' : 'upcoming',
+          },
+          {
+            key: 'assign',
+            label: t.workflow.staffAssign,
+            icon: <Users className="w-4 h-4" />,
+            status: 'upcoming',
+          },
+        ]}
+      />
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <GlassCard variant="clear" className="p-4">
@@ -220,8 +260,15 @@ export default function StaffPage() {
                 <ShieldCheck className="w-6 h-6 text-primary-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Cumplimiento DCF</h3>
-                <p className="text-sm text-gray-500">Estado de certificaciones del personal</p>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-gray-900">{t.reports.dcfCompliance}</h3>
+                  <GlassContextualHelp
+                    title={t.contextHelp.dcfTitle}
+                    content={t.contextHelp.dcfContent}
+                    position="right"
+                  />
+                </div>
+                <p className="text-sm text-gray-500">{t.staff.certificationStatus}</p>
               </div>
             </div>
 
@@ -230,7 +277,7 @@ export default function StaffPage() {
                 <CheckCircle2 className="w-5 h-5 text-green-600" />
                 <div>
                   <p className="text-lg font-bold text-gray-900">{complianceStats.complianceRate}%</p>
-                  <p className="text-xs text-gray-500">Cumplimiento</p>
+                  <p className="text-xs text-gray-500">{t.dcfRatios.complianceStatus}</p>
                 </div>
               </div>
 
@@ -239,7 +286,7 @@ export default function StaffPage() {
                   <Clock className="w-5 h-5 text-yellow-600" />
                   <div>
                     <p className="text-lg font-bold text-yellow-600">{complianceStats.expiringSoon}</p>
-                    <p className="text-xs text-gray-500">Por vencer</p>
+                    <p className="text-xs text-gray-500">{t.staff.expiringSoon}</p>
                   </div>
                 </div>
               )}
@@ -257,7 +304,7 @@ export default function StaffPage() {
               <div className="flex items-center gap-2">
                 <Link href="/dashboard/staff/compliance">
                   <GlassButton variant="secondary" size="sm">
-                    Ver Detalles
+                    {t.common.view}
                     <ChevronRight className="w-4 h-4 ml-1" />
                   </GlassButton>
                 </Link>
@@ -306,9 +353,20 @@ export default function StaffPage() {
       {/* Staff List - Mobile Cards */}
       <div className="md:hidden space-y-3">
         {filteredStaff.length === 0 ? (
-          <GlassCard className="p-8 text-center">
-            <p className="text-gray-500">{t.staff.noStaffFound}</p>
-          </GlassCard>
+          <GlassSmartEmptyState
+            icon={<UserPlus className="w-8 h-8" />}
+            title={t.emptyStates.staffTitle}
+            steps={[
+              { label: t.workflow.staffHire, icon: <UserPlus className="w-4 h-4" /> },
+              { label: t.workflow.staffCredentials, icon: <FileCheck className="w-4 h-4" /> },
+              { label: t.workflow.staffAssign, icon: <Users className="w-4 h-4" /> },
+            ]}
+            primaryAction={{
+              label: t.emptyStates.staffAction,
+              href: '/dashboard/staff/new',
+              icon: <Plus className="w-4 h-4" />,
+            }}
+          />
         ) : (
           filteredStaff.map((member) => (
             <GlassCard key={member.id} className="p-4">
@@ -382,7 +440,16 @@ export default function StaffPage() {
               </GlassTableHeader>
               <GlassTableBody>
                 {filteredStaff.length === 0 ? (
-                  <GlassTableEmpty title={t.staff.noStaffFound} />
+                  <GlassSmartEmptyState
+                    icon={<UserPlus className="w-8 h-8" />}
+                    title={t.emptyStates.staffTitle}
+                    primaryAction={{
+                      label: t.emptyStates.staffAction,
+                      href: '/dashboard/staff/new',
+                      icon: <Plus className="w-4 h-4" />,
+                    }}
+                    variant="table"
+                  />
                 ) : (
                   filteredStaff.map((member) => (
                     <GlassTableRow key={member.id}>

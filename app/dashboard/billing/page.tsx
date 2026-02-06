@@ -18,6 +18,9 @@ import {
   X,
   Banknote,
   CalendarDays,
+  FileText,
+  CheckSquare,
+  Receipt,
 } from 'lucide-react'
 import { useTranslations, useI18n } from '@/shared/lib/i18n'
 import { billingService } from '@/features/billing/services/billing.service'
@@ -40,6 +43,10 @@ import {
   GlassTableHead,
   GlassTableCell,
   GlassTableEmpty,
+  GlassWorkflowStepper,
+  type WorkflowStep,
+  GlassSmartEmptyState,
+  GlassContextualHelp,
 } from '@/shared/components/ui'
 
 // Status options will be created inside component to use translations
@@ -379,6 +386,40 @@ export default function BillingPage() {
         </div>
       </div>
 
+      {/* Billing Workflow */}
+      {(() => {
+        const workflowSteps: WorkflowStep[] = [
+          {
+            key: 'create',
+            label: t.workflow.billingCreate,
+            icon: <FileText className="w-4 h-4" />,
+            status: (invoices.length > 0 ? 'completed' : 'current') as any,
+            count: invoices.filter(i => i.status === 'draft').length || undefined,
+          },
+          {
+            key: 'send',
+            label: t.workflow.billingSend,
+            icon: <Send className="w-4 h-4" />,
+            status: (invoices.some(i => i.status === 'sent' || i.status === 'paid') ? 'completed' : invoices.length > 0 ? 'current' : 'upcoming') as any,
+            count: invoices.filter(i => i.status === 'sent').length || undefined,
+          },
+          {
+            key: 'collect',
+            label: t.workflow.billingCollect,
+            icon: <CreditCard className="w-4 h-4" />,
+            status: (invoices.some(i => i.status === 'paid') ? 'completed' : invoices.some(i => i.status === 'sent') ? 'current' : 'upcoming') as any,
+            count: invoices.filter(i => i.status === 'paid').length || undefined,
+          },
+          {
+            key: 'reconcile',
+            label: t.workflow.billingReconcile,
+            icon: <CheckSquare className="w-4 h-4" />,
+            status: 'upcoming' as any,
+          },
+        ]
+        return <GlassWorkflowStepper steps={workflowSteps} />
+      })()}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <GlassCard variant="clear" className="p-3 sm:p-4">
@@ -467,9 +508,20 @@ export default function BillingPage() {
       {/* Invoices List - Mobile Cards */}
       <div className="md:hidden space-y-3">
         {filteredInvoices.length === 0 ? (
-          <GlassCard className="p-8 text-center">
-            <p className="text-gray-500">{t.billing.noInvoicesFound}</p>
-          </GlassCard>
+          <GlassSmartEmptyState
+            icon={<Receipt className="w-8 h-8" />}
+            title={t.emptyStates.billingTitle}
+            steps={[
+              { label: t.workflow.billingCreate, icon: <FileText className="w-4 h-4" /> },
+              { label: t.workflow.billingSend, icon: <Send className="w-4 h-4" /> },
+              { label: t.workflow.billingCollect, icon: <CreditCard className="w-4 h-4" /> },
+            ]}
+            primaryAction={{
+              label: t.emptyStates.billingAction,
+              href: '/dashboard/billing/new',
+              icon: <Plus className="w-4 h-4" />,
+            }}
+          />
         ) : (
           filteredInvoices.map((invoice) => {
             const familyName = invoice.family

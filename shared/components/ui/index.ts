@@ -43,3 +43,8 @@ export {
   GlassTableCell,
   GlassTableEmpty,
 } from './glass-table'
+
+// Workflow & UX
+export { GlassWorkflowStepper, type WorkflowStep } from './glass-workflow-stepper'
+export { GlassSmartEmptyState } from './glass-smart-empty-state'
+export { GlassContextualHelp } from './glass-contextual-help'

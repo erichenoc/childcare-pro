@@ -16,6 +16,9 @@ import {
   Loader2,
   Calculator,
   Sun,
+  FileBarChart,
+  CheckSquare,
+  Plus,
 } from 'lucide-react'
 import {
   accountingService,
@@ -30,6 +33,9 @@ import {
   GlassCardTitle,
   GlassCardContent,
   GlassButton,
+  GlassWorkflowStepper,
+  type WorkflowStep,
+  GlassSmartEmptyState,
 } from '@/shared/components/ui'
 import { useTranslations } from '@/shared/lib/i18n'
 
@@ -121,6 +127,36 @@ export default function AccountingDashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Accounting Workflow */}
+      <GlassWorkflowStepper
+        steps={[
+          {
+            key: 'income',
+            label: t.workflow.accountingIncome,
+            icon: <TrendingUp className="w-4 h-4" />,
+            status: 'current',
+          },
+          {
+            key: 'expenses',
+            label: t.workflow.accountingExpenses,
+            icon: <TrendingDown className="w-4 h-4" />,
+            status: 'current',
+          },
+          {
+            key: 'reconcile',
+            label: t.workflow.accountingReconcile,
+            icon: <CheckSquare className="w-4 h-4" />,
+            status: 'upcoming',
+          },
+          {
+            key: 'reports',
+            label: t.workflow.accountingReports,
+            icon: <FileBarChart className="w-4 h-4" />,
+            status: 'upcoming',
+          },
+        ]}
+      />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -302,45 +338,63 @@ export default function AccountingDashboardPage() {
               </div>
             </GlassCardHeader>
             <GlassCardContent>
-              <div className="space-y-3">
-                {recentTransactions.map((txn) => {
-                  const isIncome = txn._type === 'income'
-                  return (
-                    <div
-                      key={txn.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          isIncome ? 'bg-green-100' : 'bg-red-100'
+              {recentTransactions.length === 0 ? (
+                <GlassSmartEmptyState
+                  icon={<Receipt className="w-8 h-8" />}
+                  title={t.emptyStates.accountingTitle}
+                  steps={[
+                    { label: t.workflow.accountingIncome, icon: <TrendingUp className="w-4 h-4" /> },
+                    { label: t.workflow.accountingExpenses, icon: <TrendingDown className="w-4 h-4" /> },
+                    { label: t.workflow.accountingReports, icon: <FileBarChart className="w-4 h-4" /> },
+                  ]}
+                  primaryAction={{
+                    label: t.emptyStates.accountingAction,
+                    onClick: () => {},
+                    icon: <Plus className="w-4 h-4" />,
+                  }}
+                  variant="inline"
+                />
+              ) : (
+                <div className="space-y-3">
+                  {recentTransactions.map((txn) => {
+                    const isIncome = txn._type === 'income'
+                    return (
+                      <div
+                        key={txn.id}
+                        className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                            isIncome ? 'bg-green-100' : 'bg-red-100'
+                          }`}>
+                            {isIncome ? (
+                              <ArrowUpRight className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <ArrowDownRight className="w-4 h-4 text-red-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {isIncome
+                                ? (txn as IncomeTransaction).payer_name || txn.category_name
+                                : (txn as ExpenseTransaction).vendor_name
+                              }
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {formatDate(txn.date)} • {txn.category_name}
+                            </p>
+                          </div>
+                        </div>
+                        <span className={`font-semibold ${
+                          isIncome ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          {isIncome ? (
-                            <ArrowUpRight className="w-4 h-4 text-green-600" />
-                          ) : (
-                            <ArrowDownRight className="w-4 h-4 text-red-600" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {isIncome
-                              ? (txn as IncomeTransaction).payer_name || txn.category_name
-                              : (txn as ExpenseTransaction).vendor_name
-                            }
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {formatDate(txn.date)} • {txn.category_name}
-                          </p>
-                        </div>
+                          {isIncome ? '+' : '-'}{formatCurrency(txn.total_amount)}
+                        </span>
                       </div>
-                      <span className={`font-semibold ${
-                        isIncome ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {isIncome ? '+' : '-'}{formatCurrency(txn.total_amount)}
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
+                    )
+                  })}
+                </div>
+              )}
             </GlassCardContent>
           </GlassCard>
         </div>

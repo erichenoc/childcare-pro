@@ -1645,4 +1645,59 @@ export const es: Translations = {
     statusSuspended: 'Suspendido',
     statusCancelled: 'Cancelado',
   },
+
+  // ============================================
+  // WORKFLOW & UX ENHANCEMENTS
+  // ============================================
+  workflow: {
+    // Billing
+    billingCreate: 'Crear',
+    billingSend: 'Enviar',
+    billingCollect: 'Cobrar',
+    billingReconcile: 'Conciliar',
+    // Food Program
+    foodRecord: 'Registrar',
+    foodInventory: 'Inventario',
+    foodCacfpReport: 'Reporte',
+    foodReimbursement: 'Reembolso',
+    // Programs (VPK/SR)
+    programsEnroll: 'Inscribir',
+    programsTrackHours: 'Horas',
+    programsReports: 'Reportes',
+    programsFunding: 'Fondos',
+    // Accounting
+    accountingIncome: 'Ingresos',
+    accountingExpenses: 'Gastos',
+    accountingReconcile: 'Conciliar',
+    accountingReports: 'Reportes',
+    // Staff
+    staffHire: 'Contratar',
+    staffCredentials: 'Credenciales',
+    staffTraining: 'Training',
+    staffAssign: 'Asignar',
+  },
+  emptyStates: {
+    billingTitle: 'Sin facturas aún',
+    billingAction: 'Crear Factura',
+    foodTitle: 'Sin comidas registradas',
+    foodAction: 'Registrar Comida',
+    programsTitle: 'Sin inscripciones',
+    programsAction: 'Inscribir Niño',
+    accountingTitle: 'Sin transacciones',
+    accountingAction: 'Registrar Transacción',
+    staffTitle: 'Sin personal registrado',
+    staffAction: 'Agregar Personal',
+  },
+  contextHelp: {
+    cacfpTitle: 'CACFP',
+    cacfpContent: 'Child and Adult Care Food Program — programa federal USDA que reembolsa comidas nutritivas servidas en guarderías.',
+    vpkTitle: 'VPK',
+    vpkContent: 'Voluntary Pre-Kindergarten — programa gratuito de Florida: 540 horas (año escolar) o 300 horas (verano) para niños de 4 años.',
+    srTitle: 'School Readiness',
+    srContent: 'Programa subsidiado del ELC que cubre cuidado infantil para familias elegibles por ingresos.',
+    dcfTitle: 'DCF',
+    dcfContent: 'Department of Children & Families — ente regulador de guarderías en Florida. Define ratios, licencias y requisitos de personal.',
+    elcTitle: 'ELC',
+    elcContent: 'Early Learning Coalition — administra fondos de VPK y School Readiness a nivel de condado en Florida.',
+  },
 }

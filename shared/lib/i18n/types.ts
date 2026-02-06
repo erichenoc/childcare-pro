@@ -1531,4 +1531,64 @@ export interface Translations {
     statusSuspended: string
     statusCancelled: string
   }
+
+  // ============================================
+  // WORKFLOW & UX ENHANCEMENTS
+  // ============================================
+  workflow: {
+    // Billing workflow steps
+    billingCreate: string
+    billingSend: string
+    billingCollect: string
+    billingReconcile: string
+    // Food Program workflow steps
+    foodRecord: string
+    foodInventory: string
+    foodCacfpReport: string
+    foodReimbursement: string
+    // Programs (VPK/SR) workflow steps
+    programsEnroll: string
+    programsTrackHours: string
+    programsReports: string
+    programsFunding: string
+    // Accounting workflow steps
+    accountingIncome: string
+    accountingExpenses: string
+    accountingReconcile: string
+    accountingReports: string
+    // Staff workflow steps
+    staffHire: string
+    staffCredentials: string
+    staffTraining: string
+    staffAssign: string
+  }
+  emptyStates: {
+    // Billing
+    billingTitle: string
+    billingAction: string
+    // Food Program
+    foodTitle: string
+    foodAction: string
+    // Programs
+    programsTitle: string
+    programsAction: string
+    // Accounting
+    accountingTitle: string
+    accountingAction: string
+    // Staff
+    staffTitle: string
+    staffAction: string
+  }
+  contextHelp: {
+    cacfpTitle: string
+    cacfpContent: string
+    vpkTitle: string
+    vpkContent: string
+    srTitle: string
+    srContent: string
+    dcfTitle: string
+    dcfContent: string
+    elcTitle: string
+    elcContent: string
+  }
 }

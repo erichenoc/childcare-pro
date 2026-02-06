@@ -12,6 +12,9 @@ import {
   CheckCircle2,
   TrendingUp,
   Loader2,
+  UserPlus,
+  FileBarChart,
+  Banknote,
 } from 'lucide-react'
 import {
   programsService,
@@ -19,15 +22,21 @@ import {
   type SchoolReadinessEnrollment,
   type VPKHoursSummary,
 } from '@/features/programs/services/programs.service'
+import { useTranslations } from '@/shared/lib/i18n'
 import {
   GlassCard,
   GlassCardHeader,
   GlassCardTitle,
   GlassCardContent,
   GlassButton,
+  GlassWorkflowStepper,
+  type WorkflowStep,
+  GlassContextualHelp,
+  GlassSmartEmptyState,
 } from '@/shared/components/ui'
 
 export default function ProgramsDashboardPage() {
+  const t = useTranslations()
   const [vpkEnrollments, setVpkEnrollments] = useState<VPKEnrollment[]>([])
   const [srEnrollments, setSrEnrollments] = useState<SchoolReadinessEnrollment[]>([])
   const [vpkSummary, setVpkSummary] = useState<VPKHoursSummary[]>([])
@@ -72,12 +81,42 @@ export default function ProgramsDashboardPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Programas de Florida</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t.nav.programs}</h1>
           <p className="text-gray-500">
             Gestiona VPK y School Readiness
           </p>
         </div>
       </div>
+
+      {/* Programs Workflow */}
+      <GlassWorkflowStepper
+        steps={[
+          {
+            key: 'enroll',
+            label: t.workflow.programsEnroll,
+            icon: <UserPlus className="w-4 h-4" />,
+            status: 'current',
+          },
+          {
+            key: 'hours',
+            label: t.workflow.programsTrackHours,
+            icon: <Clock className="w-4 h-4" />,
+            status: 'upcoming',
+          },
+          {
+            key: 'reports',
+            label: t.workflow.programsReports,
+            icon: <FileBarChart className="w-4 h-4" />,
+            status: 'upcoming',
+          },
+          {
+            key: 'funding',
+            label: t.workflow.programsFunding,
+            icon: <Banknote className="w-4 h-4" />,
+            status: 'upcoming',
+          },
+        ]}
+      />
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -88,7 +127,7 @@ export default function ProgramsDashboardPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{activeVPK.length}</p>
-              <p className="text-sm text-gray-500">VPK Activos</p>
+              <p className="text-sm text-gray-500">VPK {t.common.active}</p>
             </div>
           </div>
         </GlassCard>
@@ -114,7 +153,7 @@ export default function ProgramsDashboardPage() {
               <p className="text-2xl font-bold text-gray-900">
                 {activeVPK.length + activeSR.length}
               </p>
-              <p className="text-sm text-gray-500">Total Inscritos</p>
+              <p className="text-sm text-gray-500">{t.children.totalEnrolled}</p>
             </div>
           </div>
         </GlassCard>
@@ -149,7 +188,14 @@ export default function ProgramsDashboardPage() {
                   <GraduationCap className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <GlassCardTitle>VPK</GlassCardTitle>
+                  <div className="flex items-center gap-1.5">
+                    <GlassCardTitle>VPK</GlassCardTitle>
+                    <GlassContextualHelp
+                      title={t.contextHelp.vpkTitle}
+                      content={t.contextHelp.vpkContent}
+                      position="bottom"
+                    />
+                  </div>
                   <p className="text-sm text-gray-500">Voluntary Prekindergarten</p>
                 </div>
               </div>
@@ -166,7 +212,7 @@ export default function ProgramsDashboardPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="text-center p-3 rounded-lg bg-gray-50">
                   <p className="text-lg font-bold text-gray-900">{activeVPK.length}</p>
-                  <p className="text-xs text-gray-500">Activos</p>
+                  <p className="text-xs text-gray-500">{t.common.active}</p>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-gray-50">
                   <p className="text-lg font-bold text-gray-900">
@@ -237,7 +283,14 @@ export default function ProgramsDashboardPage() {
                   <DollarSign className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <GlassCardTitle>School Readiness</GlassCardTitle>
+                  <div className="flex items-center gap-1.5">
+                    <GlassCardTitle>School Readiness</GlassCardTitle>
+                    <GlassContextualHelp
+                      title={t.contextHelp.srTitle}
+                      content={t.contextHelp.srContent}
+                      position="bottom"
+                    />
+                  </div>
                   <p className="text-sm text-gray-500">Subsidio de Cuidado Infantil</p>
                 </div>
               </div>
@@ -254,19 +307,19 @@ export default function ProgramsDashboardPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="text-center p-3 rounded-lg bg-gray-50">
                   <p className="text-lg font-bold text-gray-900">{activeSR.length}</p>
-                  <p className="text-xs text-gray-500">Activos</p>
+                  <p className="text-xs text-gray-500">{t.common.active}</p>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-gray-50">
                   <p className="text-lg font-bold text-gray-900">
                     {srEnrollments.filter(e => e.rate_type === 'full_time').length}
                   </p>
-                  <p className="text-xs text-gray-500">Full Time</p>
+                  <p className="text-xs text-gray-500">{t.children.fullTime}</p>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-gray-50">
                   <p className="text-lg font-bold text-gray-900">
                     {srEnrollments.filter(e => e.rate_type === 'part_time').length}
                   </p>
-                  <p className="text-xs text-gray-500">Part Time</p>
+                  <p className="text-xs text-gray-500">{t.children.partTime}</p>
                 </div>
               </div>
 
@@ -290,8 +343,8 @@ export default function ProgramsDashboardPage() {
                           {enrollment.authorized_hours_weekly} hrs/sem
                         </p>
                         <p className="text-xs text-gray-500">
-                          {enrollment.rate_type === 'full_time' ? 'Full Time' :
-                           enrollment.rate_type === 'part_time' ? 'Part Time' : 'Hourly'}
+                          {enrollment.rate_type === 'full_time' ? t.children.fullTime :
+                           enrollment.rate_type === 'part_time' ? t.children.partTime : t.children.srHourly}
                         </p>
                       </div>
                     </div>
@@ -343,7 +396,7 @@ export default function ProgramsDashboardPage() {
                       {summary.hours_remaining} horas restantes
                     </p>
                     <p className="text-xs text-amber-700">
-                      {summary.schedule_type === 'school_year' ? 'Programa Escolar' : 'Programa Verano'}
+                      {summary.schedule_type === 'school_year' ? t.children.vpkSchoolYear : t.children.vpkSummer}
                     </p>
                   </div>
                 </div>
