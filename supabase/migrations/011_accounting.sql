@@ -9,7 +9,7 @@
 
 -- Account categories
 CREATE TABLE IF NOT EXISTS account_categories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   name TEXT NOT NULL,
@@ -38,7 +38,7 @@ CREATE INDEX IF NOT EXISTS idx_account_categories_type ON account_categories(typ
 
 -- Income records
 CREATE TABLE IF NOT EXISTS income_transactions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   date DATE NOT NULL,
@@ -98,7 +98,7 @@ CREATE INDEX IF NOT EXISTS idx_income_transactions_status ON income_transactions
 
 -- Expense records
 CREATE TABLE IF NOT EXISTS expense_transactions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   date DATE NOT NULL,
@@ -172,7 +172,7 @@ CREATE INDEX IF NOT EXISTS idx_expense_transactions_status ON expense_transactio
 
 -- Quarterly/Annual tax records
 CREATE TABLE IF NOT EXISTS tax_records (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   -- Period
@@ -225,7 +225,7 @@ CREATE INDEX IF NOT EXISTS idx_tax_records_org_year ON tax_records(organization_
 
 -- Payroll records
 CREATE TABLE IF NOT EXISTS payroll_records (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   -- Period

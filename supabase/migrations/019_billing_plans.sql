@@ -3,6 +3,17 @@
 -- Description: Billing rates by age group, schedule, and enrollment management
 -- =====================================================
 
+-- =====================================================
+-- DROP existing tables (reverse dependency order)
+-- Required: remote DB has incompatible schemas, no production data
+-- =====================================================
+DROP TABLE IF EXISTS billing_adjustments CASCADE;
+DROP TABLE IF EXISTS applied_discounts CASCADE;
+DROP TABLE IF EXISTS child_billing_enrollments CASCADE;
+DROP TABLE IF EXISTS recurring_invoice_templates CASCADE;
+DROP TABLE IF EXISTS billing_discounts CASCADE;
+DROP TABLE IF EXISTS billing_rate_templates CASCADE;
+
 -- ==================== Enums ====================
 
 -- Schedule types
@@ -241,8 +252,8 @@ CREATE TABLE IF NOT EXISTS billing_adjustments (
   applied_at TIMESTAMPTZ,
 
   -- Approval
-  created_by UUID REFERENCES staff(id),
-  approved_by UUID REFERENCES staff(id),
+  created_by UUID REFERENCES profiles(id),
+  approved_by UUID REFERENCES profiles(id),
   approved_at TIMESTAMPTZ,
 
   notes TEXT,
@@ -289,7 +300,7 @@ CREATE POLICY "billing_rate_templates_org_access" ON billing_rate_templates
   FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM staff WHERE email = auth.jwt() ->> 'email'
+      SELECT organization_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -298,7 +309,7 @@ CREATE POLICY "billing_discounts_org_access" ON billing_discounts
   FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM staff WHERE email = auth.jwt() ->> 'email'
+      SELECT organization_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -307,7 +318,7 @@ CREATE POLICY "child_billing_enrollments_org_access" ON child_billing_enrollment
   FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM staff WHERE email = auth.jwt() ->> 'email'
+      SELECT organization_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -316,7 +327,7 @@ CREATE POLICY "applied_discounts_org_access" ON applied_discounts
   FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM staff WHERE email = auth.jwt() ->> 'email'
+      SELECT organization_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -325,7 +336,7 @@ CREATE POLICY "recurring_invoice_templates_org_access" ON recurring_invoice_temp
   FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM staff WHERE email = auth.jwt() ->> 'email'
+      SELECT organization_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -334,7 +345,7 @@ CREATE POLICY "billing_adjustments_org_access" ON billing_adjustments
   FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM staff WHERE email = auth.jwt() ->> 'email'
+      SELECT organization_id FROM profiles WHERE id = auth.uid()
     )
   );
 

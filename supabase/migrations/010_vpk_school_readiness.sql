@@ -9,7 +9,7 @@
 
 -- VPK enrollment records
 CREATE TABLE IF NOT EXISTS vpk_enrollments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
 
@@ -78,7 +78,7 @@ CREATE INDEX IF NOT EXISTS idx_vpk_enrollments_status ON vpk_enrollments(status)
 
 -- VPK attendance/hours tracking
 CREATE TABLE IF NOT EXISTS vpk_attendance (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   vpk_enrollment_id UUID NOT NULL REFERENCES vpk_enrollments(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
@@ -107,7 +107,7 @@ CREATE INDEX IF NOT EXISTS idx_vpk_attendance_date ON vpk_attendance(date);
 
 -- VPK assessment periods
 CREATE TABLE IF NOT EXISTS vpk_assessments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   vpk_enrollment_id UUID NOT NULL REFERENCES vpk_enrollments(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
@@ -171,7 +171,7 @@ CREATE INDEX IF NOT EXISTS idx_vpk_assessments_period ON vpk_assessments(assessm
 
 -- School Readiness enrollment
 CREATE TABLE IF NOT EXISTS sr_enrollments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
   family_id UUID REFERENCES families(id),
@@ -236,7 +236,7 @@ CREATE INDEX IF NOT EXISTS idx_sr_enrollments_redetermination ON sr_enrollments(
 
 -- School Readiness attendance tracking
 CREATE TABLE IF NOT EXISTS sr_attendance (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   sr_enrollment_id UUID NOT NULL REFERENCES sr_enrollments(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
@@ -511,8 +511,8 @@ SELECT
   se.child_id,
   c.first_name || ' ' || c.last_name as child_name,
   f.primary_contact_name as parent_name,
-  f.email as parent_email,
-  f.phone as parent_phone,
+  f.primary_contact_email as parent_email,
+  f.primary_contact_phone as parent_phone,
   se.redetermination_date,
   se.elc_case_number,
   se.elc_worker_name,

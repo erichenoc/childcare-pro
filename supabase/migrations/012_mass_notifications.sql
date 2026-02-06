@@ -9,7 +9,7 @@
 
 -- Reusable notification templates
 CREATE TABLE IF NOT EXISTS notification_templates (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   name TEXT NOT NULL,
@@ -45,7 +45,7 @@ CREATE INDEX IF NOT EXISTS idx_notification_templates_type ON notification_templ
 
 -- Mass notification campaigns
 CREATE TABLE IF NOT EXISTS mass_notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   -- Basic info
@@ -102,7 +102,7 @@ CREATE INDEX IF NOT EXISTS idx_mass_notifications_type ON mass_notifications(not
 
 -- Individual notification recipients
 CREATE TABLE IF NOT EXISTS notification_recipients (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   notification_id UUID NOT NULL REFERENCES mass_notifications(id) ON DELETE CASCADE,
 
@@ -147,7 +147,7 @@ CREATE INDEX IF NOT EXISTS idx_notification_recipients_email ON notification_rec
 
 -- In-app notifications (shown in dashboard)
 CREATE TABLE IF NOT EXISTS app_notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   -- Target user
@@ -188,7 +188,7 @@ CREATE INDEX IF NOT EXISTS idx_app_notifications_created ON app_notifications(cr
 
 -- User notification preferences
 CREATE TABLE IF NOT EXISTS notification_preferences (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
 
   -- Email preferences
@@ -311,13 +311,13 @@ BEGIN
   SELECT DISTINCT
     f.id as family_id,
     f.primary_contact_name as recipient_name,
-    f.email as recipient_email,
-    f.phone as recipient_phone
+    f.primary_contact_email as recipient_email,
+    f.primary_contact_phone as recipient_phone
   FROM families f
   LEFT JOIN children c ON c.family_id = f.id
   WHERE f.organization_id = p_organization_id
     AND f.status = 'active'
-    AND f.email IS NOT NULL
+    AND f.primary_contact_email IS NOT NULL
     AND (
       -- All families
       p_target_type = 'all'
@@ -352,7 +352,7 @@ BEGIN
   -- Replace family variables
   v_result := REPLACE(v_result, '{{parent_name}}', COALESCE(v_family.primary_contact_name, ''));
   v_result := REPLACE(v_result, '{{family_name}}', COALESCE(v_family.primary_contact_name, ''));
-  v_result := REPLACE(v_result, '{{family_email}}', COALESCE(v_family.email, ''));
+  v_result := REPLACE(v_result, '{{family_email}}', COALESCE(v_family.primary_contact_email, ''));
 
   -- Replace organization variables
   v_result := REPLACE(v_result, '{{organization_name}}', COALESCE(v_org.name, ''));

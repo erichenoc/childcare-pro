@@ -5,7 +5,7 @@
 
 -- Table for SaaS system administrators (you)
 CREATE TABLE IF NOT EXISTS system_admins (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
   role TEXT DEFAULT 'super_admin', -- super_admin, support, sales

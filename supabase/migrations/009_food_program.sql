@@ -3,13 +3,26 @@
 -- =====================================================
 -- Complete food program management with CACFP compliance
 
+-- Drop existing tables with incompatible schemas (no production data)
+DROP TABLE IF EXISTS meal_records CASCADE;
+DROP TABLE IF EXISTS meal_attendance CASCADE;
+DROP TABLE IF EXISTS food_expenses CASCADE;
+DROP TABLE IF EXISTS food_budgets CASCADE;
+DROP TABLE IF EXISTS milk_inventory CASCADE;
+DROP TABLE IF EXISTS food_inventory CASCADE;
+DROP TABLE IF EXISTS inventory_transactions CASCADE;
+DROP TABLE IF EXISTS daily_menus CASCADE;
+DROP TABLE IF EXISTS menu_items CASCADE;
+DROP TABLE IF EXISTS menu_templates CASCADE;
+DROP TABLE IF EXISTS meal_categories CASCADE;
+
 -- =====================================================
 -- Meal Categories & Menu Templates
 -- =====================================================
 
 -- Meal categories (breakfast, lunch, snack, etc.)
 CREATE TABLE IF NOT EXISTS meal_categories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   name TEXT NOT NULL, -- 'Breakfast', 'AM Snack', 'Lunch', 'PM Snack'
@@ -34,7 +47,7 @@ CREATE INDEX IF NOT EXISTS idx_meal_categories_org ON meal_categories(organizati
 
 -- Daily menu templates
 CREATE TABLE IF NOT EXISTS menu_templates (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   name TEXT NOT NULL, -- 'Week 1 Menu', 'Summer Menu'
@@ -51,7 +64,7 @@ CREATE TABLE IF NOT EXISTS menu_templates (
 
 -- Menu items within templates
 CREATE TABLE IF NOT EXISTS menu_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   menu_template_id UUID NOT NULL REFERENCES menu_templates(id) ON DELETE CASCADE,
   meal_category_id UUID NOT NULL REFERENCES meal_categories(id),
@@ -84,7 +97,7 @@ CREATE INDEX IF NOT EXISTS idx_menu_items_day ON menu_items(day_of_week);
 
 -- Daily meal plan (what was served)
 CREATE TABLE IF NOT EXISTS daily_menus (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   date DATE NOT NULL,
@@ -119,7 +132,7 @@ CREATE INDEX IF NOT EXISTS idx_daily_menus_org_date ON daily_menus(organization_
 
 -- Individual child meal records
 CREATE TABLE IF NOT EXISTS meal_records (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   daily_menu_id UUID NOT NULL REFERENCES daily_menus(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
@@ -153,7 +166,7 @@ CREATE INDEX IF NOT EXISTS idx_meal_records_date ON meal_records(date);
 
 -- Monthly food budget
 CREATE TABLE IF NOT EXISTS food_budgets (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   year INTEGER NOT NULL,
@@ -180,7 +193,7 @@ CREATE TABLE IF NOT EXISTS food_budgets (
 
 -- Food purchases/expenses
 CREATE TABLE IF NOT EXISTS food_expenses (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   food_budget_id UUID REFERENCES food_budgets(id),
 
@@ -217,7 +230,7 @@ CREATE INDEX IF NOT EXISTS idx_food_expenses_budget ON food_expenses(food_budget
 
 -- Milk inventory tracking
 CREATE TABLE IF NOT EXISTS milk_inventory (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   date DATE NOT NULL,

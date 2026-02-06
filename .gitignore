@@ -60,6 +60,9 @@ Thumbs.db
 *.mcp.json
 !example.mcp.json
 
+# Playwright MCP screenshots
+.playwright-mcp/
+
 # Supabase
 supabase/.branches
 supabase/.temp

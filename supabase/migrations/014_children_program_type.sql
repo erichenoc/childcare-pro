@@ -70,7 +70,7 @@ ALTER TABLE families ADD COLUMN IF NOT EXISTS
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS rate_schedules (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
     name TEXT NOT NULL, -- e.g., "Infant Full Time", "Toddler Part Time"

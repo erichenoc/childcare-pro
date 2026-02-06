@@ -5,7 +5,7 @@
 
 -- Create guardians table (separate from families for detailed tracking)
 CREATE TABLE IF NOT EXISTS guardians (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   family_id UUID NOT NULL REFERENCES families(id) ON DELETE CASCADE,
 
@@ -83,7 +83,7 @@ CREATE INDEX IF NOT EXISTS idx_guardians_relationship ON guardians(relationship_
 
 -- Junction table for guardian-child relationships (many-to-many)
 CREATE TABLE IF NOT EXISTS guardian_children (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   guardian_id UUID NOT NULL REFERENCES guardians(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
   relationship TEXT NOT NULL, -- Specific relationship to this child
@@ -98,7 +98,7 @@ CREATE INDEX IF NOT EXISTS idx_guardian_children_child ON guardian_children(chil
 
 -- Emergency contacts table (separate from guardians - can be anyone)
 CREATE TABLE IF NOT EXISTS emergency_contacts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
 
@@ -135,7 +135,7 @@ CREATE INDEX IF NOT EXISTS idx_emergency_contacts_priority ON emergency_contacts
 
 -- Authorized pickups table (non-guardian people authorized to pick up)
 CREATE TABLE IF NOT EXISTS authorized_pickups (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
 

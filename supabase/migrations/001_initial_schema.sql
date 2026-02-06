@@ -37,7 +37,7 @@ CREATE TYPE message_type AS ENUM ('direct', 'announcement', 'alert', 'report');
 -- ============================================
 
 CREATE TABLE organizations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
   slug VARCHAR(100) UNIQUE NOT NULL,
   license_number VARCHAR(100),
@@ -90,7 +90,7 @@ CREATE INDEX idx_profiles_role ON profiles(role);
 -- ============================================
 
 CREATE TABLE classrooms (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   name VARCHAR(100) NOT NULL,
   age_group VARCHAR(50), -- 'infants', 'toddlers', 'twos', 'threes', 'fours', 'school_age'
@@ -112,7 +112,7 @@ CREATE INDEX idx_classrooms_organization ON classrooms(organization_id);
 -- ============================================
 
 CREATE TABLE families (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   family_code VARCHAR(20) UNIQUE,
   primary_contact_name VARCHAR(200) NOT NULL,
@@ -143,7 +143,7 @@ CREATE INDEX idx_families_code ON families(family_code);
 -- ============================================
 
 CREATE TABLE children (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   family_id UUID NOT NULL REFERENCES families(id) ON DELETE CASCADE,
   classroom_id UUID REFERENCES classrooms(id) ON DELETE SET NULL,
@@ -178,7 +178,7 @@ CREATE INDEX idx_children_status ON children(status);
 -- ============================================
 
 CREATE TABLE staff_assignments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   classroom_id UUID NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
@@ -198,7 +198,7 @@ CREATE INDEX idx_staff_assignments_classroom ON staff_assignments(classroom_id);
 -- ============================================
 
 CREATE TABLE attendance (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
   classroom_id UUID REFERENCES classrooms(id) ON DELETE SET NULL,
@@ -224,7 +224,7 @@ CREATE INDEX idx_attendance_classroom ON attendance(classroom_id);
 -- ============================================
 
 CREATE TABLE staff_attendance (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -245,7 +245,7 @@ CREATE INDEX idx_staff_attendance_date ON staff_attendance(date);
 -- ============================================
 
 CREATE TABLE invoices (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   family_id UUID NOT NULL REFERENCES families(id) ON DELETE CASCADE,
   invoice_number VARCHAR(50) NOT NULL,
@@ -277,7 +277,7 @@ CREATE INDEX idx_invoices_due_date ON invoices(due_date);
 -- ============================================
 
 CREATE TABLE payments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   invoice_id UUID NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
   family_id UUID NOT NULL REFERENCES families(id) ON DELETE CASCADE,
@@ -298,7 +298,7 @@ CREATE INDEX idx_payments_family ON payments(family_id);
 -- ============================================
 
 CREATE TABLE incidents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
   classroom_id UUID REFERENCES classrooms(id),
@@ -331,7 +331,7 @@ CREATE INDEX idx_incidents_date ON incidents(occurred_at);
 -- ============================================
 
 CREATE TABLE messages (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   sender_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   recipient_id UUID REFERENCES profiles(id), -- NULL si es announcement
@@ -357,7 +357,7 @@ CREATE INDEX idx_messages_family ON messages(family_id);
 -- ============================================
 
 CREATE TABLE daily_reports (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
   classroom_id UUID REFERENCES classrooms(id),
@@ -385,7 +385,7 @@ CREATE INDEX idx_daily_reports_date ON daily_reports(date);
 -- ============================================
 
 CREATE TABLE activity_log (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
   user_id UUID REFERENCES profiles(id),
   action VARCHAR(100) NOT NULL,

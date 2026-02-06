@@ -10,7 +10,7 @@
 
 -- Florida DCF required vaccines by age
 CREATE TABLE IF NOT EXISTS dcf_vaccine_requirements (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   vaccine_name TEXT NOT NULL, -- 'DTaP', 'Polio', 'MMR', 'Hepatitis B', etc.
   vaccine_code TEXT NOT NULL, -- Standard vaccine code
@@ -53,7 +53,7 @@ CREATE INDEX IF NOT EXISTS idx_dcf_vaccines_age ON dcf_vaccine_requirements(min_
 
 -- Main immunization records table
 CREATE TABLE IF NOT EXISTS immunization_records (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
 
@@ -103,7 +103,7 @@ CREATE INDEX IF NOT EXISTS idx_immunization_date ON immunization_records(date_ad
 
 -- Track medical and religious exemptions
 CREATE TABLE IF NOT EXISTS immunization_exemptions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
 
@@ -143,7 +143,7 @@ CREATE INDEX IF NOT EXISTS idx_exemption_status ON immunization_exemptions(statu
 
 -- Track overall compliance status per child
 CREATE TABLE IF NOT EXISTS immunization_compliance (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
 
@@ -187,7 +187,7 @@ CREATE INDEX IF NOT EXISTS idx_compliance_provisional ON immunization_compliance
 
 -- Track scheduled reminders for upcoming vaccines
 CREATE TABLE IF NOT EXISTS immunization_reminders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
 

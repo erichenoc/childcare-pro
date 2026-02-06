@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS whatsapp_sessions (
   organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
   instance_name TEXT NOT NULL,
   remote_jid TEXT NOT NULL,                      -- 1234567890@s.whatsapp.net
-  guardian_id UUID REFERENCES guardians(id) ON DELETE SET NULL,
+  guardian_id UUID, -- Guardian reference (no FK - managed at app level)
   family_id UUID REFERENCES families(id) ON DELETE SET NULL,
   current_child_id UUID REFERENCES children(id) ON DELETE SET NULL,
   is_prospect BOOLEAN DEFAULT false,

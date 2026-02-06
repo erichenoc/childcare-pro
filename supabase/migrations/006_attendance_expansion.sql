@@ -67,7 +67,7 @@ CREATE INDEX IF NOT EXISTS idx_attendance_check_in_method ON attendance(check_in
 
 -- Table to log unauthorized pickup attempts
 CREATE TABLE IF NOT EXISTS unauthorized_pickup_attempts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
 

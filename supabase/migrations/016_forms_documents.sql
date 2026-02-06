@@ -10,7 +10,7 @@
 
 -- Predefined document templates (system-wide and organization-specific)
 CREATE TABLE IF NOT EXISTS document_templates (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE, -- NULL = system template
 
   -- Template info
@@ -95,7 +95,7 @@ ON CONFLICT DO NOTHING;
 
 -- Actual documents associated with entities
 CREATE TABLE IF NOT EXISTS documents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   template_id UUID REFERENCES document_templates(id),
 
@@ -148,7 +148,7 @@ CREATE INDEX IF NOT EXISTS idx_documents_expiration ON documents(expiration_date
 
 -- Track signatures on documents
 CREATE TABLE IF NOT EXISTS document_signatures (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
 
@@ -179,7 +179,7 @@ CREATE INDEX IF NOT EXISTS idx_signatures_org ON document_signatures(organizatio
 
 -- Track requested documents from parents/staff
 CREATE TABLE IF NOT EXISTS document_requests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   template_id UUID NOT NULL REFERENCES document_templates(id),
 
@@ -219,7 +219,7 @@ CREATE INDEX IF NOT EXISTS idx_doc_requests_due ON document_requests(due_date) W
 
 -- Pre-computed compliance status per entity
 CREATE TABLE IF NOT EXISTS document_compliance (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   entity_type TEXT NOT NULL,

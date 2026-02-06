@@ -54,7 +54,7 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS
 
 -- Detailed certifications tracking table
 CREATE TABLE IF NOT EXISTS staff_certifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
 
@@ -80,21 +80,6 @@ CREATE TABLE IF NOT EXISTS staff_certifications (
   verification_notes TEXT,
 
   status TEXT DEFAULT 'active', -- 'active', 'expired', 'pending_verification', 'revoked'
-
-  -- Auto-calculated
-  days_until_expiration INTEGER GENERATED ALWAYS AS (
-    CASE
-      WHEN expiration_date IS NOT NULL THEN expiration_date - CURRENT_DATE
-      ELSE NULL
-    END
-  ) STORED,
-
-  is_expired BOOLEAN GENERATED ALWAYS AS (
-    CASE
-      WHEN expiration_date IS NOT NULL THEN expiration_date < CURRENT_DATE
-      ELSE false
-    END
-  ) STORED,
 
   notes TEXT,
 

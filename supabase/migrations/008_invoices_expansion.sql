@@ -60,7 +60,7 @@ ALTER TABLE invoices ADD COLUMN IF NOT EXISTS
 
 -- Detailed line items table for invoice weeks
 CREATE TABLE IF NOT EXISTS invoice_weeks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   invoice_id UUID NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
 
@@ -246,8 +246,8 @@ SELECT
   i.*,
   f.family_code,
   f.primary_contact_name as family_contact_name,
-  f.email as family_email,
-  f.phone as family_phone,
+  f.primary_contact_email as family_email,
+  f.primary_contact_phone as family_phone,
   f.address as family_address,
   f.city as family_city,
   f.state as family_state,
@@ -288,8 +288,8 @@ SELECT
   i.invoice_number,
   i.family_id,
   f.primary_contact_name,
-  f.email,
-  f.phone,
+  f.primary_contact_email as email,
+  f.primary_contact_phone as phone,
   i.total,
   i.balance,
   i.due_date,

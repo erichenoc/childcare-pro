@@ -3,6 +3,17 @@
 -- Child Development Tracking System
 -- =====================================================
 
+-- =====================================================
+-- DROP existing tables (reverse dependency order)
+-- Required: remote DB has incompatible schemas, no production data
+-- =====================================================
+DROP TABLE IF EXISTS portfolio_entries CASCADE;
+DROP TABLE IF EXISTS milestone_observations CASCADE;
+DROP TABLE IF EXISTS child_milestones CASCADE;
+DROP TABLE IF EXISTS learning_plans CASCADE;
+DROP TABLE IF EXISTS milestone_templates CASCADE;
+DROP TABLE IF EXISTS milestone_categories CASCADE;
+
 -- ==================== Milestone Categories ====================
 CREATE TABLE IF NOT EXISTS milestone_categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
