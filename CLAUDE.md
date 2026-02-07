@@ -236,6 +236,33 @@ proyecto/
 - `npm run commit` - Commit con Conventional Commits
 - `npm run pre-commit` - Hook de pre-commit
 
+### Flujo de Producto Completo (SaaS Factory v3)
+
+**Proyecto NUEVO (flujo completo obligatorio):**
+```
+/co-founder → /primer → /generar-prp → /ejecutar-prp → /bucle-agentico → /pulir → /entregar
+```
+
+**Proyecto EXISTENTE (skip descubrimiento):**
+```
+/primer → /generar-prp → /ejecutar-prp → /bucle-agentico → /pulir → /entregar
+```
+
+**Fix rápido (directo al código):**
+```
+Directo → Implementar → Validar → Deploy
+```
+
+| Command | Fase | Cuándo usar |
+|---------|------|-------------|
+| `/co-founder` | Descubrimiento | Proyecto NUEVO - define visión, alcance, prioridades |
+| `/primer` | Contextualización | Inicio de conversación - carga contexto del proyecto |
+| `/generar-prp` | Planificación | Antes de implementar una feature compleja |
+| `/ejecutar-prp` | Construcción | Implementar según especificaciones del PRP |
+| `/bucle-agentico` | Iteración | Problemas complejos multi-paso |
+| `/pulir` | Pulido | Post-construcción - validación visual con Playwright |
+| `/entregar` | Entrega | Cierre - deploy, documentación, independencia |
+
 ## 📝 Convenciones de Código
 
 ### File & Function Limits
