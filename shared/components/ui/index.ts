@@ -48,3 +48,6 @@ export {
 export { GlassWorkflowStepper, type WorkflowStep } from './glass-workflow-stepper'
 export { GlassSmartEmptyState } from './glass-smart-empty-state'
 export { GlassContextualHelp } from './glass-contextual-help'
+
+// Allergy Alert
+export { GlassAllergyAlert } from './glass-allergy-alert'

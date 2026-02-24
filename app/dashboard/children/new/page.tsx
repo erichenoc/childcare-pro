@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -38,6 +38,7 @@ import { familiesService } from '@/features/families/services/families.service'
 import type { ChildProgramType, ChildFormData } from '@/shared/types/children-extended'
 import { PROGRAM_TYPE_OPTIONS, isVPKProgram, isSRProgram } from '@/shared/types/children-extended'
 import { programIncomeService, type SummerCampWeek } from '@/features/accounting/services/program-income.service'
+import { useUnsavedChanges } from '@/shared/hooks/useUnsavedChanges'
 
 export default function NewChildPage() {
   const t = useTranslations()
@@ -117,6 +118,16 @@ export default function NewChildPage() {
     allergies: [],
   })
 
+  // Track unsaved changes
+  const [hasChanges, setHasChanges] = useState(false)
+  useUnsavedChanges(hasChanges)
+
+  // Wrap setFormData to track changes
+  const updateFormData = useCallback((updater: React.SetStateAction<typeof formData>) => {
+    setFormData(updater)
+    setHasChanges(true)
+  }, [])
+
   useEffect(() => {
     loadOptions()
   }, [])
@@ -151,7 +162,7 @@ export default function NewChildPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target
-    setFormData((prev) => ({
+    updateFormData((prev) => ({
       ...prev,
       [name]: type === 'number' ? (value ? parseFloat(value) : undefined) : value,
     }))
@@ -159,7 +170,7 @@ export default function NewChildPage() {
 
   const handleProgramChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newProgram = e.target.value as ChildProgramType
-    setFormData((prev) => ({
+    updateFormData((prev) => ({
       ...prev,
       program_type: newProgram,
       // Reset VPK fields if not VPK
@@ -244,6 +255,7 @@ export default function NewChildPage() {
         allergies,
       })
 
+      setHasChanges(false) // Clear before navigation
       router.push('/dashboard/children')
     } catch (err) {
       console.error('Error saving child:', err)
@@ -362,7 +374,7 @@ export default function NewChildPage() {
                 </label>
                 <GlassSelect
                   name="classroom_id"
-                  value={formData.classroom_id}
+                  value={formData.classroom_id ?? ''}
                   onChange={handleInputChange}
                   options={classroomOptions}
                 />
@@ -805,7 +817,7 @@ export default function NewChildPage() {
                 </label>
                 <GlassInput
                   name="doctor_name"
-                  value={formData.doctor_name}
+                  value={formData.doctor_name ?? ''}
                   onChange={handleInputChange}
                   placeholder="Dr. Nombre Apellido"
                 />
@@ -816,7 +828,7 @@ export default function NewChildPage() {
                 </label>
                 <GlassInput
                   name="doctor_phone"
-                  value={formData.doctor_phone}
+                  value={formData.doctor_phone ?? ''}
                   onChange={handleInputChange}
                   leftIcon={<Phone className="w-5 h-5" />}
                   placeholder="(305) 555-0000"
@@ -868,7 +880,7 @@ export default function NewChildPage() {
               </label>
               <GlassTextarea
                 name="medical_conditions"
-                value={formData.medical_conditions}
+                value={formData.medical_conditions ?? ''}
                 onChange={handleInputChange}
                 rows={3}
                 placeholder={t.children.medicalNotesPlaceholder}

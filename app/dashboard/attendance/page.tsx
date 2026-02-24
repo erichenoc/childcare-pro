@@ -39,11 +39,13 @@ import {
   GlassAvatar,
   GlassBadge,
   GlassModal,
+  GlassAllergyAlert,
 } from '@/shared/components/ui'
 
 type AttendanceRecord = {
   childId: string
   childName: string
+  childFirstName: string
   classroomId: string
   classroomName: string
   status: 'not_recorded' | 'present' | 'absent' | 'checked_out'
@@ -53,6 +55,7 @@ type AttendanceRecord = {
   checkOutPersonName: string | null
   checkOutVerified: boolean | null
   notes: string | null
+  allergies: string[] | null
 }
 
 // Modal for selecting drop-off/pickup person
@@ -362,9 +365,18 @@ export default function AttendancePage() {
             }
           }
 
+          // Normalize allergies from Json (array stored as JSON) to string[]
+          const rawAllergies = child.allergies
+          const allergyList: string[] | null = Array.isArray(rawAllergies)
+            ? (rawAllergies as string[]).filter(Boolean)
+            : typeof rawAllergies === 'string' && rawAllergies.trim()
+              ? [rawAllergies.trim()]
+              : null
+
           return {
             childId: child.id,
             childName: `${child.first_name} ${child.last_name}`,
+            childFirstName: child.first_name,
             classroomId: child.classroom_id || '',
             classroomName: classroom?.name || t.common.unassigned,
             status,
@@ -374,6 +386,7 @@ export default function AttendancePage() {
             checkOutPersonName: attendance?.check_out_person_name || null,
             checkOutVerified: attendance?.check_out_verified || null,
             notes: attendance?.notes || null,
+            allergies: allergyList && allergyList.length > 0 ? allergyList : null,
           }
         })
 
@@ -692,9 +705,17 @@ export default function AttendancePage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <GlassAvatar name={record.childName} size="md" />
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-semibold text-gray-900">{record.childName}</p>
                     <p className="text-sm text-gray-500">{record.classroomName}</p>
+                    {record.allergies && (
+                      <GlassAllergyAlert
+                        childName={record.childFirstName}
+                        allergies={record.allergies}
+                        variant="compact"
+                        className="mt-1"
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -728,7 +749,7 @@ export default function AttendancePage() {
                             </span>
                           )}
                           {record.checkOutVerified && (
-                            <Shield className="w-3 h-3 text-green-500" title="Verificado" />
+                            <span title="Verificado"><Shield className="w-3 h-3 text-green-500" /></span>
                           )}
                         </div>
                       )}
