@@ -59,6 +59,8 @@ Thumbs.db
 .claude/plugins
 *.mcp.json
 !example.mcp.json
+**/CLAUDE.md
+!/CLAUDE.md
 
 # Playwright MCP screenshots
 .playwright-mcp/
