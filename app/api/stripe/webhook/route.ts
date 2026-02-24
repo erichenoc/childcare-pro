@@ -16,9 +16,9 @@ type ExtendedInvoice = Stripe.Invoice & {
 
 // Plan limits for updating organization
 const PLAN_LIMITS: Record<string, { max_children: number; max_staff: number }> = {
-  trial: { max_children: 15, max_staff: 3 },
-  starter: { max_children: 50, max_staff: 5 },
-  professional: { max_children: 150, max_staff: 15 },
+  trial: { max_children: 999, max_staff: 999 },
+  starter: { max_children: 50, max_staff: 10 },
+  professional: { max_children: 200, max_staff: 50 },
   enterprise: { max_children: 9999, max_staff: 9999 },
 }
 

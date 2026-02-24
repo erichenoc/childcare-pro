@@ -6,7 +6,7 @@ export type {
   CreateOrganizationInput,
 } from './services/organization.service'
 
-export { subscriptionService, PLAN_PRICING, PLAN_LIMITS, PLAN_FEATURES } from './services/subscription.service'
+export { subscriptionService, PLAN_PRICING, PLAN_FEATURES, calculateMonthlyPrice, calculateAnnualPrice } from './services/subscription.service'
 export type { SubscriptionDetails } from './services/subscription.service'
 
 export { storageService } from './services/storage.service'

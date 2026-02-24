@@ -32,7 +32,9 @@ import {
 } from '@/shared/components/ui'
 import { organizationService, type Organization, type OrganizationSettings } from '@/features/organization/services/organization.service'
 import { subscriptionService, type SubscriptionDetails } from '@/features/organization/services/subscription.service'
-import { stripeService, type BillingCycle, PLAN_PRICING } from '@/features/billing/services/stripe.service'
+import { stripeService, type BillingCycle } from '@/features/billing/services/stripe.service'
+import { PLAN_PRICING, PLAN_DISPLAY, calculateMonthlyPrice, calculateAnnualPrice } from '@/shared/lib/plan-config'
+import { usePlanGating } from '@/shared/hooks/usePlanGating'
 import { LogoUpload } from '@/features/organization/components/LogoUpload'
 
 type SettingsTab = 'organization' | 'locations' | 'users' | 'billing' | 'notifications' | 'appearance' | 'security'
@@ -50,6 +52,7 @@ const getSettingsSections = (t: ReturnType<typeof useTranslations>) => [
 export default function SettingsPage() {
   const t = useTranslations()
   const { locale, setLocale } = useI18n()
+  const { activeChildCount } = usePlanGating()
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('organization')
   const [isLoading, setIsLoading] = useState(true)
@@ -165,6 +168,7 @@ export default function SettingsPage() {
         organizationId: organization.id,
         plan,
         billingCycle,
+        childCount: activeChildCount,
         customerEmail: organization.email || undefined,
         customerName: organization.name || undefined,
       })
@@ -688,18 +692,26 @@ export default function SettingsPage() {
                       </span>
                     </div>
 
-                    {/* Usage Limits */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+                    {/* Usage / Pricing Info */}
+                    <div className="grid grid-cols-3 gap-4 mb-4">
                       <div className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-xs text-gray-500 mb-1">Niños</p>
+                        <p className="text-xs text-gray-500 mb-1">Active Children</p>
+                        <p className="font-semibold text-gray-900">{activeChildCount}</p>
+                      </div>
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <p className="text-xs text-gray-500 mb-1">Per Child Rate</p>
                         <p className="font-semibold text-gray-900">
-                          -- / {organization?.max_children || 15}
+                          {organization?.plan && organization.plan !== 'trial' && organization.plan !== 'cancelled'
+                            ? `$${PLAN_PRICING[organization.plan as 'starter' | 'professional' | 'enterprise']?.perChild}/mo`
+                            : '--'}
                         </p>
                       </div>
                       <div className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-xs text-gray-500 mb-1">Staff</p>
-                        <p className="font-semibold text-gray-900">
-                          -- / {organization?.max_staff || 3}
+                        <p className="text-xs text-gray-500 mb-1">Monthly Total</p>
+                        <p className="font-semibold text-primary-600">
+                          {organization?.plan && organization.plan !== 'trial' && organization.plan !== 'cancelled'
+                            ? `$${calculateMonthlyPrice(organization.plan as 'starter' | 'professional' | 'enterprise', activeChildCount)}`
+                            : '--'}
                         </p>
                       </div>
                     </div>
@@ -784,19 +796,25 @@ export default function SettingsPage() {
                         )}
                       </div>
                       <p className="text-2xl font-bold text-gray-900 mb-1">
-                        ${billingCycle === 'monthly' ? PLAN_PRICING.starter.monthly : Math.round(PLAN_PRICING.starter.annual / 12)}
-                        <span className="text-sm font-normal text-gray-500">/mes</span>
+                        ${PLAN_PRICING.starter.perChild.toFixed(2)}
+                        <span className="text-sm font-normal text-gray-500">/child/mo</span>
                       </p>
-                      {billingCycle === 'annual' && (
-                        <p className="text-xs text-green-600 mb-2">
-                          ${PLAN_PRICING.starter.annual}/año (ahorra ${PLAN_PRICING.starter.monthly * 12 - PLAN_PRICING.starter.annual})
+                      <p className="text-xs text-gray-500 mb-1">
+                        Min. ${PLAN_PRICING.starter.minimum}/month
+                      </p>
+                      {activeChildCount > 0 && (
+                        <p className="text-xs text-primary-600 font-medium mb-2">
+                          Your price: ${calculateMonthlyPrice('starter', activeChildCount)}/mo
+                          {billingCycle === 'annual' && ` (save 17%)`}
                         </p>
                       )}
                       <ul className="text-sm text-gray-600 space-y-1 mb-4">
-                        <li>• Hasta 25 niños</li>
-                        <li>• 5 usuarios staff</li>
-                        <li>• Asistencia básica</li>
-                        <li>• Reportes esenciales</li>
+                        <li>• Up to 50 children</li>
+                        <li>• 10 staff members</li>
+                        <li>• Attendance &amp; Check-in</li>
+                        <li>• Billing &amp; Invoicing</li>
+                        <li>• Daily Activities</li>
+                        <li>• AI Assistant</li>
                       </ul>
                       <GlassButton
                         variant="secondary"
@@ -822,20 +840,26 @@ export default function SettingsPage() {
                         <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">Popular</span>
                       </div>
                       <p className="text-2xl font-bold text-gray-900 mb-1">
-                        ${billingCycle === 'monthly' ? PLAN_PRICING.professional.monthly : Math.round(PLAN_PRICING.professional.annual / 12)}
-                        <span className="text-sm font-normal text-gray-500">/mes</span>
+                        ${PLAN_PRICING.professional.perChild.toFixed(2)}
+                        <span className="text-sm font-normal text-gray-500">/child/mo</span>
                       </p>
-                      {billingCycle === 'annual' && (
-                        <p className="text-xs text-green-600 mb-2">
-                          ${PLAN_PRICING.professional.annual}/año (ahorra ${PLAN_PRICING.professional.monthly * 12 - PLAN_PRICING.professional.annual})
+                      <p className="text-xs text-gray-500 mb-1">
+                        Min. ${PLAN_PRICING.professional.minimum}/month
+                      </p>
+                      {activeChildCount > 0 && (
+                        <p className="text-xs text-primary-600 font-medium mb-2">
+                          Your price: ${calculateMonthlyPrice('professional', activeChildCount)}/mo
+                          {billingCycle === 'annual' && ` (save 17%)`}
                         </p>
                       )}
                       <ul className="text-sm text-gray-600 space-y-1 mb-4">
-                        <li>• Hasta 70 niños</li>
-                        <li>• 10 usuarios staff</li>
-                        <li>• Facturación integrada</li>
-                        <li>• Comunicación con padres</li>
-                        <li>• Reportes DCF</li>
+                        <li>• Up to 200 children</li>
+                        <li>• 50 staff members</li>
+                        <li>• DCF Ratio Tracking</li>
+                        <li>• Parent Communication</li>
+                        <li>• Immunization Tracking</li>
+                        <li>• CACFP Food Program</li>
+                        <li>• Reports &amp; Analytics</li>
                       </ul>
                       <GlassButton
                         variant="primary"
@@ -863,20 +887,26 @@ export default function SettingsPage() {
                         )}
                       </div>
                       <p className="text-2xl font-bold text-gray-900 mb-1">
-                        ${billingCycle === 'monthly' ? PLAN_PRICING.enterprise.monthly : Math.round(PLAN_PRICING.enterprise.annual / 12)}
-                        <span className="text-sm font-normal text-gray-500">/mes</span>
+                        ${PLAN_PRICING.enterprise.perChild.toFixed(2)}
+                        <span className="text-sm font-normal text-gray-500">/child/mo</span>
                       </p>
-                      {billingCycle === 'annual' && (
-                        <p className="text-xs text-green-600 mb-2">
-                          ${PLAN_PRICING.enterprise.annual}/año (ahorra ${PLAN_PRICING.enterprise.monthly * 12 - PLAN_PRICING.enterprise.annual})
+                      <p className="text-xs text-gray-500 mb-1">
+                        Min. ${PLAN_PRICING.enterprise.minimum}/month
+                      </p>
+                      {activeChildCount > 0 && (
+                        <p className="text-xs text-primary-600 font-medium mb-2">
+                          Your price: ${calculateMonthlyPrice('enterprise', activeChildCount)}/mo
+                          {billingCycle === 'annual' && ` (save 17%)`}
                         </p>
                       )}
                       <ul className="text-sm text-gray-600 space-y-1 mb-4">
-                        <li>• Niños ilimitados</li>
-                        <li>• Staff ilimitado</li>
-                        <li>• Multi-ubicación</li>
-                        <li>• Soporte prioritario</li>
+                        <li>• Unlimited children</li>
+                        <li>• Unlimited staff</li>
+                        <li>• Full Accounting</li>
+                        <li>• Multi-Location</li>
+                        <li>• DCF Compliance Suite</li>
                         <li>• API Access</li>
+                        <li>• Custom Branding</li>
                       </ul>
                       <GlassButton
                         variant="secondary"
@@ -897,7 +927,7 @@ export default function SettingsPage() {
                   </div>
 
                   <p className="text-center text-sm text-gray-500 mt-4">
-                    Todos los planes incluyen 14 días de prueba gratis. Ahorra 2 meses con facturación anual.
+                    All plans include 14-day free trial. Save 17% with annual billing. Price adjusts automatically based on your active children count.
                   </p>
                 </GlassCardContent>
               </GlassCard>

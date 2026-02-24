@@ -13,6 +13,10 @@
 import { createClient } from '@/shared/lib/supabase/client'
 import { requireOrgId } from '@/shared/lib/organization-context'
 import type { SubscriptionPlanType } from '@/shared/types/database.types'
+import {
+  calculateMonthlyPrice as calcMonthly,
+  calculateAnnualPrice as calcAnnual,
+} from '@/shared/lib/plan-config'
 
 // ==========================================
 // INVOICE PAYMENT TYPES
@@ -44,6 +48,7 @@ export interface CreateSubscriptionCheckoutParams {
   organizationId: string
   plan: 'starter' | 'professional' | 'enterprise'
   billingCycle: BillingCycle
+  childCount: number  // active children count
   customerEmail?: string
   customerName?: string
 }
@@ -63,20 +68,12 @@ export interface CustomerPortalResult {
 // PLAN PRICING
 // ==========================================
 
-export const PLAN_PRICING = {
-  starter: {
-    monthly: 79,
-    annual: 79 * 10, // 2 months free
-  },
-  professional: {
-    monthly: 149,
-    annual: 149 * 10,
-  },
-  enterprise: {
-    monthly: 299,
-    annual: 299 * 10,
-  },
-} as const
+export {
+  PLAN_PRICING,
+  PLAN_DISPLAY,
+  calculateMonthlyPrice,
+  calculateAnnualPrice,
+} from '@/shared/lib/plan-config'
 
 // ==========================================
 // SERVICE
@@ -142,32 +139,26 @@ export const stripeService = {
   },
 
   /**
-   * Get formatted price for a plan
+   * Get formatted price for a plan based on active child count
    */
   getPrice(
     plan: 'starter' | 'professional' | 'enterprise',
-    billingCycle: BillingCycle
+    billingCycle: BillingCycle,
+    childCount: number
   ): { monthly: number; total: number; savings: number } {
-    const pricing = PLAN_PRICING[plan]
-
     if (billingCycle === 'annual') {
-      const total = pricing.annual
-      const monthlyEquivalent = total / 12
-      const monthlyCost = pricing.monthly
-      const savings = (monthlyCost * 12) - total
+      const { annual, savings } = calcAnnual(plan, childCount)
 
       return {
-        monthly: Math.round(monthlyEquivalent * 100) / 100,
-        total,
+        monthly: Math.round((annual / 12) * 100) / 100,
+        total: annual,
         savings,
       }
     }
 
-    return {
-      monthly: pricing.monthly,
-      total: pricing.monthly,
-      savings: 0,
-    }
+    const monthly = calcMonthly(plan, childCount)
+
+    return { monthly, total: monthly, savings: 0 }
   },
 
   /**

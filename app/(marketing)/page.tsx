@@ -68,56 +68,62 @@ const LOGO_URL = 'https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/
 const PLANS = [
   {
     name: 'Starter',
-    price: 79,
-    annual: 790,
+    perChild: 1.50,
+    minimum: 29,
     description: 'Perfect for small home daycares',
-    children: 15,
-    staff: 3,
+    maxChildren: 50,
+    maxStaff: 10,
     features: [
       'Check-in/Check-out System',
       'Automated Billing & Invoicing',
-      'Daily Reports to Parents',
+      'Daily Activity Reports',
       'AI Support Assistant',
-      'Parent Communication App',
-      'Basic Analytics',
+      'Staff & Classroom Management',
+      'Notifications Center',
     ],
     cta: 'Start Free Trial',
     popular: false,
   },
   {
     name: 'Professional',
-    price: 149,
-    annual: 1490,
+    perChild: 2.50,
+    minimum: 49,
     description: 'For growing childcare centers',
-    children: 50,
-    staff: 10,
+    maxChildren: 200,
+    maxStaff: 50,
     features: [
       'Everything in Starter',
       'DCF Ratio Tracking',
+      'Parent Communication Portal',
       'Advanced Reports & Analytics',
-      'Staff Scheduling',
-      'Priority Support',
-      'Custom Branding',
+      'Immunization Tracking',
+      'CACFP Food Program',
+      'Incident Management',
+      'Document Management',
+      'Learning Milestones',
+      'Admissions & Waitlist',
     ],
     cta: 'Start Free Trial',
     popular: true,
   },
   {
     name: 'Enterprise',
-    price: 299,
-    annual: 2990,
+    perChild: 3.50,
+    minimum: 99,
     description: 'For multi-location operations',
-    children: 150,
-    staff: 'Unlimited',
+    maxChildren: 9999,
+    maxStaff: 9999,
     features: [
       'Everything in Professional',
+      'Full Accounting Module',
       'Multi-Location Management',
-      'API Access',
+      'DCF Compliance Suite',
+      'API Access & Integrations',
+      'Custom Branding',
       'Dedicated Onboarding',
-      'Custom Integrations',
-      'White-Label Options',
+      'Priority Support',
     ],
-    cta: 'Contact Sales',
+    cta: 'Start Free Trial',
     popular: false,
   },
 ]
@@ -1211,15 +1217,18 @@ export default function LandingPage() {
 
                 <div className="mb-8">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-5xl font-bold text-gray-800">
-                      ${billingAnnual ? Math.round(plan.annual / 12) : plan.price}
+                    <span className="text-4xl font-bold text-gray-800">
+                      ${plan.perChild.toFixed(2)}
                     </span>
-                    <span className="text-gray-500">/month</span>
+                    <span className="text-gray-500">/child/month</span>
                   </div>
+                  <p className="text-sm mt-2 text-gray-500">
+                    Starting at ${plan.minimum}/month minimum
+                  </p>
                   {billingAnnual && (
                     <p className="text-sm mt-1 text-success flex items-center gap-1">
                       <CheckCircle2 className="w-4 h-4" />
-                      Billed ${plan.annual}/year (save ${(plan.price * 12) - plan.annual})
+                      Billed annually (save 17%)
                     </p>
                   )}
                 </div>
@@ -1227,11 +1236,11 @@ export default function LandingPage() {
                 <div className="space-y-4 mb-8">
                   <div className="flex items-center gap-3 text-gray-600">
                     <Baby className="w-5 h-5 text-pink-500" />
-                    Up to <strong>{plan.children}</strong> children
+                    Up to <strong>{plan.maxChildren === 9999 ? 'Unlimited' : plan.maxChildren}</strong> children
                   </div>
                   <div className="flex items-center gap-3 text-gray-600">
                     <Users className="w-5 h-5 text-primary-500" />
-                    {plan.staff === 'Unlimited' ? <strong>Unlimited</strong> : `Up to ${plan.staff}`} staff
+                    Up to <strong>{plan.maxStaff === 9999 ? 'Unlimited' : plan.maxStaff}</strong> staff
                   </div>
                   <div className="h-px bg-gray-300 my-4" />
                   {plan.features.map((feature, j) => (

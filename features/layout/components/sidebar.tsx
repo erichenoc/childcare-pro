@@ -29,8 +29,11 @@ import {
   CalendarClock,
   BookOpen,
   UserPlus,
+  Lock,
 } from 'lucide-react'
 import { useTranslations } from '@/shared/lib/i18n'
+import { usePlanGating } from '@/shared/hooks/usePlanGating'
+import { getMinimumPlan } from '@/shared/lib/plan-config'
 
 const LOGO_URL = 'https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png'
 
@@ -74,6 +77,7 @@ export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const pathname = usePathname()
   const t = useTranslations()
+  const { canAccessNav, plan, isLoading } = usePlanGating()
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -109,6 +113,30 @@ export function Sidebar({ className }: SidebarProps) {
           const Icon = item.icon
           const active = isActive(item.href)
           const label = t.nav[item.key as keyof typeof t.nav]
+          const hasAccess = canAccessNav(item.key)
+
+          if (!hasAccess) {
+            // Locked feature - show grayed out with lock
+            return (
+              <div
+                key={item.key}
+                className={clsx(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl',
+                  'text-gray-300 dark:text-gray-600 cursor-not-allowed',
+                  isCollapsed && 'justify-center px-2'
+                )}
+                title={isCollapsed ? `${label} (Upgrade required)` : 'Upgrade your plan to access this feature'}
+              >
+                <Icon className="w-5 h-5 flex-shrink-0 text-gray-300 dark:text-gray-600" />
+                {!isCollapsed && (
+                  <>
+                    <span className="truncate flex-1 text-gray-300 dark:text-gray-600">{label}</span>
+                    <Lock className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600" />
+                  </>
+                )}
+              </div>
+            )
+          }
 
           return (
             <Link

@@ -7,30 +7,9 @@ import type {
   TablesInsert
 } from '@/shared/types/database.types'
 
-// Plan pricing in cents (for display purposes - Stripe prices are configured in Stripe Dashboard)
-export const PLAN_PRICING = {
-  trial: { monthly: 0, annual: 0 },
-  starter: { monthly: 7900, annual: 79000 },
-  professional: { monthly: 14900, annual: 149000 },
-  enterprise: { monthly: 29900, annual: 299000 },
-  cancelled: { monthly: 0, annual: 0 },
-} as const
-
-// Plan limits
-export const PLAN_LIMITS = {
-  trial: { max_children: 15, max_staff: 3 },
-  starter: { max_children: 15, max_staff: 3 },
-  professional: { max_children: 50, max_staff: 10 },
-  enterprise: { max_children: 150, max_staff: 999 },
-} as const
-
-// Plan features
-export const PLAN_FEATURES = {
-  trial: ['all_features', '14_days'],
-  starter: ['check_in', 'billing', 'reports', 'ai_support', 'parent_communication'],
-  professional: ['all_starter', 'ratio_tracking', 'advanced_reports', 'priority_support'],
-  enterprise: ['all_professional', 'multi_location', 'api_access', 'dedicated_onboarding', 'custom_branding'],
-} as const
+// Re-export from central config — single source of truth for per-child pricing
+export { PLAN_PRICING, PLAN_FEATURES, calculateMonthlyPrice, calculateAnnualPrice } from '@/shared/lib/plan-config'
+import { calculateAnnualPrice } from '@/shared/lib/plan-config'
 
 export interface SubscriptionDetails {
   subscription: Subscription | null
@@ -128,6 +107,7 @@ export const subscriptionService = {
     if (error) throw error
 
     // Update organization with subscription details
+    // NOTE: max_children and max_staff are managed by the Stripe webhook based on active child count
     await supabase
       .from('organizations')
       .update({
@@ -137,8 +117,6 @@ export const subscriptionService = {
         current_period_start: input.current_period_start,
         current_period_end: input.current_period_end,
         cancel_at_period_end: input.cancel_at_period_end || false,
-        max_children: PLAN_LIMITS[input.plan as keyof typeof PLAN_LIMITS]?.max_children || 15,
-        max_staff: PLAN_LIMITS[input.plan as keyof typeof PLAN_LIMITS]?.max_staff || 3,
         updated_at: new Date().toISOString(),
       })
       .eq('id', input.organization_id)
@@ -389,34 +367,43 @@ export const subscriptionService = {
 
   /**
    * Format price for display (always uses en-US for USD: $1,000.00)
+   * Accepts dollars (not cents) to match the per-child pricing model.
    */
-  formatPrice(cents: number, locale = 'en-US'): string {
+  formatPrice(dollars: number, locale = 'en-US'): string {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(cents / 100)
+    }).format(dollars)
   },
 
   /**
-   * Calculate annual savings
+   * Calculate annual savings based on child count using per-child pricing.
+   * childCount defaults to 0 which results in the plan minimum being used.
    */
-  getAnnualSavings(planType: SubscriptionPlanType): {
+  getAnnualSavings(
+    planType: SubscriptionPlanType,
+    childCount = 0
+  ): {
     monthlyTotal: number
     annualPrice: number
     savings: number
     monthsFree: number
   } {
-    const pricing = PLAN_PRICING[planType]
-    const monthlyTotal = pricing.monthly * 12
-    const savings = monthlyTotal - pricing.annual
+    if (planType === 'trial' || planType === 'cancelled') {
+      return { monthlyTotal: 0, annualPrice: 0, savings: 0, monthsFree: 0 }
+    }
+
+    const tierPlan = planType as 'starter' | 'professional' | 'enterprise'
+    const { annual, savings } = calculateAnnualPrice(tierPlan, childCount)
+    const monthlyTotal = annual + savings  // full year at monthly rate
 
     return {
       monthlyTotal,
-      annualPrice: pricing.annual,
+      annualPrice: annual,
       savings,
-      monthsFree: Math.round(savings / pricing.monthly),
+      monthsFree: monthlyTotal > 0 ? Math.round(savings / (monthlyTotal / 12)) : 0,
     }
   },
 }

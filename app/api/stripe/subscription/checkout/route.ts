@@ -2,30 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import type { SubscriptionPlanType } from '@/shared/types/database.types'
-
-// Plan Price IDs - these should be created in Stripe Dashboard
-// In production, these would be stored in environment variables
-const PLAN_PRICE_IDS: Record<string, { monthly: string; annual: string }> = {
-  starter: {
-    monthly: process.env.STRIPE_PRICE_STARTER_MONTHLY || 'price_starter_monthly',
-    annual: process.env.STRIPE_PRICE_STARTER_ANNUAL || 'price_starter_annual',
-  },
-  professional: {
-    monthly: process.env.STRIPE_PRICE_PROFESSIONAL_MONTHLY || 'price_professional_monthly',
-    annual: process.env.STRIPE_PRICE_PROFESSIONAL_ANNUAL || 'price_professional_annual',
-  },
-  enterprise: {
-    monthly: process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY || 'price_enterprise_monthly',
-    annual: process.env.STRIPE_PRICE_ENTERPRISE_ANNUAL || 'price_enterprise_annual',
-  },
-}
-
-// Plan limits for updating organization
-const PLAN_LIMITS: Record<string, { max_children: number; max_staff: number }> = {
-  starter: { max_children: 50, max_staff: 5 },
-  professional: { max_children: 150, max_staff: 15 },
-  enterprise: { max_children: 9999, max_staff: 9999 }, // Unlimited
-}
+import { verifyUserAuth, isAuthError } from '@/shared/lib/auth-helpers'
+import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
+import { AuditLogger } from '@/shared/lib/audit-logger'
+import { calculateMonthlyPrice, calculateAnnualPrice, PLAN_PRICING } from '@/shared/lib/plan-config'
 
 function getStripeClient() {
   if (!process.env.STRIPE_SECRET_KEY) return null
@@ -43,6 +23,14 @@ function getSupabaseAdmin() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimited = checkRateLimit(request, RateLimits.strict, 'subscription-checkout')
+    if (rateLimited) return rateLimited
+
+    // Authentication
+    const auth = await verifyUserAuth()
+    if (isAuthError(auth)) return auth.response
+
     const stripe = getStripeClient()
     if (!stripe) {
       return NextResponse.json(
@@ -131,23 +119,44 @@ export async function POST(request: NextRequest) {
         .eq('id', organizationId)
     }
 
-    // Get the price ID for the selected plan and billing cycle
-    const priceId = PLAN_PRICE_IDS[plan]?.[billingCycle as 'monthly' | 'annual']
+    // Count active children for pricing calculation
+    const { count: childCount } = await supabaseAdmin
+      .from('children')
+      .select('id', { count: 'exact', head: true })
+      .eq('organization_id', organizationId)
+      .eq('status', 'active')
 
-    if (!priceId) {
-      return NextResponse.json(
-        { error: 'Price configuration not found for this plan' },
-        { status: 500 }
-      )
+    const activeChildren = childCount ?? 0
+
+    // Calculate the price based on the billing cycle
+    let unitAmount: number // in cents for Stripe
+    let intervalConfig: { interval: 'month' | 'year'; interval_count?: number }
+
+    if (billingCycle === 'annual') {
+      const { annual } = calculateAnnualPrice(plan, activeChildren)
+      unitAmount = annual * 100 // convert to cents
+      intervalConfig = { interval: 'year' }
+    } else {
+      const monthly = calculateMonthlyPrice(plan, activeChildren)
+      unitAmount = Math.round(monthly * 100) // convert to cents
+      intervalConfig = { interval: 'month' }
     }
 
-    // Create Checkout Session for subscription
+    // Create Checkout Session for subscription using dynamic price_data
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
       line_items: [
         {
-          price: priceId,
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `ChildCare Pro - ${plan.charAt(0).toUpperCase() + plan.slice(1)}`,
+              description: `${activeChildren} children @ $${PLAN_PRICING[plan as keyof typeof PLAN_PRICING].perChild}/child/month`,
+            },
+            unit_amount: unitAmount,
+            recurring: intervalConfig,
+          },
           quantity: 1,
         },
       ],
@@ -159,13 +168,15 @@ export async function POST(request: NextRequest) {
           organizationId,
           plan,
           billingCycle,
+          childCount: String(activeChildren),
         },
-        trial_period_days: org.plan === 'trial' ? undefined : 0, // No extra trial if upgrading from trial
+        trial_period_days: org.plan === 'trial' ? 0 : undefined,
       },
       metadata: {
         organizationId,
         plan,
         billingCycle,
+        childCount: String(activeChildren),
         type: 'subscription',
       },
       allow_promotion_codes: true,
@@ -175,6 +186,15 @@ export async function POST(request: NextRequest) {
         name: 'auto',
       },
     })
+
+    // Audit logging
+    await AuditLogger.paymentInitiated(
+      auth.user.id,
+      organizationId,
+      'subscription',
+      0,
+      request.headers
+    )
 
     return NextResponse.json({ url: session.url, sessionId: session.id })
   } catch (error) {
