@@ -164,6 +164,26 @@ export default function SettingsPage() {
     setCheckoutError(null)
 
     try {
+      // If org already has an active Stripe subscription, use plan change (proration)
+      if (organization.stripe_subscription_id) {
+        const changeResult = await stripeService.changeSubscriptionPlan({
+          organizationId: organization.id,
+          plan,
+          billingCycle,
+        })
+
+        if (changeResult.error) {
+          setCheckoutError(changeResult.error)
+          return
+        }
+
+        // Plan changed successfully - reload data
+        setOrganization(prev => prev ? { ...prev, plan } : prev)
+        await loadData()
+        return
+      }
+
+      // No existing subscription - create new checkout
       const result = await stripeService.createSubscriptionCheckout({
         organizationId: organization.id,
         plan,
@@ -174,6 +194,21 @@ export default function SettingsPage() {
       })
 
       if (result.error) {
+        // If the checkout says org has subscription, try plan change
+        if (result.hasSubscription) {
+          const changeResult = await stripeService.changeSubscriptionPlan({
+            organizationId: organization.id,
+            plan,
+            billingCycle,
+          })
+          if (changeResult.error) {
+            setCheckoutError(changeResult.error)
+          } else {
+            setOrganization(prev => prev ? { ...prev, plan } : prev)
+            await loadData()
+          }
+          return
+        }
         setCheckoutError(result.error)
         return
       }
@@ -720,7 +755,33 @@ export default function SettingsPage() {
                       <div className="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg mb-4">
                         <AlertTriangle className="w-4 h-4 text-yellow-600" />
                         <p className="text-sm text-yellow-800">
-                          Tu prueba termina el {subscription.trialEndsAt ? new Date(subscription.trialEndsAt).toLocaleDateString() : '--'}
+                          Tu prueba termina el {subscription.trialEndsAt ? new Date(subscription.trialEndsAt).toLocaleDateString() : '--'}.
+                          Incluye 14 días de prueba gratis con todas las funciones Professional.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Renewal date for active subscriptions */}
+                    {!subscription?.isTrial && subscription?.isActive && subscription?.subscription?.current_period_end && (
+                      <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg mb-4">
+                        <CreditCard className="w-4 h-4 text-blue-600" />
+                        <p className="text-sm text-blue-800">
+                          Próxima renovación: {new Date(subscription.subscription.current_period_end).toLocaleDateString()}
+                          {subscription.cancelAtPeriodEnd && (
+                            <span className="text-red-600 font-medium ml-2">
+                              (Se cancelará al final del período)
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Suspended or payment pending warning */}
+                    {(organization?.subscription_status === 'suspended' || organization?.subscription_status === 'pending') && (
+                      <div className="flex items-center gap-2 p-3 bg-red-50 rounded-lg mb-4">
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                        <p className="text-sm text-red-800">
+                          Tu pago ha fallado. Por favor actualiza tu método de pago para evitar la interrupción del servicio.
                         </p>
                       </div>
                     )}
@@ -804,8 +865,10 @@ export default function SettingsPage() {
                       </p>
                       {activeChildCount > 0 && (
                         <p className="text-xs text-primary-600 font-medium mb-2">
-                          Your price: ${calculateMonthlyPrice('starter', activeChildCount)}/mo
-                          {billingCycle === 'annual' && ` (save 17%)`}
+                          {billingCycle === 'annual'
+                            ? `Your price: $${calculateAnnualPrice('starter', activeChildCount).monthlyEquivalent}/mo (save $${calculateAnnualPrice('starter', activeChildCount).savings}/yr)`
+                            : `Your price: $${calculateMonthlyPrice('starter', activeChildCount)}/mo`
+                          }
                         </p>
                       )}
                       <ul className="text-sm text-gray-600 space-y-1 mb-4">
@@ -827,6 +890,8 @@ export default function SettingsPage() {
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : organization?.plan === 'starter' ? (
                           'Plan Actual'
+                        ) : organization?.stripe_subscription_id ? (
+                          'Cambiar Plan'
                         ) : (
                           'Seleccionar'
                         )}
@@ -848,8 +913,10 @@ export default function SettingsPage() {
                       </p>
                       {activeChildCount > 0 && (
                         <p className="text-xs text-primary-600 font-medium mb-2">
-                          Your price: ${calculateMonthlyPrice('professional', activeChildCount)}/mo
-                          {billingCycle === 'annual' && ` (save 17%)`}
+                          {billingCycle === 'annual'
+                            ? `Your price: $${calculateAnnualPrice('professional', activeChildCount).monthlyEquivalent}/mo (save $${calculateAnnualPrice('professional', activeChildCount).savings}/yr)`
+                            : `Your price: $${calculateMonthlyPrice('professional', activeChildCount)}/mo`
+                          }
                         </p>
                       )}
                       <ul className="text-sm text-gray-600 space-y-1 mb-4">
@@ -872,6 +939,8 @@ export default function SettingsPage() {
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : organization?.plan === 'professional' ? (
                           'Plan Actual'
+                        ) : organization?.stripe_subscription_id ? (
+                          'Cambiar Plan'
                         ) : (
                           'Seleccionar'
                         )}
@@ -895,8 +964,10 @@ export default function SettingsPage() {
                       </p>
                       {activeChildCount > 0 && (
                         <p className="text-xs text-primary-600 font-medium mb-2">
-                          Your price: ${calculateMonthlyPrice('enterprise', activeChildCount)}/mo
-                          {billingCycle === 'annual' && ` (save 17%)`}
+                          {billingCycle === 'annual'
+                            ? `Your price: $${calculateAnnualPrice('enterprise', activeChildCount).monthlyEquivalent}/mo (save $${calculateAnnualPrice('enterprise', activeChildCount).savings}/yr)`
+                            : `Your price: $${calculateMonthlyPrice('enterprise', activeChildCount)}/mo`
+                          }
                         </p>
                       )}
                       <ul className="text-sm text-gray-600 space-y-1 mb-4">
@@ -919,6 +990,8 @@ export default function SettingsPage() {
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : organization?.plan === 'enterprise' ? (
                           'Plan Actual'
+                        ) : organization?.stripe_subscription_id ? (
+                          'Cambiar Plan'
                         ) : (
                           'Seleccionar'
                         )}
@@ -927,7 +1000,7 @@ export default function SettingsPage() {
                   </div>
 
                   <p className="text-center text-sm text-gray-500 mt-4">
-                    All plans include 14-day free trial. Save 17% with annual billing. Price adjusts automatically based on your active children count.
+                    All plans include 14-day free trial. Save 17% with annual billing. Price adjusts automatically based on your active children count. Promotion codes can be applied at checkout.
                   </p>
                 </GlassCardContent>
               </GlassCard>

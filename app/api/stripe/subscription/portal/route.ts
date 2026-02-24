@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
-import { verifyUserAuth, isAuthError } from '@/shared/lib/auth-helpers'
+import { createClient } from '@/shared/lib/supabase/server'
 import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
 import { AuditLogger } from '@/shared/lib/audit-logger'
 
@@ -12,48 +11,43 @@ function getStripeClient() {
   })
 }
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
-
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
     const rateLimited = checkRateLimit(request, RateLimits.strict, 'subscription-portal')
     if (rateLimited) return rateLimited
 
-    // Authentication
-    const auth = await verifyUserAuth()
-    if (isAuthError(auth)) return auth.response
+    // Authentication via SSR client
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.organization_id) {
+      return NextResponse.json({ error: 'User has no organization' }, { status: 403 })
+    }
 
     const stripe = getStripeClient()
     if (!stripe) {
       return NextResponse.json(
-        {
-          error: 'Stripe is not configured.',
-          demo: true,
-        },
+        { error: 'Stripe is not configured.', demo: true },
         { status: 503 }
       )
     }
 
-    const body = await request.json()
-    const { organizationId } = body
-
-    if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Missing required field: organizationId' },
-        { status: 400 }
-      )
-    }
-
-    const supabaseAdmin = getSupabaseAdmin()
+    // Use authenticated user's organization
+    const organizationId = profile.organization_id
 
     // Get organization's Stripe customer ID
-    const { data: org, error: orgError } = await supabaseAdmin
+    const { data: org, error: orgError } = await supabase
       .from('organizations')
       .select('stripe_customer_id')
       .eq('id', organizationId)
@@ -80,8 +74,8 @@ export async function POST(request: NextRequest) {
     })
 
     await AuditLogger.adminAccess(
-      auth.user.email || 'unknown',
-      auth.user.id,
+      user.email || 'unknown',
+      user.id,
       'stripe-portal',
       request.headers
     )

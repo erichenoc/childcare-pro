@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import type { SubscriptionPlanType } from '@/shared/types/database.types'
 import { emailService } from '@/features/notifications/services/email.service'
 
-// Extended types for Stripe objects with properties not in the types but present in API
+// Extended types for Stripe objects
 type ExtendedSubscription = Stripe.Subscription & {
   current_period_start: number
   current_period_end: number
@@ -20,6 +20,20 @@ const PLAN_LIMITS: Record<string, { max_children: number; max_staff: number }> =
   starter: { max_children: 50, max_staff: 10 },
   professional: { max_children: 200, max_staff: 50 },
   enterprise: { max_children: 9999, max_staff: 9999 },
+}
+
+// Dunning escalation thresholds
+const DUNNING_CONFIG = {
+  maxRetries: 4,
+  // Days after first failure to downgrade or cancel
+  gracePeriodDays: 14,
+  // Escalation messages based on attempt count
+  messages: {
+    1: 'We had trouble processing your payment. Please update your payment method.',
+    2: 'Second payment attempt failed. Your account may be restricted soon.',
+    3: 'Third payment attempt failed. Please update your payment method to avoid service interruption.',
+    4: 'Final payment attempt failed. Your account has been suspended. Please update your payment method to restore access.',
+  } as Record<number, string>,
 }
 
 function getStripeClient() {
@@ -88,8 +102,7 @@ export async function POST(request: NextRequest) {
 
     case 'customer.subscription.trial_will_end': {
       const subscription = event.data.object as Stripe.Subscription
-      // Could send notification that trial is ending in 3 days
-      console.log(`Trial ending soon for subscription: ${subscription.id}`)
+      await handleTrialEnding(supabaseAdmin, subscription)
       break
     }
 
@@ -97,7 +110,7 @@ export async function POST(request: NextRequest) {
     // INVOICE EVENTS (for subscription payments)
     // ==========================================
     case 'invoice.paid': {
-      const invoice = event.data.object as Stripe.Invoice & { subscription?: string | null }
+      const invoice = event.data.object as ExtendedInvoice
       if (invoice.subscription) {
         await handleInvoicePaid(supabaseAdmin, invoice)
       }
@@ -105,9 +118,9 @@ export async function POST(request: NextRequest) {
     }
 
     case 'invoice.payment_failed': {
-      const invoice = event.data.object as Stripe.Invoice & { subscription?: string | null }
+      const invoice = event.data.object as ExtendedInvoice
       if (invoice.subscription) {
-        await handleInvoicePaymentFailed(supabaseAdmin, invoice)
+        await handleInvoicePaymentFailed(supabaseAdmin, stripe, invoice)
       }
       break
     }
@@ -118,12 +131,9 @@ export async function POST(request: NextRequest) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session
 
-      // Check if this is a subscription or one-time payment
       if (session.mode === 'subscription') {
-        // Subscription is handled by customer.subscription.created
         console.log('Subscription checkout completed:', session.id)
       } else if (session.payment_status === 'paid') {
-        // Handle one-time invoice payment
         await handleOneTimePayment(supabaseAdmin, session)
       }
       break
@@ -132,6 +142,16 @@ export async function POST(request: NextRequest) {
     case 'payment_intent.payment_failed': {
       const paymentIntent = event.data.object as Stripe.PaymentIntent
       console.log('Payment failed:', paymentIntent.id)
+      break
+    }
+
+    // ==========================================
+    // COUPON EVENTS
+    // ==========================================
+    case 'customer.discount.created': {
+      const discount = event.data.object as Stripe.Discount
+      const discountPromo = discount.promotion_code
+      console.log('Discount applied:', typeof discountPromo === 'string' ? discountPromo : discountPromo?.id || discount.id)
       break
     }
 
@@ -151,6 +171,7 @@ async function handleSubscriptionChange(
   try {
     const organizationId = subscription.metadata.organizationId
     const plan = subscription.metadata.plan as SubscriptionPlanType
+    const billingCycle = subscription.metadata.billingCycle || 'monthly'
 
     if (!organizationId) {
       // Try to find org by customer ID
@@ -169,20 +190,22 @@ async function handleSubscriptionChange(
 
     const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.starter
 
-    // Get the subscription item price to determine the plan if not in metadata
     let determinedPlan = plan
     if (!determinedPlan && subscription.items.data.length > 0) {
-      // Could map price IDs to plans here using subscription.items.data[0].price.id
-      determinedPlan = 'starter' // Default
+      determinedPlan = 'starter'
     }
 
-    // Update organization
+    // Determine status: trialing counts as active for feature access
+    const isActive = subscription.status === 'active' || subscription.status === 'trialing'
+
+    // Update organization with full subscription data
     await supabase
       .from('organizations')
       .update({
         stripe_subscription_id: subscription.id,
-        subscription_status: subscription.status === 'active' || subscription.status === 'trialing' ? 'active' : subscription.status,
+        subscription_status: isActive ? 'active' : subscription.status,
         plan: determinedPlan as SubscriptionPlanType,
+        billing_cycle: billingCycle,
         current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
         current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
         cancel_at_period_end: subscription.cancel_at_period_end,
@@ -191,9 +214,16 @@ async function handleSubscriptionChange(
           : null,
         max_children: limits.max_children,
         max_staff: limits.max_staff,
+        // Reset payment failure tracking on successful subscription update
+        payment_retry_count: 0,
+        last_payment_failed_at: null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', organizationId)
+
+    // Get unit amount from subscription item
+    const unitAmountCents = subscription.items.data[0]?.price?.unit_amount || 0
+    const childCount = parseInt(subscription.metadata.childCount || '0', 10)
 
     // Create or update subscription record
     const { data: existingSub } = await supabase
@@ -208,6 +238,7 @@ async function handleSubscriptionChange(
       stripe_customer_id: subscription.customer as string,
       status: subscription.status,
       plan: determinedPlan as SubscriptionPlanType,
+      billing_cycle: billingCycle,
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       cancel_at_period_end: subscription.cancel_at_period_end,
@@ -220,6 +251,8 @@ async function handleSubscriptionChange(
       trial_end: subscription.trial_end
         ? new Date(subscription.trial_end * 1000).toISOString()
         : null,
+      child_count_at_signup: childCount,
+      unit_amount_cents: unitAmountCents,
       updated_at: new Date().toISOString(),
     }
 
@@ -240,11 +273,13 @@ async function handleSubscriptionChange(
       data: {
         status: subscription.status,
         plan: determinedPlan,
+        billingCycle,
         cancel_at_period_end: subscription.cancel_at_period_end,
+        periodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
       },
     })
 
-    console.log(`Subscription updated for org ${organizationId}:`, subscription.status)
+    console.log(`Subscription updated for org ${organizationId}: ${subscription.status} (${determinedPlan})`)
   } catch (error) {
     console.error('Error handling subscription change:', error)
   }
@@ -294,9 +329,72 @@ async function handleSubscriptionCanceled(
       data: { cancelled_at: new Date().toISOString() },
     })
 
+    // Send cancellation email
+    const { data: owner } = await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('organization_id', organizationId)
+      .eq('role', 'owner')
+      .single()
+
+    if (owner?.email) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcareproai.com'
+      await emailService.sendGenericNotification(owner.email, {
+        subject: 'Your ChildCare Pro subscription has been cancelled',
+        body: `Your subscription has been cancelled. You can resubscribe at any time from your settings page: ${appUrl}/dashboard/settings?tab=billing`,
+      })
+    }
+
     console.log(`Subscription cancelled for org ${organizationId}`)
   } catch (error) {
     console.error('Error handling subscription cancellation:', error)
+  }
+}
+
+// Handle trial ending notification (3 days before)
+async function handleTrialEnding(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  subscription: Stripe.Subscription
+) {
+  try {
+    const organizationId = subscription.metadata.organizationId
+    if (!organizationId) return
+
+    const { data: owner } = await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('organization_id', organizationId)
+      .eq('role', 'owner')
+      .single()
+
+    if (owner?.email) {
+      const trialEnd = subscription.trial_end
+        ? new Date(subscription.trial_end * 1000).toLocaleDateString('en-US')
+        : 'soon'
+      const plan = subscription.metadata.plan || 'your plan'
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcareproai.com'
+
+      await emailService.sendGenericNotification(owner.email, {
+        subject: 'Your ChildCare Pro trial ends in 3 days',
+        body: `Your free trial ends on ${trialEnd}. After that, your ${plan} subscription will begin billing automatically. Make sure your payment method is up to date. Manage your subscription: ${appUrl}/dashboard/settings?tab=billing`,
+      })
+    }
+
+    // Log event
+    await supabase.from('subscription_events').insert({
+      subscription_id: subscription.id,
+      organization_id: organizationId,
+      event_type: 'trial.ending',
+      data: {
+        trial_end: subscription.trial_end
+          ? new Date(subscription.trial_end * 1000).toISOString()
+          : null,
+      },
+    })
+
+    console.log(`Trial ending notification sent for org ${organizationId}`)
+  } catch (error) {
+    console.error('Error handling trial ending:', error)
   }
 }
 
@@ -320,6 +418,17 @@ async function handleInvoicePaid(
       return
     }
 
+    // Reset payment failure state on successful payment
+    await supabase
+      .from('organizations')
+      .update({
+        subscription_status: 'active',
+        payment_retry_count: 0,
+        last_payment_failed_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', org.id)
+
     // Log payment event
     await supabase.from('subscription_events').insert({
       subscription_id: subscriptionId,
@@ -329,6 +438,7 @@ async function handleInvoicePaid(
         amount: invoice.amount_paid / 100,
         currency: invoice.currency,
         invoice_id: invoice.id,
+        billing_reason: invoice.billing_reason,
       },
     })
 
@@ -338,33 +448,49 @@ async function handleInvoicePaid(
   }
 }
 
-// Handle failed invoice payment
+// Handle failed invoice payment with dunning escalation
 async function handleInvoicePaymentFailed(
   supabase: ReturnType<typeof getSupabaseAdmin>,
+  stripe: Stripe,
   invoice: ExtendedInvoice
 ) {
   try {
     const subscriptionId = invoice.subscription as string
+    const attemptCount = invoice.attempt_count || 1
 
     // Find organization by subscription with owner info
     const { data: org } = await supabase
       .from('organizations')
-      .select('id, name')
+      .select('id, name, payment_retry_count')
       .eq('stripe_subscription_id', subscriptionId)
       .single()
 
     if (!org) return
 
-    // Update organization status to past_due
+    const retryCount = (org.payment_retry_count || 0) + 1
+
+    // Determine subscription status based on retry count
+    // Uses DB enum: active | inactive | pending | suspended
+    let newStatus: string
+    if (retryCount >= DUNNING_CONFIG.maxRetries) {
+      newStatus = 'suspended'
+    } else {
+      // Still active but payment pending - mark as pending
+      newStatus = 'pending'
+    }
+
+    // Update organization with failure tracking
     await supabase
       .from('organizations')
       .update({
-        subscription_status: 'past_due',
+        subscription_status: newStatus,
+        payment_retry_count: retryCount,
+        last_payment_failed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', org.id)
 
-    // Log event
+    // Log event with escalation details
     await supabase.from('subscription_events').insert({
       subscription_id: subscriptionId,
       organization_id: org.id,
@@ -372,11 +498,14 @@ async function handleInvoicePaymentFailed(
       data: {
         amount: invoice.amount_due / 100,
         currency: invoice.currency,
-        attempt_count: invoice.attempt_count,
+        attempt_count: attemptCount,
+        retry_count: retryCount,
+        status: newStatus,
+        escalation: retryCount >= DUNNING_CONFIG.maxRetries ? 'suspended' : 'warning',
       },
     })
 
-    // Send notification to organization owner about failed payment
+    // Send dunning email with escalating urgency
     const { data: owner } = await supabase
       .from('profiles')
       .select('id, email, full_name')
@@ -392,6 +521,9 @@ async function handleInvoicePaymentFailed(
 
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://childcareproai.com'
       const retryUrl = `${appUrl}/dashboard/settings?tab=billing`
+      const message = DUNNING_CONFIG.messages[retryCount] || DUNNING_CONFIG.messages[1]
+
+      const isFinal = retryCount >= DUNNING_CONFIG.maxRetries
 
       await emailService.sendPaymentFailed(owner.email, {
         organizationName: org.name || 'your organization',
@@ -399,9 +531,28 @@ async function handleInvoicePaymentFailed(
         retryUrl,
       })
 
-      console.log(`Payment failed notification sent to ${owner.email} for org ${org.id}`)
-    } else {
-      console.log(`Payment failed for org ${org.id} - no owner email found`)
+      // If final attempt, also send a more urgent notification
+      if (isFinal) {
+        await emailService.sendGenericNotification(owner.email, {
+          subject: 'URGENT: Your ChildCare Pro account has been suspended',
+          body: `${message} Amount due: ${amount}. Your account features have been restricted until payment is resolved. Update your payment method: ${retryUrl}`,
+        })
+
+        // Cancel the subscription in Stripe after max retries
+        try {
+          await stripe.subscriptions.update(subscriptionId, {
+            cancel_at_period_end: true,
+            metadata: {
+              cancelReason: 'payment_failed_max_retries',
+              canceledAt: new Date().toISOString(),
+            },
+          })
+        } catch (cancelError) {
+          console.error('Error canceling subscription after max retries:', cancelError)
+        }
+      }
+
+      console.log(`Payment failed (attempt ${retryCount}/${DUNNING_CONFIG.maxRetries}) for org ${org.id}: ${amount}`)
     }
   } catch (error) {
     console.error('Error handling invoice payment failed:', error)

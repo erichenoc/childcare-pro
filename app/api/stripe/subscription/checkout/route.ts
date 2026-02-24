@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
-import type { SubscriptionPlanType } from '@/shared/types/database.types'
-import { verifyUserAuth, isAuthError } from '@/shared/lib/auth-helpers'
+import { createClient } from '@/shared/lib/supabase/server'
 import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
 import { AuditLogger } from '@/shared/lib/audit-logger'
-import { calculateMonthlyPrice, calculateAnnualPrice, PLAN_PRICING } from '@/shared/lib/plan-config'
+import { calculateMonthlyPrice, calculateAnnualPrice, PLAN_PRICING, TRIAL_CONFIG } from '@/shared/lib/plan-config'
 
 function getStripeClient() {
   if (!process.env.STRIPE_SECRET_KEY) return null
@@ -14,22 +12,30 @@ function getStripeClient() {
   })
 }
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
-
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
     const rateLimited = checkRateLimit(request, RateLimits.strict, 'subscription-checkout')
     if (rateLimited) return rateLimited
 
-    // Authentication
-    const auth = await verifyUserAuth()
-    if (isAuthError(auth)) return auth.response
+    // Authentication via SSR client (uses cookies)
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get user's organization
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.organization_id) {
+      return NextResponse.json({ error: 'User has no organization' }, { status: 403 })
+    }
 
     const stripe = getStripeClient()
     if (!stripe) {
@@ -44,23 +50,17 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const {
-      organizationId,
       plan,
-      billingCycle = 'monthly', // 'monthly' or 'annual'
+      billingCycle = 'monthly',
       customerEmail,
       customerName,
     } = body
 
-    // Validate required fields
-    if (!organizationId || !plan) {
-      return NextResponse.json(
-        { error: 'Missing required fields: organizationId, plan' },
-        { status: 400 }
-      )
-    }
+    // Use the authenticated user's organization (ignore client-sent organizationId for security)
+    const organizationId = profile.organization_id
 
     // Validate plan
-    if (!['starter', 'professional', 'enterprise'].includes(plan)) {
+    if (!plan || !['starter', 'professional', 'enterprise'].includes(plan)) {
       return NextResponse.json(
         { error: 'Invalid plan. Must be starter, professional, or enterprise.' },
         { status: 400 }
@@ -75,26 +75,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabaseAdmin = getSupabaseAdmin()
-
-    // Get organization to check current state
-    const { data: org, error: orgError } = await supabaseAdmin
+    // Get organization to check current state (using authenticated client)
+    const { data: org, error: orgError } = await supabase
       .from('organizations')
-      .select('id, name, email, stripe_customer_id, stripe_subscription_id, plan')
+      .select('id, name, email, stripe_customer_id, stripe_subscription_id, plan, trial_ends_at')
       .eq('id', organizationId)
       .single()
 
     if (orgError || !org) {
+      console.error('Org lookup failed:', { organizationId, orgError })
       return NextResponse.json(
         { error: 'Organization not found' },
         { status: 404 }
       )
     }
 
-    // If already has an active subscription, redirect to customer portal instead
+    // If already has an active subscription, use plan change instead
     if (org.stripe_subscription_id) {
       return NextResponse.json(
-        { error: 'Organization already has an active subscription. Use the customer portal to manage it.' },
+        {
+          error: 'Organization already has an active subscription. Use /api/stripe/subscription/change to switch plans.',
+          hasSubscription: true,
+        },
         { status: 400 }
       )
     }
@@ -104,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     if (!customerId) {
       const customer = await stripe.customers.create({
-        email: customerEmail || org.email || undefined,
+        email: customerEmail || org.email || user.email || undefined,
         name: customerName || org.name,
         metadata: {
           organizationId: org.id,
@@ -113,14 +115,14 @@ export async function POST(request: NextRequest) {
       customerId = customer.id
 
       // Save customer ID to organization
-      await supabaseAdmin
+      await supabase
         .from('organizations')
         .update({ stripe_customer_id: customerId })
         .eq('id', organizationId)
     }
 
     // Count active children for pricing calculation
-    const { count: childCount } = await supabaseAdmin
+    const { count: childCount } = await supabase
       .from('children')
       .select('id', { count: 'exact', head: true })
       .eq('organization_id', organizationId)
@@ -129,74 +131,102 @@ export async function POST(request: NextRequest) {
     const activeChildren = childCount ?? 0
 
     // Calculate the price based on the billing cycle
-    let unitAmount: number // in cents for Stripe
+    let unitAmount: number
     let intervalConfig: { interval: 'month' | 'year'; interval_count?: number }
 
     if (billingCycle === 'annual') {
       const { annual } = calculateAnnualPrice(plan, activeChildren)
-      unitAmount = annual * 100 // convert to cents
+      unitAmount = annual * 100
       intervalConfig = { interval: 'year' }
     } else {
       const monthly = calculateMonthlyPrice(plan, activeChildren)
-      unitAmount = Math.round(monthly * 100) // convert to cents
+      unitAmount = Math.round(monthly * 100)
       intervalConfig = { interval: 'month' }
     }
 
-    // Create Checkout Session for subscription using dynamic price_data
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `ChildCare Pro - ${plan.charAt(0).toUpperCase() + plan.slice(1)}`,
-              description: `${activeChildren} children @ $${PLAN_PRICING[plan as keyof typeof PLAN_PRICING].perChild}/child/month`,
+    // Determine trial period:
+    // - If currently on trial plan, give remaining trial days (min 0)
+    // - If new subscriber (no previous plan), give full trial
+    // - If returning from cancelled, no trial
+    let trialDays: number | undefined
+    if (org.plan === 'trial' && org.trial_ends_at) {
+      const remaining = Math.ceil(
+        (new Date(org.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      )
+      trialDays = Math.max(remaining, 0)
+    } else if (!org.plan || org.plan === 'trial') {
+      trialDays = TRIAL_CONFIG.durationDays
+    }
+    // Cancelled/existing plans get no trial
+
+    // Idempotency key: org + plan + cycle to prevent duplicate sessions
+    const idempotencyKey = `sub-checkout-${organizationId}-${plan}-${billingCycle}-${Date.now()}`
+
+    // Create Checkout Session for subscription
+    const session = await stripe.checkout.sessions.create(
+      {
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `ChildCare Pro - ${plan.charAt(0).toUpperCase() + plan.slice(1)}`,
+                description: `${activeChildren} children @ $${PLAN_PRICING[plan as keyof typeof PLAN_PRICING].perChild}/child/month`,
+              },
+              unit_amount: unitAmount,
+              recurring: intervalConfig,
             },
-            unit_amount: unitAmount,
-            recurring: intervalConfig,
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        mode: 'subscription',
+        success_url: `${request.nextUrl.origin}/dashboard/settings?tab=billing&success=true&plan=${plan}`,
+        cancel_url: `${request.nextUrl.origin}/dashboard/settings?tab=billing&canceled=true`,
+        subscription_data: {
+          metadata: {
+            organizationId,
+            plan,
+            billingCycle,
+            childCount: String(activeChildren),
+          },
+          ...(trialDays && trialDays > 0 ? { trial_period_days: trialDays } : {}),
         },
-      ],
-      mode: 'subscription',
-      success_url: `${request.nextUrl.origin}/dashboard/settings?tab=billing&success=true&plan=${plan}`,
-      cancel_url: `${request.nextUrl.origin}/dashboard/settings?tab=billing&canceled=true`,
-      subscription_data: {
         metadata: {
           organizationId,
           plan,
           billingCycle,
           childCount: String(activeChildren),
+          type: 'subscription',
         },
-        trial_period_days: org.plan === 'trial' ? 0 : undefined,
+        allow_promotion_codes: true,
+        billing_address_collection: 'required',
+        customer_update: {
+          address: 'auto',
+          name: 'auto',
+        },
+        payment_method_collection: 'always',
       },
-      metadata: {
-        organizationId,
-        plan,
-        billingCycle,
-        childCount: String(activeChildren),
-        type: 'subscription',
-      },
-      allow_promotion_codes: true,
-      billing_address_collection: 'required',
-      customer_update: {
-        address: 'auto',
-        name: 'auto',
-      },
-    })
+      {
+        idempotencyKey,
+      }
+    )
 
     // Audit logging
     await AuditLogger.paymentInitiated(
-      auth.user.id,
+      user.id,
       organizationId,
       'subscription',
-      0,
+      unitAmount / 100,
       request.headers
     )
 
-    return NextResponse.json({ url: session.url, sessionId: session.id })
+    return NextResponse.json({
+      url: session.url,
+      sessionId: session.id,
+      trialDays: trialDays || 0,
+    })
   } catch (error) {
     console.error('Stripe subscription checkout error:', error)
 

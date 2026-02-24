@@ -56,6 +56,18 @@ export interface CreateSubscriptionCheckoutParams {
 export interface SubscriptionCheckoutResult {
   url?: string
   sessionId?: string
+  trialDays?: number
+  error?: string
+  hasSubscription?: boolean
+}
+
+export interface PlanChangeResult {
+  success?: boolean
+  plan?: string
+  billingCycle?: string
+  isUpgrade?: boolean
+  prorated?: boolean
+  newPrice?: number
   error?: string
 }
 
@@ -102,12 +114,44 @@ export const stripeService = {
       const data = await response.json()
 
       if (!response.ok) {
+        // If org already has subscription, signal to use plan change instead
+        if (data.hasSubscription) {
+          return { error: data.error, hasSubscription: true }
+        }
         return { error: data.error || 'Error creating subscription checkout' }
       }
 
-      return { url: data.url, sessionId: data.sessionId }
+      return { url: data.url, sessionId: data.sessionId, trialDays: data.trialDays }
     } catch (error) {
       console.error('Error creating subscription checkout:', error)
+      return { error: 'Error connecting to payment service' }
+    }
+  },
+
+  /**
+   * Change subscription plan (upgrade/downgrade) with proration
+   */
+  async changeSubscriptionPlan(params: {
+    organizationId: string
+    plan: 'starter' | 'professional' | 'enterprise'
+    billingCycle?: BillingCycle
+  }): Promise<PlanChangeResult> {
+    try {
+      const response = await fetch('/api/stripe/subscription/change', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { error: data.error || 'Error changing plan' }
+      }
+
+      return data
+    } catch (error) {
+      console.error('Error changing subscription plan:', error)
       return { error: 'Error connecting to payment service' }
     }
   },
