@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/shared/lib/supabase/server'
+import { verifyAdminAuth, isAuthError } from '@/shared/lib/auth-helpers'
+import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
 
 // GET - Get a single lead
 export async function GET(
@@ -7,6 +9,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const rateLimited = checkRateLimit(request, RateLimits.authenticated, 'leads-id')
+    if (rateLimited) return rateLimited
+
+    const auth = await verifyAdminAuth()
+    if (isAuthError(auth)) return auth.response
+
     const { id } = await params
     const supabase = await createClient()
 
@@ -34,6 +42,12 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const rateLimited = checkRateLimit(request, RateLimits.authenticated, 'leads-id')
+    if (rateLimited) return rateLimited
+
+    const auth = await verifyAdminAuth()
+    if (isAuthError(auth)) return auth.response
+
     const { id } = await params
     const supabase = await createClient()
     const body = await request.json()
@@ -86,6 +100,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const rateLimited = checkRateLimit(request, RateLimits.strict, 'leads-id-delete')
+    if (rateLimited) return rateLimited
+
+    const auth = await verifyAdminAuth()
+    if (isAuthError(auth)) return auth.response
+
     const { id } = await params
     const supabase = await createClient()
 

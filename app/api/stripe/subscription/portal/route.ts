@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { verifyUserAuth, isAuthError } from '@/shared/lib/auth-helpers'
+import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
+import { AuditLogger } from '@/shared/lib/audit-logger'
 
 function getStripeClient() {
   if (!process.env.STRIPE_SECRET_KEY) return null
@@ -18,6 +21,14 @@ function getSupabaseAdmin() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimited = checkRateLimit(request, RateLimits.strict, 'subscription-portal')
+    if (rateLimited) return rateLimited
+
+    // Authentication
+    const auth = await verifyUserAuth()
+    if (isAuthError(auth)) return auth.response
+
     const stripe = getStripeClient()
     if (!stripe) {
       return NextResponse.json(
@@ -67,6 +78,13 @@ export async function POST(request: NextRequest) {
       customer: org.stripe_customer_id,
       return_url: `${request.nextUrl.origin}/dashboard/settings?tab=billing`,
     })
+
+    await AuditLogger.adminAccess(
+      auth.user.email || 'unknown',
+      auth.user.id,
+      'stripe-portal',
+      request.headers
+    )
 
     return NextResponse.json({ url: session.url })
   } catch (error) {

@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/shared/lib/supabase/server'
+import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
 import { allTools, requiresConfirmation } from '@/features/ai-assistant/tools/definitions'
 import { executeTool, executeConfirmedAction } from '@/features/ai-assistant/tools/executor'
 import type { AIAssistantRequest, ToolCall, AssistantContext } from '@/features/ai-assistant/types'
@@ -321,7 +322,7 @@ async function* streamAssistantResponse(
         // Build assistant message with tool calls
         const assistantToolCallsMessage = {
           role: 'assistant',
-          content: fullContent || null,
+          content: fullContent || '',
           tool_calls: pendingToolCalls.map(tc => ({
             id: tc.id,
             type: 'function',
@@ -386,6 +387,10 @@ async function* streamAssistantResponse(
 
 export async function POST(request: NextRequest) {
   try {
+    // 🛡️ RATE LIMITING
+    const rateLimited = checkRateLimit(request, RateLimits.ai, 'ai-assistant')
+    if (rateLimited) return rateLimited
+
     const supabase = await createClient()
 
     // Verify authentication

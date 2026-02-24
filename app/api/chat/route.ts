@@ -4,6 +4,8 @@ import { createClient } from '@/shared/lib/supabase/server'
 import { getModelInstance, validateModelId } from '@/shared/lib/models'
 import { getModelById } from '@/config/models'
 import { streamOpenRouterChat } from '@/shared/lib/openrouter'
+import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
+import { NextRequest } from 'next/server'
 
 /**
  * 🤖 CHAT API ROUTE
@@ -19,8 +21,12 @@ import { streamOpenRouterChat } from '@/shared/lib/openrouter'
  *
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text
  */
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    // 🛡️ RATE LIMITING
+    const rateLimited = checkRateLimit(req, RateLimits.ai, 'chat')
+    if (rateLimited) return rateLimited
+
     // 📥 PARSE REQUEST
     const { messages, conversationId, modelId: rawModelId } = await req.json()
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateText, tool } from 'ai'
+import { generateText, tool, stepCountIs } from 'ai'
 import { openrouter } from '@/shared/lib/openrouter'
 import { createClient } from '@/shared/lib/supabase/server'
 import { z } from 'zod'
@@ -114,13 +114,25 @@ export async function POST(req: NextRequest) {
     let updatedVerifiedChildren = [...verifiedChildren]
 
     // Define tools
+    const verifyChildNameSchema = z.object({
+      providedName: z.string().describe('Nombre que el padre proporciono'),
+    })
+    const getChildSummarySchema = z.object({
+      childId: z.string().describe('ID del nino'),
+    })
+    const getPhotosSchema = z.object({
+      childId: z.string().optional().describe('ID del nino especifico'),
+    })
+    const scheduleTourSchema = z.object({
+      preferredDate: z.string().optional().describe('Fecha preferida'),
+      notes: z.string().optional().describe('Notas adicionales'),
+    })
+
     const tools = {
       verify_child_name: tool({
         description: 'Verifica que el nombre proporcionado coincide con un nino registrado del padre',
-        parameters: z.object({
-          providedName: z.string().describe('Nombre que el padre proporciono'),
-        }),
-        execute: async ({ providedName }) => {
+        inputSchema: verifyChildNameSchema,
+        execute: async ({ providedName }): Promise<Record<string, unknown>> => {
           const { data: children } = await supabase
             .from('children')
             .select('id, first_name, last_name')
@@ -154,10 +166,8 @@ export async function POST(req: NextRequest) {
 
       get_child_summary: tool({
         description: 'Obtiene resumen del estado actual del nino (requiere verificacion previa)',
-        parameters: z.object({
-          childId: z.string().describe('ID del nino'),
-        }),
-        execute: async ({ childId }) => {
+        inputSchema: getChildSummarySchema,
+        execute: async ({ childId }): Promise<Record<string, unknown>> => {
           if (!updatedVerifiedChildren.includes(childId)) {
             return { error: 'Este nino no ha sido verificado. Pide confirmacion del nombre primero.' }
           }
@@ -186,7 +196,7 @@ export async function POST(req: NextRequest) {
 
           return {
             name: `${child.first_name} ${child.last_name}`,
-            classroom: child.classroom?.name || 'Sin asignar',
+            classroom: (child.classroom as unknown as { name: string } | null)?.name || 'Sin asignar',
             status: child.status,
             todayAttendance: attendance || { status: 'not_recorded' },
           }
@@ -195,8 +205,8 @@ export async function POST(req: NextRequest) {
 
       get_invoices: tool({
         description: 'Obtiene facturas pendientes del padre',
-        parameters: z.object({}),
-        execute: async () => {
+        inputSchema: z.object({}),
+        execute: async (): Promise<Record<string, unknown>> => {
           const { data: invoices } = await supabase
             .from('invoices')
             .select('invoice_number, total_amount, due_date, status, child:children(first_name)')
@@ -216,7 +226,7 @@ export async function POST(req: NextRequest) {
               amount: inv.total_amount,
               dueDate: inv.due_date,
               status: inv.status,
-              childName: inv.child?.first_name,
+              childName: (inv.child as unknown as { first_name: string } | null)?.first_name,
             })),
           }
         },
@@ -224,10 +234,8 @@ export async function POST(req: NextRequest) {
 
       get_photos: tool({
         description: 'Obtiene fotos recientes de los ninos (requiere verificacion)',
-        parameters: z.object({
-          childId: z.string().optional().describe('ID del nino especifico'),
-        }),
-        execute: async ({ childId }) => {
+        inputSchema: getPhotosSchema,
+        execute: async ({ childId }): Promise<Record<string, unknown>> => {
           const targetIds = childId ? [childId] : updatedVerifiedChildren
 
           if (targetIds.length === 0) {
@@ -250,7 +258,7 @@ export async function POST(req: NextRequest) {
             photos: photos.map(p => ({
               caption: p.caption,
               date: p.taken_at,
-              childName: p.child?.first_name,
+              childName: (p.child as unknown as { first_name: string } | null)?.first_name,
             })),
             note: 'Puedes ver todas las fotos en la seccion Fotos del portal.',
           }
@@ -259,11 +267,8 @@ export async function POST(req: NextRequest) {
 
       schedule_tour: tool({
         description: 'Ayuda a programar una visita o tour a la guarderia',
-        parameters: z.object({
-          preferredDate: z.string().optional().describe('Fecha preferida'),
-          notes: z.string().optional().describe('Notas adicionales'),
-        }),
-        execute: async ({ preferredDate, notes }) => {
+        inputSchema: scheduleTourSchema,
+        execute: async ({ preferredDate, notes }): Promise<Record<string, unknown>> => {
           return {
             message: 'Para programar una visita, por favor contacta directamente a la guarderia.',
             phone: 'Disponible en el perfil de la organizacion',
@@ -290,7 +295,7 @@ export async function POST(req: NextRequest) {
       system: MAYA_SYSTEM_PROMPT,
       messages,
       tools,
-      maxSteps: 5,
+      stopWhen: stepCountIs(5),
     })
 
     return NextResponse.json({

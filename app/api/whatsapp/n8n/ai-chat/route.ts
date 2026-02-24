@@ -5,7 +5,7 @@
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server'
-import { generateText, tool } from 'ai'
+import { generateText, tool, stepCountIs } from 'ai'
 import { createClient } from '@/shared/lib/supabase/server'
 import { openrouter } from '@/shared/lib/openrouter'
 import { z } from 'zod'
@@ -253,10 +253,10 @@ export async function POST(request: NextRequest) {
     const tools = {
       verify_child_name: tool({
         description: 'SEGURIDAD: Verifica que el padre conoce el nombre del niño antes de dar información sensible. SIEMPRE usa esto ANTES de get_child_summary o get_photos.',
-        parameters: z.object({
+        inputSchema: z.object({
           childNameProvided: z.string().describe('El nombre que el padre proporcionó para verificar'),
         }),
-        execute: async ({ childNameProvided }) => {
+        execute: async ({ childNameProvided }): Promise<Record<string, unknown>> => {
           if (!data.children || data.children.length === 0) {
             return {
               verified: false,
@@ -295,10 +295,10 @@ export async function POST(request: NextRequest) {
 
       get_child_summary: tool({
         description: 'Obtiene el resumen del día de un niño. IMPORTANTE: Requiere que el niño haya sido verificado primero con verify_child_name.',
-        parameters: z.object({
+        inputSchema: z.object({
           childId: z.string().describe('ID del niño (obtenido de verify_child_name).'),
         }),
-        execute: async ({ childId }) => {
+        execute: async ({ childId }): Promise<Record<string, unknown>> => {
           if (!data.organizationId) return { error: 'No organization context' }
 
           const targetChildId = childId || data.currentChildId || data.children?.[0]?.id
@@ -371,8 +371,8 @@ export async function POST(request: NextRequest) {
 
       get_invoices: tool({
         description: 'Obtiene el estado de las facturas de una familia. Usa esto cuando un padre pregunte sobre pagos, facturas pendientes, o cuánto debe.',
-        parameters: z.object({}),
-        execute: async () => {
+        inputSchema: z.object({}),
+        execute: async (): Promise<Record<string, unknown>> => {
           if (!data.familyId || !data.organizationId) {
             return { error: 'No family context' }
           }
@@ -408,10 +408,10 @@ export async function POST(request: NextRequest) {
 
       get_photos: tool({
         description: 'Verifica si hay fotos disponibles de un niño. IMPORTANTE: Requiere que el niño haya sido verificado primero con verify_child_name.',
-        parameters: z.object({
+        inputSchema: z.object({
           childId: z.string().optional().describe('ID del niño (obtenido de verify_child_name)'),
         }),
-        execute: async ({ childId }) => {
+        execute: async ({ childId }): Promise<Record<string, unknown>> => {
           if (!data.organizationId) return { error: 'No organization context' }
 
           const targetChildId = childId || data.currentChildId || data.children?.[0]?.id
@@ -451,12 +451,12 @@ export async function POST(request: NextRequest) {
 
       schedule_tour: tool({
         description: 'Registra el interés de un prospecto en agendar un tour/visita. Usa esto cuando alguien quiera visitar el centro.',
-        parameters: z.object({
+        inputSchema: z.object({
           preferredDate: z.string().optional().describe('Fecha preferida si la mencionaron'),
           preferredTime: z.string().optional().describe('Hora preferida si la mencionaron'),
           notes: z.string().optional().describe('Notas adicionales sobre lo que buscan'),
         }),
-        execute: async ({ preferredDate, preferredTime, notes }) => {
+        execute: async ({ preferredDate, preferredTime, notes }): Promise<Record<string, unknown>> => {
           // Log the tour request
           const { error } = await supabase
             .from('sales_leads')
@@ -485,10 +485,10 @@ export async function POST(request: NextRequest) {
 
       escalate_to_human: tool({
         description: 'Escala la conversación a un agente humano. Usa esto cuando el usuario pida hablar con una persona, o cuando no puedas resolver su consulta.',
-        parameters: z.object({
+        inputSchema: z.object({
           reason: z.string().describe('Razón de la escalación'),
         }),
-        execute: async ({ reason }) => {
+        execute: async ({ reason }): Promise<Record<string, unknown>> => {
           // Update session to mark as needing human attention
           if (data.sessionId) {
             await supabase
@@ -517,7 +517,7 @@ export async function POST(request: NextRequest) {
       system: systemPrompt,
       messages: conversationMessages,
       tools,
-      maxSteps: 3, // Allow up to 3 tool calls
+      stopWhen: stepCountIs(3), // Allow up to 3 tool calls
       temperature: 0.7,
     })
 

@@ -19,9 +19,10 @@ const N8N_API_KEY = process.env.N8N_WEBHOOK_SECRET || process.env.WHATSAPP_API_K
 function validateApiKey(request: NextRequest): boolean {
   const apiKey = request.headers.get('x-api-key') || request.headers.get('authorization')?.replace('Bearer ', '')
 
-  // In development, allow requests without API key
-  if (process.env.NODE_ENV === 'development' && !N8N_API_KEY) {
-    return true
+  // Require API key in all environments
+  if (!N8N_API_KEY) {
+    console.warn('[WhatsApp API] N8N_WEBHOOK_SECRET or WHATSAPP_API_KEY not configured')
+    return false
   }
 
   return apiKey === N8N_API_KEY

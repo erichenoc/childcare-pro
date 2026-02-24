@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/shared/lib/supabase/server'
+import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
 import { createCheckoutSessionSchema } from '@/shared/lib/validations'
 import { AuditLogger } from '@/shared/lib/audit-logger'
 
@@ -13,6 +14,10 @@ function getStripeClient() {
 
 export async function POST(request: NextRequest) {
   try {
+    // 🛡️ RATE LIMITING
+    const rateLimited = checkRateLimit(request, RateLimits.strict, 'stripe-checkout')
+    if (rateLimited) return rateLimited
+
     // 🔐 AUTHENTICATION: Verify user is logged in
     const supabase = await createClient()
     const {
@@ -134,11 +139,10 @@ export async function POST(request: NextRequest) {
       metadata: {
         invoiceId,
         invoiceNumber,
-        familyName,
-        organizationId: profile.organization_id,
+        familyName: familyName ?? '',
+        organizationId: profile.organization_id ?? '',
         userId: user.id,
       },
-      customer_email: undefined, // Could be passed from family data
     })
 
     console.log('[Stripe Checkout] Session created:', session.id, 'for invoice:', invoiceId)

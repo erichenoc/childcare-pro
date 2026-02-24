@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/shared/lib/supabase/server'
+import { verifyUserAuth, isAuthError } from '@/shared/lib/auth-helpers'
+import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
 import { emailService } from '@/features/notifications/services/email.service'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -75,6 +77,12 @@ const MILK_TYPE_LABELS: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
+    const rateLimited = checkRateLimit(request, RateLimits.authenticated, 'daily-report-email')
+    if (rateLimited) return rateLimited
+
+    const auth = await verifyUserAuth()
+    if (isAuthError(auth)) return auth.response
+
     const body = await request.json() as SendReportRequest
     const { child_id, date, parent_email, parent_name, child_name, center_name, notes } = body
 

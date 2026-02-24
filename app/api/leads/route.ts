@@ -121,9 +121,9 @@ export async function POST(request: NextRequest) {
     if (phone) score += 15
     if (company_name) score += 10
     if (daycare_size) score += 10
-    if (current_pain_points?.length > 0) score += 15
-    if (interested_features?.length > 0) score += 10
-    if (conversation_history?.length > 3) score += 20
+    if ((current_pain_points?.length ?? 0) > 0) score += 15
+    if ((interested_features?.length ?? 0) > 0) score += 10
+    if ((conversation_history?.length ?? 0) > 3) score += 20
 
     // Determine priority based on score
     let priority = 'medium'
