@@ -93,7 +93,10 @@ export default function FamilyPortalBillingPage() {
           .order('due_date', { ascending: false })
 
         if (error) throw error
-        setInvoices(data || [])
+        setInvoices((data || []).map((r: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+          ...r,
+          child: Array.isArray(r.child) ? r.child[0] : r.child,
+        })))
       } catch (error) {
         console.error('Error loading invoices:', error)
       } finally {
@@ -109,20 +112,19 @@ export default function FamilyPortalBillingPage() {
     try {
       const result = await stripeService.createCheckoutSession({
         invoiceId: invoice.id,
-        childId: invoice.child_id,
         amount: invoice.total_amount,
+        familyName: `${invoice.child?.first_name ?? ''} ${invoice.child?.last_name ?? ''}`.trim(),
+        invoiceNumber: invoice.invoice_number,
         description: `Factura #${invoice.invoice_number} - ${invoice.child?.first_name} ${invoice.child?.last_name}`,
       })
 
-      if (result.error) {
+      if ('error' in result) {
         alert(result.error)
         return
       }
 
       // Redirect to Stripe Checkout
-      if (result.url) {
-        window.location.href = result.url
-      }
+      window.location.href = result.url
     } catch (error) {
       console.error('Error initiating payment:', error)
       alert('Error al procesar el pago. Intenta de nuevo.')

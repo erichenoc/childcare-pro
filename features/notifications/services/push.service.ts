@@ -165,7 +165,7 @@ class PushService {
       // Subscribe to push
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey,
+        applicationServerKey: applicationServerKey.buffer as ArrayBuffer,
       })
 
       console.log('[Push] Subscribed:', subscription.endpoint)
@@ -310,7 +310,7 @@ class PushService {
       }
 
       // Use Service Worker notification
-      await registration.showNotification(payload.title, {
+      const notificationOptions: NotificationOptions & Record<string, unknown> = {
         body: payload.body,
         icon: payload.icon || '/icons/icon-192x192.png',
         badge: payload.badge || '/icons/badge-72x72.png',
@@ -319,7 +319,8 @@ class PushService {
         requireInteraction: payload.priority === 'urgent' || payload.priority === 'high',
         vibrate: payload.vibrate || [200, 100, 200],
         actions: payload.actions,
-      })
+      }
+      await registration.showNotification(payload.title, notificationOptions as NotificationOptions)
 
       return true
     } catch (error) {

@@ -49,7 +49,7 @@ import type {
   BottleFeeding,
 } from '@/shared/types/daily-activities'
 import type { Child } from '@/shared/types'
-import type { Classroom } from '@/features/classrooms/types'
+type Classroom = { id: string; name: string; status: string | null }
 import { useTranslations } from '@/shared/lib/i18n'
 
 interface ChildActivityCounts {
@@ -507,7 +507,7 @@ export default function DailyActivitiesPage() {
                             <ChildActivityStatus counts={counts} />
                           </div>
                           <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                            {child.classroom?.name || t.dailyActivities.noClassroom}
+                            {classrooms.find(c => c.id === child.classroom_id)?.name || t.dailyActivities.noClassroom}
                             {!isPresent && !showOnlyPresent && (
                               <span className="text-amber-500 ml-1">• {t.dailyActivities.noCheckIn}</span>
                             )}
@@ -551,7 +551,7 @@ export default function DailyActivitiesPage() {
                       {selectedChild.first_name} {selectedChild.last_name}
                     </h2>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {selectedChild.classroom?.name || t.dailyActivities.noClassroomAssigned}
+                      {classrooms.find(c => c.id === selectedChild.classroom_id)?.name || t.dailyActivities.noClassroomAssigned}
                     </p>
                   </div>
                 </div>

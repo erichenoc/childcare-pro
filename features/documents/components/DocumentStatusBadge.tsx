@@ -1,7 +1,7 @@
 'use client'
 
 import { clsx } from 'clsx'
-import type { DocumentStatus, ComplianceStatus } from '@/shared/types/documents'
+import type { DocumentStatus, DocumentComplianceStatus } from '@/shared/types/documents'
 
 interface DocumentStatusBadgeProps {
   status: DocumentStatus
@@ -47,12 +47,12 @@ export function DocumentStatusBadge({ status, size = 'md' }: DocumentStatusBadge
   )
 }
 
-interface ComplianceStatusBadgeProps {
-  status: ComplianceStatus
+interface DocumentComplianceStatusBadgeProps {
+  status: DocumentComplianceStatus
   size?: 'sm' | 'md'
 }
 
-const complianceConfig: Record<ComplianceStatus, { label: string; className: string }> = {
+const complianceConfig: Record<DocumentComplianceStatus, { label: string; className: string }> = {
   compliant: {
     label: 'Compliant',
     className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
@@ -71,7 +71,7 @@ const complianceConfig: Record<ComplianceStatus, { label: string; className: str
   },
 }
 
-export function ComplianceStatusBadge({ status, size = 'md' }: ComplianceStatusBadgeProps) {
+export function DocumentComplianceStatusBadge({ status, size = 'md' }: DocumentComplianceStatusBadgeProps) {
   const config = complianceConfig[status]
 
   return (

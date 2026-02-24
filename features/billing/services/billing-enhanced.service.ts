@@ -215,8 +215,8 @@ export const billingEnhancedService = {
         total,
         child_id: child.child_id,
         child_name: child.child_name,
-        period_start: periodStart,
-        period_end: periodEnd,
+        period_start: periodStart ?? undefined,
+        period_end: periodEnd ?? undefined,
       })
     }
 

@@ -5,7 +5,7 @@
 // Enums
 export type DocumentCategory = 'enrollment' | 'medical' | 'dcf' | 'permission' | 'emergency' | 'financial' | 'other'
 export type DocumentStatus = 'pending' | 'submitted' | 'approved' | 'rejected' | 'expired'
-export type ComplianceStatus = 'compliant' | 'incomplete' | 'overdue' | 'pending_review'
+export type DocumentComplianceStatus = 'compliant' | 'incomplete' | 'overdue' | 'pending_review'
 export type EntityType = 'child' | 'family' | 'staff'
 export type SignerType = 'parent' | 'guardian' | 'staff' | 'witness'
 export type ContentType = 'html' | 'pdf' | 'external_url'
@@ -177,7 +177,7 @@ export interface DocumentCompliance {
   organization_id: string
   entity_type: EntityType
   entity_id: string
-  compliance_status: ComplianceStatus
+  compliance_status: DocumentComplianceStatus
   total_required: number
   total_submitted: number
   total_approved: number
@@ -205,7 +205,7 @@ export interface EntityDocumentStatus {
   entity_type: EntityType
   entity_id: string
   entity_name: string
-  compliance_status: ComplianceStatus
+  compliance_status: DocumentComplianceStatus
   total_required: number
   total_approved: number
   missing_documents: string[]
@@ -228,7 +228,7 @@ export interface MissingDocument {
   entity_type: EntityType
   entity_id: string
   missing_document_name: string
-  compliance_status: ComplianceStatus
+  compliance_status: DocumentComplianceStatus
   entity_name: string
 }
 

@@ -430,6 +430,7 @@ export const milkCalculatorService = {
       '2%': 0,
       skim: 0,
       lactose_free: 0,
+      formula: 0,
     }
 
     const byType = forecast.by_milk_type

@@ -120,9 +120,9 @@ export default function EditIncidentPage() {
       await incidentsService.update(incidentId, {
         child_id: formData.child_id,
         classroom_id: formData.classroom_id || null,
-        incident_type: formData.incident_type as 'injury' | 'illness' | 'behavioral' | 'medication' | 'property_damage' | 'security' | 'other',
-        severity: formData.severity as 'minor' | 'moderate' | 'serious' | 'critical',
-        status: formData.status as 'open' | 'pending_signature' | 'pending_closure' | 'closed',
+        incident_type: formData.incident_type as unknown as Parameters<typeof incidentsService.update>[1]['incident_type'],
+        severity: formData.severity as unknown as Parameters<typeof incidentsService.update>[1]['severity'],
+        status: formData.status as unknown as Parameters<typeof incidentsService.update>[1]['status'],
         description: formData.description,
         location: formData.location || null,
         action_taken: formData.action_taken || null,

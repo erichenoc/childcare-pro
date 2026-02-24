@@ -541,6 +541,8 @@ export interface Translations {
     amountExceedsBalance: string
     invoicePayment: string
     stripeNotConfigured: string
+    paymentPeriod: string
+    paymentRecordNote: string
     selectFamily: string
     addLineItems: string
     sendError: string

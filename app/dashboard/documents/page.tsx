@@ -279,13 +279,11 @@ export default function DocumentsPage() {
               </GlassTableHeader>
               <GlassTableBody>
                 {filteredDocuments.length === 0 ? (
-                  <GlassTableEmpty colSpan={6}>
-                    <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p>{t.documents.noDocumentsFound}</p>
-                    <p className="text-sm text-gray-400 mt-1">
-                      {t.documents.uploadToGetStarted}
-                    </p>
-                  </GlassTableEmpty>
+                  <GlassTableEmpty
+                    icon={<FileText className="w-12 h-12 text-gray-400" />}
+                    title={t.documents.noDocumentsFound}
+                    description={t.documents.uploadToGetStarted}
+                  />
                 ) : (
                   filteredDocuments.map((doc) => (
                     <GlassTableRow key={doc.id}>

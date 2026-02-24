@@ -7,6 +7,9 @@ import { createClient } from '@/shared/lib/supabase/server'
 import { requiresConfirmation, getToolInfo } from './definitions'
 import type { ToolCall, ToolResult, PendingConfirmation } from '../types'
 import { emailService } from '@/features/notifications/services/email.service'
+import { attendanceService } from '@/features/attendance/services/attendance.service'
+import { incidentsService } from '@/features/incidents/services/incidents.service'
+import { billingService } from '@/features/billing/services/billing.service'
 
 // =====================================================
 // EXECUTION CONTEXT - passed from API route
@@ -705,7 +708,7 @@ const toolImplementations: Record<string, (args: Record<string, unknown>) => Pro
 
     // Get compliance
     const ratios = await toolImplementations.classrooms_get_ratios({})
-    const classrooms = (ratios as { classrooms: Array<{ isCompliant: boolean }> }).classrooms
+    const classrooms = (ratios as { classrooms: Array<{ isCompliant: boolean; name: string }> }).classrooms
     const violations = classrooms.filter(c => !c.isCompliant)
 
     return {
@@ -1239,22 +1242,22 @@ export async function executeConfirmedAction(
     case 'incidents_create':
       return incidentsService.create({
         child_id: params.child_id as string,
-        incident_type: params.incident_type as string,
+        incident_type: params.incident_type as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         description: params.description as string,
-        severity: params.severity as string,
-        first_aid_given: params.first_aid_given as string,
+        severity: params.severity as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        action_taken: (params.first_aid_given || params.action_taken) as string,
         occurred_at: new Date().toISOString(),
-        status: 'open',
+        status: 'open' as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       })
 
     case 'billing_create_invoice':
-      return billingService.create({
+      return billingService.createInvoice({
         family_id: params.family_id as string,
-        total: params.amount as number,
+        total_amount: params.amount as number,
         description: params.description as string,
         due_date: params.due_date as string,
-        status: 'sent',
-      })
+        status: 'pending',
+      } as any) // eslint-disable-line @typescript-eslint/no-explicit-any
 
     case 'billing_send_reminder':
       return sendBillingReminder(params)

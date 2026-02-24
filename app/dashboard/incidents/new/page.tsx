@@ -61,8 +61,8 @@ export default function NewIncidentPage() {
   const [formData, setFormData] = useState({
     child_id: '',
     classroom_id: '',
-    incident_type: 'injury' as const,
-    severity: 'minor' as const,
+    incident_type: 'injury' as string,
+    severity: 'minor' as string,
     description: '',
     location: '',
     action_taken: '',
@@ -121,14 +121,14 @@ export default function NewIncidentPage() {
       await incidentsService.create({
         child_id: formData.child_id,
         classroom_id: formData.classroom_id || null,
-        incident_type: formData.incident_type,
-        severity: formData.severity,
+        incident_type: formData.incident_type as Parameters<typeof incidentsService.create>[0]['incident_type'],
+        severity: formData.severity as Parameters<typeof incidentsService.create>[0]['severity'],
         description: formData.description,
         location: formData.location || null,
         action_taken: formData.action_taken || null,
         parent_notified: formData.parent_notified,
         occurred_at: new Date().toISOString(),
-        status: 'open',
+        status: 'open' as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- DB enum mismatch
       })
       router.push('/dashboard/incidents')
     } catch (error) {

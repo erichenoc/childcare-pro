@@ -58,7 +58,10 @@ export default function FamilyPortalPhotosPage() {
           .order('taken_at', { ascending: false })
 
         if (error) throw error
-        setPhotos(data || [])
+        setPhotos((data || []).map((r: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+          ...r,
+          child: Array.isArray(r.child) ? r.child[0] : r.child,
+        })))
       } catch (error) {
         console.error('Error loading photos:', error)
       } finally {

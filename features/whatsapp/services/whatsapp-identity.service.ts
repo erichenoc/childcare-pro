@@ -113,7 +113,7 @@ export const whatsappIdentityService = {
           children = childrenData.map((child) => ({
             id: child.id,
             name: `${child.first_name} ${child.last_name}`,
-            classroom: (child.classrooms as { name: string } | null)?.name || 'Sin asignar',
+            classroom: (child.classrooms as unknown as { name: string } | null)?.name || 'Sin asignar',
           }))
         }
       }
@@ -135,7 +135,7 @@ export const whatsappIdentityService = {
       }
 
       if (guardian) {
-        const family = guardian.families as { id: string; name: string } | null
+        const family = guardian.families as unknown as { id: string; name: string } | null
         response.guardian = {
           id: guardian.id,
           name: `${guardian.first_name} ${guardian.last_name}`,

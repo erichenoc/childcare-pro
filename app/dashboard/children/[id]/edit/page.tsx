@@ -385,7 +385,7 @@ export default function EditChildPage() {
                 <GlassSelect
                   name="classroom_id"
                   options={classroomOptions}
-                  value={formData.classroom_id}
+                  value={formData.classroom_id ?? ''}
                   onChange={handleInputChange}
                 />
               </div>

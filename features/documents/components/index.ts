@@ -1,4 +1,4 @@
 // Documents Feature Components
-export { DocumentStatusBadge, ComplianceStatusBadge } from './DocumentStatusBadge'
+export { DocumentStatusBadge, DocumentComplianceStatusBadge } from './DocumentStatusBadge'
 export { DocumentSummaryCard } from './DocumentSummaryCard'
 export { DocumentUploadModal } from './DocumentUploadModal'

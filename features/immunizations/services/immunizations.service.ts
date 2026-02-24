@@ -440,7 +440,7 @@ export const immunizationsService = {
       const childExemptions = exemptions?.filter(e => e.child_id === child.id) || []
       const exemptVaccines = new Set<string>()
       childExemptions.forEach(e => {
-        e.vaccine_codes?.forEach(code => exemptVaccines.add(code))
+        (e.vaccine_codes as string[] | null)?.forEach((code: string) => exemptVaccines.add(code))
       })
 
       // Check each required vaccine

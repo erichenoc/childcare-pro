@@ -181,9 +181,10 @@ export function DailyReportModal({
 
       // Send the report via email if email method selected
       if (sendVia === 'email' || sendVia === 'both') {
-        // Get parent email from family (you would need to fetch this in production)
-        const parentEmail = child.family?.primary_email || ''
-        const parentName = child.family?.name || 'Padre/Tutor'
+        // Get parent email from family - child.family is not in the type yet, access via any
+        const childAny = child as any // eslint-disable-line @typescript-eslint/no-explicit-any
+        const parentEmail = childAny.family?.primary_email || childAny.family?.primary_contact_email || ''
+        const parentName = childAny.family?.name || childAny.family?.primary_contact_name || 'Padre/Tutor'
 
         if (parentEmail) {
           const response = await fetch('/api/daily-report/send-email', {

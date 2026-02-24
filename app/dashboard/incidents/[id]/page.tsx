@@ -105,8 +105,9 @@ export default function IncidentDetailPage() {
 
   async function handleMarkResolved() {
     // Check if parent has signed the incident
-    const incidentData = incident as Record<string, unknown>
-    if (!incidentData.parent_signed_at) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const incidentData = incident as any
+    if (!incidentData?.parent_signed_at) {
       // Redirect to signature page with a message
       if (confirm('Este incidente requiere la firma del padre/tutor antes de cerrarse.\n\n¿Desea ir a la pagina de firma ahora?')) {
         router.push(`/dashboard/incidents/${incidentId}/sign`)
@@ -116,7 +117,8 @@ export default function IncidentDetailPage() {
 
     try {
       // Use correct status value synced with backend
-      await incidentsService.update(incidentId, { status: 'closed' })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await incidentsService.update(incidentId, { status: 'closed' as any })
       loadIncident()
     } catch (error) {
       console.error('Error updating incident:', error)
@@ -137,54 +139,77 @@ export default function IncidentDetailPage() {
     }
   }
 
-  function handlePrint() {
-    if (!incident || !organization) return
+  function buildPdfData(organization: Organization): IncidentPDFData {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const inc = incident as any
+    // The incident data shape here bridges IncidentWithRelations (DB) and IncidentWithDetails (expanded).
+    // We use `any` to avoid cascading type mismatches between the two type systems.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const incidentData: any = {
+      id: inc.id,
+      organization_id: inc.organization_id,
+      child_id: inc.child_id,
+      classroom_id: inc.classroom_id,
+      reporting_teacher_id: inc.reporter_id || inc.reporting_teacher_id || inc.reported_by || '',
+      incident_number: inc.incident_number || `INC-${inc.id.slice(0, 8).toUpperCase()}`,
+      incident_type: inc.incident_type,
+      severity: inc.severity || 'minor',
+      status: inc.status === 'inactive' ? 'closed' : inc.status === 'active' ? 'pending_signature' : (inc.status || 'open'),
+      occurred_at: inc.occurred_at,
+      location: inc.location || null,
+      description: inc.description,
+      action_taken: inc.action_taken || null,
+      witness_names: inc.witnesses ? [inc.witnesses] : null,
+      parent_notified: inc.parent_notified || false,
+      parent_notified_at: inc.parent_notified_at || null,
+      parent_notified_method: null,
+      parent_signature_data: inc.parent_signature_data || inc.parent_signature || null,
+      parent_signed_at: inc.parent_signed_at || null,
+      parent_signed_by_name: inc.parent_signed_by_name || null,
+      parent_signed_by_relationship: inc.parent_signed_by_relationship || null,
+      parent_copy_sent: false,
+      parent_copy_sent_at: null,
+      parent_copy_sent_method: null,
+      closed_at: inc.status === 'inactive' ? inc.updated_at : null,
+      closed_by: null,
+      closure_notes: inc.follow_up_notes || null,
+      attachments: null,
+      created_at: inc.created_at,
+      updated_at: inc.updated_at,
+      // Extended fields with defaults
+      witness_staff_ids: [],
+      parent_notified_by: null,
+      parent_response: null,
+      parent_signature_url: null,
+      signature_ip_address: null,
+      pdf_url: null,
+      daycare_copy_url: null,
+      parent_copy_url: null,
+      follow_up_required: inc.follow_up_required || false,
+      follow_up_date: inc.follow_up_date || null,
+      follow_up_completed: inc.follow_up_completed || false,
+      follow_up_completed_at: inc.follow_up_completed_at || null,
+      follow_up_completed_by: null,
+      child: inc.child ? {
+        id: inc.child.id || '',
+        first_name: inc.child.first_name,
+        last_name: inc.child.last_name,
+        date_of_birth: inc.child.date_of_birth || null,
+        photo_url: inc.child.photo_url || null,
+      } : null,
+      classroom: inc.classroom ? {
+        id: inc.classroom.id || '',
+        name: inc.classroom.name,
+      } : null,
+      reporting_teacher: (inc.reporter || inc.reporting_teacher) ? {
+        id: (inc.reporter || inc.reporting_teacher).id || '',
+        first_name: (inc.reporter || inc.reporting_teacher).first_name,
+        last_name: (inc.reporter || inc.reporting_teacher).last_name,
+      } : null,
+    }
 
-    const pdfData: IncidentPDFData = {
-      incident: {
-        id: incident.id,
-        organization_id: incident.organization_id,
-        child_id: incident.child_id,
-        classroom_id: incident.classroom_id,
-        reporting_teacher_id: incident.reporter_id,
-        incident_number: (incident as Record<string, unknown>).incident_number as string || `INC-${incident.id.slice(0, 8).toUpperCase()}`,
-        incident_type: incident.incident_type as 'injury' | 'illness' | 'behavioral' | 'medication' | 'property_damage' | 'security' | 'other',
-        severity: (incident.severity || 'minor') as 'minor' | 'moderate' | 'serious' | 'critical',
-        status: incident.status === 'inactive' ? 'closed' : incident.status === 'active' ? 'pending_signature' : 'open',
-        occurred_at: incident.occurred_at,
-        location: incident.location || null,
-        description: incident.description,
-        action_taken: incident.action_taken || null,
-        witness_names: incident.witnesses ? [incident.witnesses] : null,
-        parent_notified: incident.parent_notified || false,
-        parent_notified_at: incident.parent_notified_at || null,
-        parent_notified_method: null,
-        parent_signature_data: (incident as Record<string, unknown>).parent_signature_data as string || null,
-        parent_signed_at: (incident as Record<string, unknown>).parent_signed_at as string || null,
-        parent_signed_by_name: (incident as Record<string, unknown>).parent_signed_by_name as string || null,
-        parent_signed_by_relationship: (incident as Record<string, unknown>).parent_signed_by_relationship as string || null,
-        parent_copy_sent: false,
-        parent_copy_sent_at: null,
-        parent_copy_sent_method: null,
-        closed_at: incident.status === 'inactive' ? incident.updated_at : null,
-        closed_by_id: null,
-        notes: incident.follow_up_notes || null,
-        attachments: null,
-        created_at: incident.created_at,
-        updated_at: incident.updated_at,
-        child: incident.child ? {
-          first_name: incident.child.first_name,
-          last_name: incident.child.last_name,
-          date_of_birth: incident.child.date_of_birth,
-        } : null,
-        classroom: incident.classroom ? {
-          name: incident.classroom.name,
-        } : null,
-        reporting_teacher: incident.reporter ? {
-          first_name: incident.reporter.first_name,
-          last_name: incident.reporter.last_name,
-        } : null,
-      },
+    return {
+      incident: incidentData,
       organization: {
         name: organization.name,
         address: organization.address,
@@ -197,72 +222,16 @@ export default function IncidentDetailPage() {
         license_number: organization.license_number,
       },
     }
+  }
 
-    printIncidentReport(pdfData)
+  function handlePrint() {
+    if (!incident || !organization) return
+    printIncidentReport(buildPdfData(organization))
   }
 
   function handleDownload() {
     if (!incident || !organization) return
-
-    const pdfData: IncidentPDFData = {
-      incident: {
-        id: incident.id,
-        organization_id: incident.organization_id,
-        child_id: incident.child_id,
-        classroom_id: incident.classroom_id,
-        reporting_teacher_id: incident.reporter_id,
-        incident_number: (incident as Record<string, unknown>).incident_number as string || `INC-${incident.id.slice(0, 8).toUpperCase()}`,
-        incident_type: incident.incident_type as 'injury' | 'illness' | 'behavioral' | 'medication' | 'property_damage' | 'security' | 'other',
-        severity: (incident.severity || 'minor') as 'minor' | 'moderate' | 'serious' | 'critical',
-        status: incident.status === 'inactive' ? 'closed' : incident.status === 'active' ? 'pending_signature' : 'open',
-        occurred_at: incident.occurred_at,
-        location: incident.location || null,
-        description: incident.description,
-        action_taken: incident.action_taken || null,
-        witness_names: incident.witnesses ? [incident.witnesses] : null,
-        parent_notified: incident.parent_notified || false,
-        parent_notified_at: incident.parent_notified_at || null,
-        parent_notified_method: null,
-        parent_signature_data: (incident as Record<string, unknown>).parent_signature_data as string || null,
-        parent_signed_at: (incident as Record<string, unknown>).parent_signed_at as string || null,
-        parent_signed_by_name: (incident as Record<string, unknown>).parent_signed_by_name as string || null,
-        parent_signed_by_relationship: (incident as Record<string, unknown>).parent_signed_by_relationship as string || null,
-        parent_copy_sent: false,
-        parent_copy_sent_at: null,
-        parent_copy_sent_method: null,
-        closed_at: incident.status === 'inactive' ? incident.updated_at : null,
-        closed_by_id: null,
-        notes: incident.follow_up_notes || null,
-        attachments: null,
-        created_at: incident.created_at,
-        updated_at: incident.updated_at,
-        child: incident.child ? {
-          first_name: incident.child.first_name,
-          last_name: incident.child.last_name,
-          date_of_birth: incident.child.date_of_birth,
-        } : null,
-        classroom: incident.classroom ? {
-          name: incident.classroom.name,
-        } : null,
-        reporting_teacher: incident.reporter ? {
-          first_name: incident.reporter.first_name,
-          last_name: incident.reporter.last_name,
-        } : null,
-      },
-      organization: {
-        name: organization.name,
-        address: organization.address,
-        city: organization.city,
-        state: organization.state,
-        zip: organization.zip_code,
-        phone: organization.phone,
-        email: organization.email,
-        logo_url: organization.logo_url,
-        license_number: organization.license_number,
-      },
-    }
-
-    downloadIncidentHTML(pdfData)
+    downloadIncidentHTML(buildPdfData(organization))
   }
 
   if (isLoading) {
@@ -325,6 +294,9 @@ export default function IncidentDetailPage() {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const incidentAny = incident as any
+
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       {/* Header */}
@@ -350,18 +322,18 @@ export default function IncidentDetailPage() {
             <Download className="w-4 h-4 mr-2" />
             Descargar
           </GlassButton>
-          {incident.status !== 'closed' && (
+          {incidentAny.status !== 'closed' && (
             <GlassButton
-              variant={(incident as Record<string, unknown>).parent_signed_at ? "primary" : "secondary"}
+              variant={incidentAny.parent_signed_at ? "primary" : "secondary"}
               onClick={handleMarkResolved}
-              title={(incident as Record<string, unknown>).parent_signed_at ? undefined : "Requiere firma del padre para cerrar"}
+              title={incidentAny.parent_signed_at ? undefined : "Requiere firma del padre para cerrar"}
             >
-              {(incident as Record<string, unknown>).parent_signed_at ? (
+              {incidentAny.parent_signed_at ? (
                 <CheckCircle className="w-4 h-4 mr-2" />
               ) : (
                 <PenTool className="w-4 h-4 mr-2 text-amber-500" />
               )}
-              {(incident as Record<string, unknown>).parent_signed_at ? "Marcar Resuelto" : "Requiere Firma"}
+              {incidentAny.parent_signed_at ? "Marcar Resuelto" : "Requiere Firma"}
             </GlassButton>
           )}
           <Link href={`/dashboard/incidents/${incidentId}/edit`}>
@@ -466,7 +438,7 @@ export default function IncidentDetailPage() {
 
         {/* Parent Signature Section */}
         <GlassCard className={`border-l-4 ${
-          (incident as { parent_signed_at?: string }).parent_signed_at
+          incidentAny.parent_signed_at
             ? 'border-l-green-500'
             : 'border-l-yellow-500'
         }`}>
@@ -477,7 +449,7 @@ export default function IncidentDetailPage() {
             </GlassCardTitle>
           </GlassCardHeader>
           <GlassCardContent>
-            {(incident as { parent_signed_at?: string; parent_signed_by_name?: string }).parent_signed_at ? (
+            {incidentAny.parent_signed_at ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -486,7 +458,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <p className="font-medium text-gray-900">Firmado</p>
                     <p className="text-sm text-gray-500">
-                      Por: {(incident as { parent_signed_by_name?: string }).parent_signed_by_name || 'Padre/Tutor'} - {formatDate((incident as { parent_signed_at?: string }).parent_signed_at!)}
+                      Por: {incidentAny.parent_signed_by_name || 'Padre/Tutor'} - {formatDate(incidentAny.parent_signed_at)}
                     </p>
                   </div>
                 </div>
@@ -520,11 +492,10 @@ export default function IncidentDetailPage() {
 
         {/* Follow-up Section */}
         {(() => {
-          const incidentData = incident as Record<string, unknown>
-          const followUpRequired = incidentData.follow_up_required as boolean
-          const followUpCompleted = incidentData.follow_up_completed as boolean
-          const followUpDate = incidentData.follow_up_date as string | null
-          const followUpCompletedAt = incidentData.follow_up_completed_at as string | null
+          const followUpRequired = incidentAny.follow_up_required as boolean
+          const followUpCompleted = incidentAny.follow_up_completed as boolean
+          const followUpDate = incidentAny.follow_up_date as string | null
+          const followUpCompletedAt = incidentAny.follow_up_completed_at as string | null
 
           if (!followUpRequired) return null
 

@@ -400,14 +400,14 @@ export default function BillingPage() {
             key: 'send',
             label: t.workflow.billingSend,
             icon: <Send className="w-4 h-4" />,
-            status: (invoices.some(i => i.status === 'sent' || i.status === 'paid') ? 'completed' : invoices.length > 0 ? 'current' : 'upcoming') as any,
-            count: invoices.filter(i => i.status === 'sent').length || undefined,
+            status: (invoices.some(i => i.status === 'pending' || i.status === 'paid') ? 'completed' : invoices.length > 0 ? 'current' : 'upcoming') as any,
+            count: invoices.filter(i => i.status === 'pending').length || undefined,
           },
           {
             key: 'collect',
             label: t.workflow.billingCollect,
             icon: <CreditCard className="w-4 h-4" />,
-            status: (invoices.some(i => i.status === 'paid') ? 'completed' : invoices.some(i => i.status === 'sent') ? 'current' : 'upcoming') as any,
+            status: (invoices.some(i => i.status === 'paid') ? 'completed' : invoices.some(i => i.status === 'pending') ? 'current' : 'upcoming') as any,
             count: invoices.filter(i => i.status === 'paid').length || undefined,
           },
           {
@@ -784,7 +784,7 @@ export default function BillingPage() {
               {/* Payment Period */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t.billing.paymentPeriod || 'Período de Pago'}
+                  {'Período de Pago'}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -874,7 +874,7 @@ export default function BillingPage() {
               </div>
 
               <p className="text-xs text-gray-500 text-center">
-                {t.billing.paymentRecordNote || 'Este registro es solo para control interno. El pago se procesa por su pasarela externa.'}
+                {'Este registro es solo para control interno. El pago se procesa por su pasarela externa.'}
               </p>
             </GlassCardContent>
           </GlassCard>

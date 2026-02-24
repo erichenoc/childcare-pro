@@ -341,7 +341,7 @@ class ProgramIncomeService {
         child_id: child.id,
         child_name: `${child.first_name} ${child.last_name}`,
         family_id: child.family_id,
-        family_name: (child.family as { primary_contact_name: string })?.primary_contact_name || 'N/A',
+        family_name: (child.family as unknown as { primary_contact_name: string })?.primary_contact_name || 'N/A',
         program_type: child.program_type || 'private',
         tuition_rate_id: null,
         weekly_rate: weeklyRate,

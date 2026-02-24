@@ -132,7 +132,7 @@ export const whatsappDataService = {
         .gte('taken_at', `${targetDate}T00:00:00`)
         .lt('taken_at', `${targetDate}T23:59:59`)
 
-      const classroom = child.classrooms as { id: string; name: string } | null
+      const classroom = child.classrooms as unknown as { id: string; name: string } | null
 
       const summary: ChildSummaryResponse = {
         child: {

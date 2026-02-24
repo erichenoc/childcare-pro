@@ -76,7 +76,7 @@ export default function FamilyPortalChildrenPage() {
               dateOfBirth: child.date_of_birth,
               photoUrl: child.photo_url,
               status: child.status,
-              classroom: child.classroom,
+              classroom: Array.isArray(child.classroom) ? child.classroom[0] : child.classroom,
               isPrimary: guardianChild?.isPrimary || false,
               canPickup: guardianChild?.canPickup || false,
               allergies: child.allergies,

@@ -592,7 +592,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               {/* Payment Period */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t.billing.paymentPeriod || 'Período de Pago'}
+                  {'Período de Pago'}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -682,7 +682,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               </div>
 
               <p className="text-xs text-gray-500 text-center">
-                {t.billing.paymentRecordNote || 'Este registro es solo para control interno. El pago se procesa por su pasarela externa.'}
+                {'Este registro es solo para control interno. El pago se procesa por su pasarela externa.'}
               </p>
             </GlassCardContent>
           </GlassCard>

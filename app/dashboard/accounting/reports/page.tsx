@@ -772,7 +772,7 @@ export default function FinancialReportsPage() {
                     <XAxis dataKey="month_name" tick={{ fill: '#6b7280', fontSize: 12 }} />
                     <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fill: '#6b7280', fontSize: 12 }} />
                     <Tooltip
-                      formatter={(value: number) => formatCurrency(value)}
+                      formatter={(value) => formatCurrency(Number(value))}
                       contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px' }}
                     />
                     <Legend />
@@ -797,7 +797,7 @@ export default function FinancialReportsPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                       <XAxis dataKey="month_name" tick={{ fill: '#6b7280', fontSize: 12 }} />
                       <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fill: '#6b7280', fontSize: 12 }} />
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                       <Bar dataKey="net_income" name="Utilidad Neta" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -816,7 +816,7 @@ export default function FinancialReportsPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                       <XAxis dataKey="month_name" tick={{ fill: '#6b7280', fontSize: 12 }} />
                       <YAxis tickFormatter={(value) => `${value}%`} tick={{ fill: '#6b7280', fontSize: 12 }} />
-                      <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
+                      <Tooltip formatter={(value) => `${Number(value).toFixed(1)}%`} />
                       <Line type="monotone" dataKey="profit_margin" name="Margen" stroke="#f59e0b" strokeWidth={3} dot={{ fill: '#f59e0b' }} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -983,7 +983,7 @@ export default function FinancialReportsPage() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis type="number" tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
                       <YAxis type="category" dataKey="name" width={80} />
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                       <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -1093,7 +1093,7 @@ export default function FinancialReportsPage() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                       <Legend />
                       <Bar dataKey="Ingresos" fill="#10b981" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} />

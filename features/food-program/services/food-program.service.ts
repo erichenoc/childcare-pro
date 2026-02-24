@@ -755,21 +755,17 @@ export const foodProgramService = {
       ? transaction.quantity
       : -transaction.quantity
 
-    const { error: updateError } = await supabase.rpc('update_inventory_quantity', {
-      p_item_id: transaction.inventory_item_id,
-      p_quantity_change: quantityChange,
-    }).catch(() => {
-      // Fallback if RPC doesn't exist
-      return supabase
-        .from('food_inventory')
-        .update({
-          quantity_on_hand: supabase.rpc('add_to_quantity', {
-            current: 'quantity_on_hand',
-            delta: quantityChange,
-          }),
-        })
-        .eq('id', transaction.inventory_item_id)
-    })
+    let updateError: any = null // eslint-disable-line @typescript-eslint/no-explicit-any
+    try {
+      const result = await supabase.rpc('update_inventory_quantity', {
+        p_item_id: transaction.inventory_item_id,
+        p_quantity_change: quantityChange,
+      })
+      updateError = result.error
+    } catch {
+      // RPC doesn't exist, will use manual fallback below
+      updateError = { message: 'RPC not available' }
+    }
 
     // Manual update as fallback
     if (!updateError) {

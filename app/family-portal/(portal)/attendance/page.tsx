@@ -121,7 +121,10 @@ export default function FamilyPortalAttendancePage() {
       .order('date', { ascending: false })
 
     if (error) throw error
-    setRecords(data || [])
+    setRecords((data || []).map((r: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+      ...r,
+      child: Array.isArray(r.child) ? r.child[0] : r.child,
+    })))
   }
 
   useEffect(() => {
