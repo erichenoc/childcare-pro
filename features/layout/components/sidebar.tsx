@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   Users,
   UserCircle,
-  Building2,
   ClipboardCheck,
   CreditCard,
   MessageSquare,
@@ -33,7 +32,6 @@ import {
 } from 'lucide-react'
 import { useTranslations } from '@/shared/lib/i18n'
 import { usePlanGating } from '@/shared/hooks/usePlanGating'
-import { getMinimumPlan } from '@/shared/lib/plan-config'
 
 const LOGO_URL = 'https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/ChildCarePro_Logo_1_f0gqth.png'
 
@@ -77,7 +75,7 @@ export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const pathname = usePathname()
   const t = useTranslations()
-  const { canAccessNav, plan, isLoading } = usePlanGating()
+  const { canAccessNav, isLoading } = usePlanGating()
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -113,7 +111,7 @@ export function Sidebar({ className }: SidebarProps) {
           const Icon = item.icon
           const active = isActive(item.href)
           const label = t.nav[item.key as keyof typeof t.nav]
-          const hasAccess = canAccessNav(item.key)
+          const hasAccess = isLoading || canAccessNav(item.key)
 
           if (!hasAccess) {
             // Locked feature - show grayed out with lock
