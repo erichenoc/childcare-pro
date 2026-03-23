@@ -71,8 +71,8 @@ const PLANS = [
     perChild: 3.50,
     minimum: 79,
     description: 'Perfect for small home daycares',
-    maxChildren: 50,
-    maxStaff: 10,
+    maxChildren: 25,
+    maxStaff: 5,
     features: [
       'Check-in/Check-out System',
       'Automated Billing & Invoicing',
@@ -89,8 +89,8 @@ const PLANS = [
     perChild: 5.00,
     minimum: 149,
     description: 'For growing childcare centers',
-    maxChildren: 200,
-    maxStaff: 50,
+    maxChildren: 70,
+    maxStaff: 15,
     features: [
       'Everything in Starter',
       'DCF Ratio Tracking',
