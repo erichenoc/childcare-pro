@@ -1,0 +1,57 @@
+{
+  "id": "animation-suite",
+  "name": "Animation Suite",
+  "version": "1.0.0",
+  "description": "Rich animation utilities with keyframes, transitions, and effects for creating engaging UI animations with Tailwind CSS",
+  "author": {
+    "name": "SkillStash Team",
+    "email": "team@skillstash.dev"
+  },
+  "category": "animations",
+  "tags": [
+    "animations",
+    "transitions",
+    "keyframes",
+    "motion",
+    "effects",
+    "interactions"
+  ],
+  "tailwind": {
+    "minVersion": "3.0.0",
+    "features": [
+      "custom-animations",
+      "keyframes",
+      "transitions",
+      "transforms"
+    ]
+  },
+  "features": {
+    "animations": [
+      "fade",
+      "slide",
+      "zoom",
+      "rotate",
+      "bounce",
+      "shake",
+      "pulse",
+      "flip"
+    ],
+    "effects": ["parallax", "morphing", "typewriter", "gradient", "particles"],
+    "scroll-animations": true,
+    "stagger-effects": true,
+    "motion-paths": true
+  },
+  "commands": [
+    "animation-create",
+    "keyframe-builder",
+    "transition-setup"
+  ],
+  "skills": [
+    "animation-composer",
+    "scroll-animator",
+    "performance-monitor"
+  ],
+  "agents": [
+    "motion-designer"
+  ]
+}

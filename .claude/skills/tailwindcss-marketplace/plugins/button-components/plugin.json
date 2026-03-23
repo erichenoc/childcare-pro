@@ -1,0 +1,50 @@
+{
+  "id": "button-components",
+  "name": "Button Components",
+  "version": "1.0.0",
+  "description": "Comprehensive button component system with variants, sizes, states, and accessibility features for Tailwind CSS",
+  "longDescription": "A production-ready button component system that extends Tailwind CSS with 8 button variants, 5 size options, interactive states, dark mode support, icon integration, and WCAG-compliant accessibility features. Perfect for building modern web applications with consistent button styling.",
+  "author": "SkillStash Team",
+  "license": "MIT",
+  "homepage": "https://github.com/skillstash/tailwindcss-plugins/tree/main/plugins/button-components",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/skillstash/tailwindcss-plugins.git"
+  },
+  "bugs": {
+    "url": "https://github.com/skillstash/tailwindcss-plugins/issues"
+  },
+  "keywords": [
+    "tailwindcss",
+    "buttons",
+    "components",
+    "ui",
+    "interactive",
+    "accessibility",
+    "variants",
+    "design-system"
+  ],
+  "categories": ["components", "ui"],
+  "compatibility": {
+    "claudeVersion": ">=1.0.0",
+    "platforms": ["mac", "linux", "windows"]
+  },
+  "dependencies": {
+    "required": ["tailwindcss@^3.0.0"],
+    "optional": ["@tailwindcss/forms@^0.5.0"],
+    "peer": []
+  },
+  "configuration": {
+    "skills": ["button-builder", "button-a11y", "button-animations"],
+    "commands": ["button-create", "button-variants", "button-group"],
+    "agents": ["button-designer", "button-optimizer"],
+    "mcpServers": []
+  },
+  "files": [
+    ".claude/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "examples/"
+  ]
+}

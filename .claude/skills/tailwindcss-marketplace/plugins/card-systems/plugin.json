@@ -1,0 +1,56 @@
+{
+  "id": "card-systems",
+  "name": "Card Systems",
+  "version": "1.0.0",
+  "description": "Flexible card components with layouts, shadows, interactions, and content patterns for Tailwind CSS",
+  "author": {
+    "name": "SkillStash Team",
+    "email": "team@skillstash.dev"
+  },
+  "category": "components",
+  "tags": [
+    "cards",
+    "layouts",
+    "components",
+    "grid",
+    "content"
+  ],
+  "tailwind": {
+    "minVersion": "3.0.0",
+    "features": [
+      "card-layouts",
+      "shadows",
+      "hover-effects",
+      "responsive-grids"
+    ]
+  },
+  "features": {
+    "types": [
+      "basic",
+      "image",
+      "profile",
+      "product",
+      "article",
+      "pricing",
+      "testimonial",
+      "stats"
+    ],
+    "layouts": ["vertical", "horizontal", "overlay", "compact"],
+    "animations": true,
+    "flip-cards": true,
+    "expandable": true
+  },
+  "commands": [
+    "card-create",
+    "card-grid",
+    "card-animate"
+  ],
+  "skills": [
+    "card-builder",
+    "layout-optimizer",
+    "content-formatter"
+  ],
+  "agents": [
+    "card-designer"
+  ]
+}

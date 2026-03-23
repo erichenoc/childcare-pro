@@ -1,0 +1,49 @@
+{
+  "id": "design-system-builder",
+  "name": "Design System Builder",
+  "version": "1.0.0",
+  "description": "Complete design system foundation with design tokens, patterns, and conventions for Tailwind CSS",
+  "author": {
+    "name": "SkillStash Team",
+    "email": "team@skillstash.dev"
+  },
+  "category": "design-systems",
+  "tags": [
+    "design-system",
+    "tokens",
+    "patterns",
+    "style-guide",
+    "branding"
+  ],
+  "tailwind": {
+    "minVersion": "3.0.0",
+    "features": [
+      "design-tokens",
+      "custom-properties",
+      "theme-extension",
+      "component-library"
+    ]
+  },
+  "features": {
+    "tokens": ["colors", "spacing", "typography", "shadows", "borders", "effects"],
+    "components": ["atoms", "molecules", "organisms", "templates"],
+    "documentation": true,
+    "version-control": true,
+    "brand-guidelines": true,
+    "token-sync": ["figma", "sketch", "adobe-xd"]
+  },
+  "commands": [
+    "design-system-init",
+    "token-generate",
+    "component-library-create"
+  ],
+  "skills": [
+    "token-manager",
+    "pattern-builder",
+    "consistency-checker"
+  ],
+  "agents": [
+    "system-architect",
+    "brand-guardian"
+  ]
+}

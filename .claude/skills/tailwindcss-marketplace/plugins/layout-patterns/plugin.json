@@ -1,0 +1,55 @@
+{
+  "id": "layout-patterns",
+  "name": "Layout Patterns",
+  "version": "1.0.0",
+  "description": "Modern layout patterns including grids, flexbox, containers, and responsive design utilities for Tailwind CSS",
+  "author": {
+    "name": "SkillStash Team",
+    "email": "team@skillstash.dev"
+  },
+  "category": "layouts",
+  "tags": [
+    "layouts",
+    "grid",
+    "flexbox",
+    "containers",
+    "responsive"
+  ],
+  "tailwind": {
+    "minVersion": "3.0.0",
+    "features": [
+      "grid-layouts",
+      "flexbox-patterns",
+      "container-queries",
+      "responsive-design"
+    ]
+  },
+  "features": {
+    "patterns": [
+      "holy-grail",
+      "sidebar",
+      "masonry",
+      "dashboard",
+      "magazine",
+      "kanban",
+      "split-screen"
+    ],
+    "grid-systems": ["12-column", "16-column", "auto-fit", "auto-fill"],
+    "container-queries": true,
+    "aspect-ratios": true,
+    "sticky-positioning": true
+  },
+  "commands": [
+    "layout-create",
+    "grid-builder",
+    "responsive-setup"
+  ],
+  "skills": [
+    "layout-analyzer",
+    "responsive-optimizer",
+    "grid-generator"
+  ],
+  "agents": [
+    "layout-architect"
+  ]
+}

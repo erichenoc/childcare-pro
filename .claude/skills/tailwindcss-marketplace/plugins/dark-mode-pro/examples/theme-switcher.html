@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark Mode Pro - Theme Switcher Example</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Theme detection and application
+    function getThemePreference() {
+      const stored = localStorage.getItem('theme');
+      if (stored) return stored;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function setTheme(theme) {
+      localStorage.setItem('theme', theme);
+      document.documentElement.className = theme;
+      updateThemeUI();
+    }
+
+    function updateThemeUI() {
+      const theme = document.documentElement.className || 'light';
+      document.querySelectorAll('[data-theme-option]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.themeOption === theme);
+      });
+    }
+
+    // Apply theme on load
+    document.documentElement.className = getThemePreference();
+  </script>
+  <style>
+    /* Theme transitions */
+    * {
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* Light theme */
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f3f4f6;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --border: #e5e7eb;
+    }
+
+    /* Dark theme */
+    .dark {
+      --bg-primary: #111827;
+      --bg-secondary: #1f2937;
+      --text-primary: #f9fafb;
+      --text-secondary: #9ca3af;
+      --border: #374151;
+    }
+
+    /* Dimmed theme */
+    .dimmed {
+      --bg-primary: #1a1f2e;
+      --bg-secondary: #242b3d;
+      --text-primary: #e8eaed;
+      --text-secondary: #9ba2b2;
+      --border: #3a4458;
+    }
+
+    /* Sepia theme */
+    .sepia {
+      --bg-primary: #f4f1e8;
+      --bg-secondary: #ebe5d6;
+      --text-primary: #5c4b37;
+      --text-secondary: #8b7355;
+      --border: #d4c4a8;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .card {
+      background-color: var(--bg-secondary);
+      border-color: var(--border);
+    }
+
+    .text-muted {
+      color: var(--text-secondary);
+    }
+
+    .theme-btn.active {
+      background-color: var(--bg-secondary);
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body class="h-full p-8" onload="updateThemeUI()">
+  <div class="max-w-4xl mx-auto space-y-8">
+    <!-- Theme Switcher -->
+    <div class="card border rounded-lg p-6">
+      <h1 class="text-2xl font-bold mb-4">Theme Switcher</h1>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <button onclick="setTheme('light')" data-theme-option="light"
+          class="theme-btn p-3 rounded-lg border text-center hover:opacity-80">
+          ☀️ Light
+        </button>
+        <button onclick="setTheme('dark')" data-theme-option="dark"
+          class="theme-btn p-3 rounded-lg border text-center hover:opacity-80">
+          🌙 Dark
+        </button>
+        <button onclick="setTheme('dimmed')" data-theme-option="dimmed"
+          class="theme-btn p-3 rounded-lg border text-center hover:opacity-80">
+          🌃 Dimmed
+        </button>
+        <button onclick="setTheme('sepia')" data-theme-option="sepia"
+          class="theme-btn p-3 rounded-lg border text-center hover:opacity-80">
+          📜 Sepia
+        </button>
+      </div>
+    </div>
+
+    <!-- Demo Content -->
+    <div class="card border rounded-lg p-6">
+      <h2 class="text-xl font-semibold mb-3">Sample Content</h2>
+      <p class="text-muted mb-4">
+        This demonstrates how content adapts to different themes with smooth transitions.
+        The theme preference is saved in localStorage and persists across sessions.
+      </p>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="card border rounded p-3 text-center">
+          <div class="text-2xl mb-1">📊</div>
+          <div class="font-medium">Analytics</div>
+          <div class="text-muted text-sm">+12.5%</div>
+        </div>
+        <div class="card border rounded p-3 text-center">
+          <div class="text-2xl mb-1">👥</div>
+          <div class="font-medium">Users</div>
+          <div class="text-muted text-sm">1,234</div>
+        </div>
+        <div class="card border rounded p-3 text-center">
+          <div class="text-2xl mb-1">💰</div>
+          <div class="font-medium">Revenue</div>
+          <div class="text-muted text-sm">$5,678</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Preference Sync -->
+    <div class="card border rounded-lg p-6">
+      <h2 class="text-xl font-semibold mb-3">System Preference</h2>
+      <button onclick="setTheme(getThemePreference())"
+        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+        Sync with System
+      </button>
+      <p class="text-muted text-sm mt-2">
+        Click to sync with your operating system's theme preference.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

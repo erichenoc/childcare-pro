@@ -1,0 +1,52 @@
+{
+  "id": "accessibility-utilities",
+  "name": "Accessibility Utilities",
+  "version": "1.0.0",
+  "description": "WCAG-compliant utilities for screen readers, keyboard navigation, and accessible design patterns for Tailwind CSS",
+  "author": {
+    "name": "SkillStash Team",
+    "email": "team@skillstash.dev"
+  },
+  "category": "accessibility",
+  "tags": [
+    "accessibility",
+    "a11y",
+    "wcag",
+    "aria",
+    "screen-readers"
+  ],
+  "tailwind": {
+    "minVersion": "3.0.0",
+    "features": [
+      "screen-reader-utilities",
+      "focus-management",
+      "aria-utilities",
+      "contrast-utilities"
+    ]
+  },
+  "features": {
+    "utilities": [
+      "sr-only",
+      "not-sr-only",
+      "focus-visible",
+      "focus-within",
+      "skip-links"
+    ],
+    "patterns": ["keyboard-nav", "focus-trap", "live-regions", "announcements"],
+    "testing": ["contrast-checker", "aria-validator", "keyboard-tester"],
+    "wcag-levels": ["A", "AA", "AAA"]
+  },
+  "commands": [
+    "a11y-audit",
+    "contrast-check",
+    "aria-setup"
+  ],
+  "skills": [
+    "accessibility-scanner",
+    "focus-manager",
+    "aria-enhancer"
+  ],
+  "agents": [
+    "a11y-auditor"
+  ]
+}

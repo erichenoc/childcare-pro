@@ -1,0 +1,65 @@
+{
+  "id": "form-controls",
+  "name": "Form Controls",
+  "version": "1.0.0",
+  "description": "Advanced form controls with validation states, custom styling, and accessibility features for Tailwind CSS",
+  "author": {
+    "name": "SkillStash Team",
+    "email": "team@skillstash.dev"
+  },
+  "category": "components",
+  "tags": [
+    "forms",
+    "inputs",
+    "validation",
+    "accessibility",
+    "components",
+    "controls"
+  ],
+  "tailwind": {
+    "minVersion": "3.0.0",
+    "features": [
+      "custom-utilities",
+      "form-styles",
+      "validation-states",
+      "dark-mode",
+      "focus-states"
+    ]
+  },
+  "features": {
+    "controls": [
+      "text-input",
+      "textarea",
+      "select",
+      "checkbox",
+      "radio",
+      "switch",
+      "file-upload",
+      "date-picker",
+      "range-slider"
+    ],
+    "validation": ["error", "success", "warning", "info"],
+    "states": ["focus", "hover", "disabled", "readonly", "loading"],
+    "floating-labels": true,
+    "input-groups": true,
+    "custom-selects": true
+  },
+  "commands": [
+    "form-create",
+    "input-builder",
+    "validation-setup"
+  ],
+  "skills": [
+    "form-validator",
+    "input-enhancer",
+    "accessibility-checker"
+  ],
+  "agents": [
+    "form-designer",
+    "validation-optimizer"
+  ],
+  "dependencies": {
+    "tailwindcss": "^3.0.0",
+    "@tailwindcss/forms": "^0.5.0"
+  }
+}

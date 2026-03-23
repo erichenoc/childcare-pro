@@ -1,0 +1,48 @@
+{
+  "id": "typography-extended",
+  "name": "Typography Extended",
+  "version": "1.0.0",
+  "description": "Advanced typography utilities with fluid scaling, custom fonts, and text effects for Tailwind CSS",
+  "author": {
+    "name": "SkillStash Team",
+    "email": "team@skillstash.dev"
+  },
+  "category": "utilities",
+  "tags": [
+    "typography",
+    "fonts",
+    "text",
+    "fluid-type",
+    "readability"
+  ],
+  "tailwind": {
+    "minVersion": "3.0.0",
+    "features": [
+      "custom-fonts",
+      "fluid-typography",
+      "text-effects",
+      "clamp-utilities"
+    ]
+  },
+  "features": {
+    "scales": ["minor-third", "major-third", "perfect-fourth", "golden-ratio"],
+    "fluid-sizing": true,
+    "text-effects": ["gradient", "outline", "shadow", "glitch", "neon"],
+    "font-loading": ["swap", "optional", "fallback", "block"],
+    "variable-fonts": true,
+    "text-balancing": true
+  },
+  "commands": [
+    "typography-setup",
+    "font-scale-create",
+    "text-effect-apply"
+  ],
+  "skills": [
+    "font-optimizer",
+    "readability-analyzer",
+    "scale-calculator"
+  ],
+  "agents": [
+    "typography-designer"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "id": "dark-mode-pro",
+  "name": "Dark Mode Pro",
+  "version": "1.0.0",
+  "description": "Enhanced dark mode implementation with theme switching, persistence, and advanced color management for Tailwind CSS",
+  "author": {
+    "name": "SkillStash Team",
+    "email": "team@skillstash.dev"
+  },
+  "category": "themes",
+  "tags": [
+    "dark-mode",
+    "themes",
+    "color-schemes",
+    "accessibility"
+  ],
+  "tailwind": {
+    "minVersion": "3.0.0",
+    "features": [
+      "dark-variants",
+      "color-schemes",
+      "custom-themes",
+      "auto-detection"
+    ]
+  },
+  "features": {
+    "modes": ["light", "dark", "auto", "custom"],
+    "persistence": ["localStorage", "cookies", "sessionStorage"],
+    "transitions": true,
+    "contrast-modes": true,
+    "color-schemes": ["default", "dimmed", "midnight", "sepia"]
+  },
+  "commands": [
+    "dark-mode-setup",
+    "theme-generate",
+    "color-scheme-create"
+  ],
+  "skills": [
+    "theme-switcher",
+    "color-optimizer",
+    "contrast-checker"
+  ],
+  "agents": [
+    "theme-designer"
+  ]
+}

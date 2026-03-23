@@ -1,0 +1,53 @@
+{
+  "id": "performance-optimizer",
+  "name": "Performance Optimizer",
+  "version": "1.0.0",
+  "description": "Performance optimization utilities including PurgeCSS configuration, JIT mode optimization, and critical CSS generation for Tailwind CSS",
+  "author": {
+    "name": "SkillStash Team",
+    "email": "team@skillstash.dev"
+  },
+  "category": "performance",
+  "tags": [
+    "performance",
+    "optimization",
+    "purgecss",
+    "jit",
+    "critical-css"
+  ],
+  "tailwind": {
+    "minVersion": "3.0.0",
+    "features": [
+      "jit-optimization",
+      "purge-configuration",
+      "critical-css",
+      "lazy-loading"
+    ]
+  },
+  "features": {
+    "optimizations": [
+      "tree-shaking",
+      "code-splitting",
+      "lazy-loading",
+      "critical-css",
+      "minification"
+    ],
+    "metrics": ["bundle-size", "load-time", "fps", "cls", "lcp"],
+    "monitoring": true,
+    "auto-optimization": true,
+    "cdn-integration": true
+  },
+  "commands": [
+    "performance-audit",
+    "purge-setup",
+    "critical-extract"
+  ],
+  "skills": [
+    "bundle-analyzer",
+    "css-optimizer",
+    "performance-monitor"
+  ],
+  "agents": [
+    "performance-guardian"
+  ]
+}
