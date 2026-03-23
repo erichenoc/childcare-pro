@@ -87,11 +87,11 @@ Software de gestión integral para guarderías que automatiza:
 
 ### PLANES Y PRECIOS
 
-| Plan | Precio | Capacidad | Ideal Para |
-|------|--------|-----------|------------|
-| **Starter** | $79/mes | 15 niños, 3 staff | Guarderías en casa |
-| **Professional** | $149/mes | 50 niños, 10 staff | Centros en crecimiento |
-| **Enterprise** | $299/mes | 150 niños, ilimitado staff | Multi-ubicaciones |
+| Plan | Precio Base | Por Niño/Mes | Ideal Para |
+|------|-------------|-------------|------------|
+| **Starter** | Desde $79/mes | $3.50/niño | Guarderías en casa (hasta 50 niños) |
+| **Professional** | Desde $149/mes | $5.00/niño | Centros en crecimiento (hasta 200 niños) |
+| **Enterprise** | Desde $299/mes | $7.00/niño | Multi-ubicaciones (ilimitado) |
 
 💡 **Todos los planes incluyen**: 14 días gratis, sin tarjeta de crédito, migración de datos GRATIS
 

@@ -22,18 +22,18 @@ export interface PlanPricing {
 
 export const PLAN_PRICING: Record<'starter' | 'professional' | 'enterprise', PlanPricing> = {
   starter: {
-    perChild: 1.50,
-    minimum: 29,
+    perChild: 3.50,
+    minimum: 79,
     annualDiscount: 0.17,
   },
   professional: {
-    perChild: 2.50,
-    minimum: 49,
+    perChild: 5.00,
+    minimum: 149,
     annualDiscount: 0.17,
   },
   enterprise: {
-    perChild: 3.50,
-    minimum: 99,
+    perChild: 7.00,
+    minimum: 299,
     annualDiscount: 0.17,
   },
 }
@@ -233,8 +233,8 @@ export const PLAN_DISPLAY: Record<'starter' | 'professional' | 'enterprise', Pla
   starter: {
     name: 'Starter',
     description: 'Perfect for small home daycares',
-    perChild: '$1.50',
-    minimum: '$29',
+    perChild: '$3.50',
+    minimum: '$79',
     features: [
       'Check-in/Check-out System',
       'Automated Billing & Invoicing',
@@ -249,8 +249,8 @@ export const PLAN_DISPLAY: Record<'starter' | 'professional' | 'enterprise', Pla
   professional: {
     name: 'Professional',
     description: 'For growing childcare centers',
-    perChild: '$2.50',
-    minimum: '$49',
+    perChild: '$5.00',
+    minimum: '$149',
     features: [
       'Everything in Starter',
       'DCF Ratio Tracking',
@@ -269,8 +269,8 @@ export const PLAN_DISPLAY: Record<'starter' | 'professional' | 'enterprise', Pla
   enterprise: {
     name: 'Enterprise',
     description: 'For multi-location operations',
-    perChild: '$3.50',
-    minimum: '$99',
+    perChild: '$7.00',
+    minimum: '$299',
     features: [
       'Everything in Professional',
       'Full Accounting Module',

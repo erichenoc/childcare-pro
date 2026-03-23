@@ -68,8 +68,8 @@ const LOGO_URL = 'https://res.cloudinary.com/dbftvu8ab/image/upload/v1768428103/
 const PLANS = [
   {
     name: 'Starter',
-    perChild: 1.50,
-    minimum: 29,
+    perChild: 3.50,
+    minimum: 79,
     description: 'Perfect for small home daycares',
     maxChildren: 50,
     maxStaff: 10,
@@ -86,8 +86,8 @@ const PLANS = [
   },
   {
     name: 'Professional',
-    perChild: 2.50,
-    minimum: 49,
+    perChild: 5.00,
+    minimum: 149,
     description: 'For growing childcare centers',
     maxChildren: 200,
     maxStaff: 50,
@@ -108,8 +108,8 @@ const PLANS = [
   },
   {
     name: 'Enterprise',
-    perChild: 3.50,
-    minimum: 99,
+    perChild: 7.00,
+    minimum: 299,
     description: 'For multi-location operations',
     maxChildren: 9999,
     maxStaff: 9999,
