@@ -1,5 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
+import * as Sentry from '@sentry/nextjs'
+
 // Segment error boundary for the whole dashboard. A thrown error in any dashboard
 // page now renders a branded, recoverable fallback instead of taking the route down.
 export default function DashboardError({
@@ -9,9 +12,10 @@ export default function DashboardError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  if (typeof console !== 'undefined') {
+  useEffect(() => {
+    Sentry.captureException(error)
     console.error('[dashboard-error]', error)
-  }
+  }, [error])
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">

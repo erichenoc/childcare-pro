@@ -1,5 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
+import * as Sentry from '@sentry/nextjs'
+
 // Root error boundary. Catches errors thrown in the root layout/template and
 // any unhandled render error not caught by a nested error.tsx. Must render its
 // own <html>/<body>. Replaces the previous behavior where any such error showed
@@ -11,10 +14,10 @@ export default function GlobalError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  // Surface to the console (and, once wired, to Sentry) so prod errors are visible.
-  if (typeof console !== 'undefined') {
+  useEffect(() => {
+    Sentry.captureException(error)
     console.error('[global-error]', error)
-  }
+  }, [error])
 
   return (
     <html lang="es">

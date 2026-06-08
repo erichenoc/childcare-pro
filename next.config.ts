@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 // Baseline security headers for a PII + payments app. These are low-risk
 // (they don't restrict script/style sources, so they won't break Stripe/Supabase),
@@ -49,4 +50,13 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry wraps the config for sourcemaps + tunneling. It is inert at runtime
+// until NEXT_PUBLIC_SENTRY_DSN is set; sourcemap upload is skipped without
+// SENTRY_ORG/SENTRY_PROJECT/SENTRY_AUTH_TOKEN, so the build still succeeds.
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  tunnelRoute: "/monitoring",
+});
