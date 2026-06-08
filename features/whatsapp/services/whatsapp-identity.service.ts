@@ -3,7 +3,11 @@
 // Identify organizations and guardians by phone/instance
 // =====================================================
 
-import { createClient } from '@/shared/lib/supabase/server'
+// n8n routes run server-to-server with no user session, so RLS (which keys off
+// auth.uid()) would block the anon cookie client. Use the service-role client and
+// rely on the explicit organization_id scoping below (org is resolved server-side
+// from the trusted whatsapp_instances row, never from request input).
+import { createServiceClient } from '@/shared/lib/supabase/service'
 import type {
   WhatsAppSession,
   ProspectData,
@@ -30,7 +34,7 @@ export const whatsappIdentityService = {
    * Identificar organizacion e informacion del contacto por instancia y remoteJid
    */
   async identify(instanceName: string, remoteJid: string): Promise<IdentifyResult> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
     const phoneNumber = normalizePhoneNumber(remoteJid)
 
     try {
@@ -170,7 +174,7 @@ export const whatsappIdentityService = {
     guardianId: string | null,
     familyId: string | null
   ): Promise<WhatsAppSession> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     // Buscar sesion existente no expirada
     const { data: existingSession } = await supabase
@@ -233,7 +237,7 @@ export const whatsappIdentityService = {
     sessionId: string,
     context: Partial<SessionContext>
   ): Promise<void> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     const { data: session } = await supabase
       .from('whatsapp_sessions')
@@ -259,7 +263,7 @@ export const whatsappIdentityService = {
     sessionId: string,
     prospectData: Partial<ProspectData>
   ): Promise<void> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     const { data: session } = await supabase
       .from('whatsapp_sessions')
@@ -282,7 +286,7 @@ export const whatsappIdentityService = {
    * Seleccionar hijo actual para la sesion
    */
   async selectChild(sessionId: string, childId: string): Promise<void> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     await supabase
       .from('whatsapp_sessions')

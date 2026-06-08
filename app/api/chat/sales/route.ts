@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/shared/lib/supabase/server'
+// Public (unauthenticated) widget → no user session. sales_leads is RLS admin-only,
+// so lead capture goes through the service-role client.
+// TODO(H3): stop trusting client-supplied leadId for updates — track the lead id in
+// a signed server cookie and only update the lead created for this session.
+import { createServiceClient } from '@/shared/lib/supabase/service'
 import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
 
 // ============================================================================
@@ -353,7 +357,7 @@ export async function POST(request: NextRequest) {
 
     if (hasContactInfo || messages.length >= 3) {
       try {
-        const supabase = await createClient()
+        const supabase = createServiceClient()
 
         if (currentLeadId) {
           // Actualizar lead existente

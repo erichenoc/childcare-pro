@@ -3,7 +3,10 @@
 // Template management and message logging
 // =====================================================
 
-import { createClient } from '@/shared/lib/supabase/server'
+// Used by server-to-server n8n routes (log-message) with no user session, and by
+// admin routes that enforce auth at the route layer. Use the service-role client
+// and scope by organization_id in queries.
+import { createServiceClient } from '@/shared/lib/supabase/service'
 import type {
   WhatsAppMessage,
   WhatsAppTemplate,
@@ -184,7 +187,7 @@ export const whatsappMessagesService = {
     organizationId: string,
     templateKey: TemplateKey
   ): Promise<string> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     // Buscar template personalizado
     const { data: customTemplate } = await supabase
@@ -207,7 +210,7 @@ export const whatsappMessagesService = {
    * Obtener todos los templates de una organizacion
    */
   async getAllTemplates(organizationId: string): Promise<WhatsAppTemplate[]> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     const { data: templates } = await supabase
       .from('whatsapp_templates')
@@ -226,7 +229,7 @@ export const whatsappMessagesService = {
     templateKey: TemplateKey,
     content: string
   ): Promise<WhatsAppTemplate | null> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     const defaultTemplate = DEFAULT_TEMPLATES[templateKey]
 
@@ -360,7 +363,7 @@ ${invoices.invoices.length > 0 ? '¿Deseas pagar alguna factura? Responde con el
    * Registrar mensaje en base de datos
    */
   async logMessage(request: LogMessageRequest): Promise<WhatsAppMessage | null> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     const { data, error } = await supabase
       .from('whatsapp_messages')
@@ -399,7 +402,7 @@ ${invoices.invoices.length > 0 ? '¿Deseas pagar alguna factura? Responde con el
     status: MessageStatus,
     errorMessage?: string
   ): Promise<void> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     await supabase
       .from('whatsapp_messages')
@@ -417,7 +420,7 @@ ${invoices.invoices.length > 0 ? '¿Deseas pagar alguna factura? Responde con el
     sessionId: string,
     limit: number = 50
   ): Promise<WhatsAppMessage[]> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     const { data } = await supabase
       .from('whatsapp_messages')
@@ -445,7 +448,7 @@ ${invoices.invoices.length > 0 ? '¿Deseas pagar alguna factura? Responde con el
     avg_response_time_ms: number
     intents_breakdown: Record<string, number>
   }> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     const { data: messages } = await supabase
       .from('whatsapp_messages')
