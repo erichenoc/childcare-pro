@@ -64,7 +64,10 @@ export const authService = {
   ): Promise<SignUpResult> {
     const supabase = createClient()
 
-    // Create auth user
+    // Create auth user. Org details + name are stored in auth user_metadata so they
+    // survive an email-confirmation round-trip (no fragile localStorage), and the
+    // org is provisioned server-side (atomic, RLS-safe) either now or in the auth
+    // callback once the session exists.
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -72,6 +75,12 @@ export const authService = {
         data: {
           first_name: profile.firstName,
           last_name: profile.lastName,
+          ...(organization
+            ? {
+                pending_org_name: organization.name,
+                pending_org_phone: organization.phone || null,
+              }
+            : {}),
         },
       },
     })
@@ -86,80 +95,38 @@ export const authService = {
       }
     }
 
-    // If email confirmation is required
+    // Email confirmation required → the org is provisioned in /auth/callback from
+    // user_metadata after the session is established.
     if (authData.user && !authData.session) {
-      // Store org data in localStorage for after confirmation
-      if (organization) {
-        localStorage.setItem('pendingOrg', JSON.stringify({
-          name: organization.name,
-          email: organization.email || email,
-          phone: organization.phone,
-          userId: authData.user.id,
-        }))
-      }
       return {
         success: true,
         requiresConfirmation: true,
       }
     }
 
-    // Create profile and organization if user was created and confirmed
-    if (authData.user) {
+    // Session present → provision the organization now via the server endpoint.
+    if (authData.user && authData.session && organization) {
       try {
-        // First create profile without organization
-        const profileData: TablesInsert<'profiles'> = {
-          id: authData.user.id,
-          email,
-          first_name: profile.firstName,
-          last_name: profile.lastName,
-          phone: profile.phone || null,
-          organization_id: null, // Will be updated after org creation
-          role: 'owner', // New signups are owners of their org
-          status: 'active',
-          is_org_owner: true,
+        const res = await fetch('/api/onboarding/organization', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orgName: organization.name,
+            orgPhone: organization.phone,
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          return { success: true, organizationId: data.organizationId }
         }
-
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert(profileData)
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError)
-          // Continue anyway, profile will be created on first login
-        }
-
-        // Create organization if provided
-        if (organization) {
-          try {
-            const slug = await organizationService.generateSlug(organization.name)
-            const org = await organizationService.create(
-              {
-                name: organization.name,
-                slug,
-                email: organization.email || email,
-                phone: organization.phone,
-              },
-              authData.user.id
-            )
-
-            return {
-              success: true,
-              organizationId: org.id,
-            }
-          } catch (orgError) {
-            console.error('Error creating organization:', orgError)
-            // Return success since user was created
-            return { success: true }
-          }
-        }
-
-        return { success: true }
+        console.error('Org provisioning returned', res.status)
       } catch (error) {
-        console.error('Error in signup process:', error)
-        return { success: true } // User was created, other parts can be fixed later
+        console.error('Error provisioning organization at signup:', error)
       }
     }
 
+    // User created; org provisioning will be retried by the auth callback / on
+    // first authenticated load if it didn't complete here.
     return { success: true }
   },
 

@@ -123,55 +123,62 @@ export const organizationService = {
     const trialEndsAt = new Date()
     trialEndsAt.setDate(trialEndsAt.getDate() + TRIAL_DURATION_DAYS)
 
-    // Create organization
-    const { data: org, error: orgError } = await supabase
-      .from('organizations')
-      .insert({
-        name: input.name,
-        slug: input.slug,
-        email: input.email || null,
-        phone: input.phone || null,
-        address: input.address || null,
-        city: input.city || null,
-        state: input.state || null,
-        zip_code: input.zip_code || null,
-        license_number: input.license_number || null,
-        logo_url: input.logo_url || null,
-        plan: 'trial' as SubscriptionPlanType,
-        subscription_status: 'active',
-        trial_ends_at: trialEndsAt.toISOString(),
-        max_children: TRIAL_LIMITS.max_children,
-        max_staff: TRIAL_LIMITS.max_staff,
-        settings: {
-          theme: 'system',
-          locale: 'es',
-          notification_email: true,
-          notification_sms: false,
-          notification_push: true,
-        },
-      } as TablesInsert<'organizations'>)
-      .select()
-      .single()
+    // Generate the org id client-side. RLS note: we must NOT use `.select()` after
+    // the insert. PostgreSQL enforces the SELECT policy on any RETURNING rows, and a
+    // brand-new owner does not yet belong to this org (their profile.organization_id
+    // is still null), so `.insert().select()` would be rejected by RLS. We provide the
+    // id, insert without RETURNING, then link the profile (which makes the org visible).
+    const orgId =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : undefined
 
+    const orgRow = {
+      ...(orgId ? { id: orgId } : {}),
+      name: input.name,
+      slug: input.slug,
+      email: input.email || null,
+      phone: input.phone || null,
+      address: input.address || null,
+      city: input.city || null,
+      state: input.state || null,
+      zip_code: input.zip_code || null,
+      license_number: input.license_number || null,
+      logo_url: input.logo_url || null,
+      plan: 'trial' as SubscriptionPlanType,
+      subscription_status: 'active',
+      trial_ends_at: trialEndsAt.toISOString(),
+      max_children: TRIAL_LIMITS.max_children,
+      max_staff: TRIAL_LIMITS.max_staff,
+      settings: {
+        theme: 'system',
+        locale: 'es',
+        notification_email: true,
+        notification_sms: false,
+        notification_push: true,
+      },
+    } as TablesInsert<'organizations'>
+
+    const { error: orgError } = await supabase.from('organizations').insert(orgRow)
     if (orgError) throw orgError
 
-    // Update owner profile with organization_id and is_org_owner flag
+    // Link the owner profile to the new org (makes it readable under RLS).
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
-        organization_id: org.id,
+        organization_id: orgId,
         is_org_owner: true,
         role: 'owner',
       })
       .eq('id', ownerId)
 
     if (profileError) {
-      // Rollback: delete organization if profile update fails
-      await supabase.from('organizations').delete().eq('id', org.id)
       throw profileError
     }
 
-    return org as Organization
+    // Now that the profile is linked, the org passes the SELECT policy.
+    const created = orgId ? await this.getById(orgId) : null
+    return (created ?? (orgRow as unknown as Organization))
   },
 
   /**
@@ -243,7 +250,7 @@ export const organizationService = {
    * Generate unique slug from organization name
    */
   async generateSlug(name: string): Promise<string> {
-    let baseSlug = name
+    const baseSlug = name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '')
