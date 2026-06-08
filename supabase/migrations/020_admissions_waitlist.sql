@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS admission_inquiries (
 
   -- Status and workflow
   status inquiry_status NOT NULL DEFAULT 'new',
-  assigned_to UUID REFERENCES staff(id),
+  assigned_to UUID REFERENCES profiles(id),
 
   -- Communication history stored in activity_log
 
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS admission_tours (
   duration_minutes INTEGER DEFAULT 30,
 
   -- Staff
-  tour_guide_id UUID REFERENCES staff(id),
+  tour_guide_id UUID REFERENCES profiles(id),
 
   -- Status
   status tour_status NOT NULL DEFAULT 'scheduled',
@@ -208,7 +208,7 @@ CREATE TABLE IF NOT EXISTS enrollment_applications (
   parent_signature_date DATE,
 
   -- Review
-  reviewed_by UUID REFERENCES staff(id),
+  reviewed_by UUID REFERENCES profiles(id),
   reviewed_at TIMESTAMPTZ,
   review_notes TEXT,
 
@@ -233,7 +233,7 @@ CREATE TABLE IF NOT EXISTS admission_communications (
   content TEXT,
 
   -- Staff
-  staff_id UUID REFERENCES staff(id),
+  staff_id UUID REFERENCES profiles(id),
 
   -- Follow-up
   requires_follow_up BOOLEAN DEFAULT false,
@@ -281,7 +281,7 @@ CREATE POLICY "admission_inquiries_org_access" ON admission_inquiries
   FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM staff WHERE email = auth.jwt() ->> 'email'
+      SELECT organization_id FROM profiles WHERE email = auth.jwt() ->> 'email'
     )
   );
 
@@ -290,7 +290,7 @@ CREATE POLICY "admission_tours_org_access" ON admission_tours
   FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM staff WHERE email = auth.jwt() ->> 'email'
+      SELECT organization_id FROM profiles WHERE email = auth.jwt() ->> 'email'
     )
   );
 
@@ -299,7 +299,7 @@ CREATE POLICY "waitlist_entries_org_access" ON waitlist_entries
   FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM staff WHERE email = auth.jwt() ->> 'email'
+      SELECT organization_id FROM profiles WHERE email = auth.jwt() ->> 'email'
     )
   );
 
@@ -308,7 +308,7 @@ CREATE POLICY "enrollment_applications_org_access" ON enrollment_applications
   FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM staff WHERE email = auth.jwt() ->> 'email'
+      SELECT organization_id FROM profiles WHERE email = auth.jwt() ->> 'email'
     )
   );
 
@@ -317,7 +317,7 @@ CREATE POLICY "admission_communications_org_access" ON admission_communications
   FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM staff WHERE email = auth.jwt() ->> 'email'
+      SELECT organization_id FROM profiles WHERE email = auth.jwt() ->> 'email'
     )
   );
 

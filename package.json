@@ -1,12 +1,13 @@
 {
-  "name": "agent-base-template",
+  "name": "childcare-pro",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.41",
@@ -14,6 +15,7 @@
     "@ai-sdk/openai": "^2.0.62",
     "@ai-sdk/react": "^2.0.89",
     "@react-pdf/renderer": "^4.3.2",
+    "@sentry/nextjs": "^10.56.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.79.0",
     "ai": "^5.0.89",

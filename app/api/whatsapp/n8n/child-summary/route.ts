@@ -5,24 +5,14 @@
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyN8nSecret } from '@/shared/lib/n8n-auth'
 import { whatsappDataService } from '@/features/whatsapp/services/whatsapp-data.service'
 import { whatsappMessagesService } from '@/features/whatsapp/services/whatsapp-messages.service'
 
-const N8N_API_KEY = process.env.N8N_WEBHOOK_SECRET || process.env.WHATSAPP_API_KEY || ''
-
-function validateApiKey(request: NextRequest): boolean {
-  const apiKey = request.headers.get('x-api-key') || request.headers.get('authorization')?.replace('Bearer ', '')
-  // Require API key in all environments
-  if (!N8N_API_KEY) {
-    console.warn('[WhatsApp API] N8N_WEBHOOK_SECRET or WHATSAPP_API_KEY not configured')
-    return false
-  }
-  return apiKey === N8N_API_KEY
-}
 
 export async function GET(request: NextRequest) {
   try {
-    if (!validateApiKey(request)) {
+    if (!verifyN8nSecret(request)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 

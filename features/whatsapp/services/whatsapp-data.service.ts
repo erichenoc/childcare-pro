@@ -3,7 +3,11 @@
 // Aggregate data for WhatsApp responses
 // =====================================================
 
-import { createClient } from '@/shared/lib/supabase/server'
+// Server-to-server (n8n) calls have no user session; use the service-role client
+// and rely on the explicit .eq('organization_id', organizationId) scoping below.
+// NOTE: organizationId MUST be resolved server-side (from the verified whatsapp
+// instance via the identity service), never taken straight from request input.
+import { createServiceClient } from '@/shared/lib/supabase/service'
 import type {
   ChildSummaryResponse,
   InvoicesResponse,
@@ -49,7 +53,7 @@ export const whatsappDataService = {
     childId: string,
     date?: string
   ): Promise<DataResult<ChildSummaryResponse>> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
     const targetDate = date || formatDate(new Date())
 
     try {
@@ -200,7 +204,7 @@ export const whatsappDataService = {
     organizationId: string,
     familyId: string
   ): Promise<DataResult<InvoicesResponse>> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     try {
       // 1. Obtener informacion de la familia
@@ -265,7 +269,7 @@ export const whatsappDataService = {
     childId: string,
     date?: string
   ): Promise<DataResult<PhotosResponse>> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
     const targetDate = date || formatDate(new Date())
 
     try {
@@ -322,7 +326,7 @@ export const whatsappDataService = {
   async getPublicInfo(
     organizationId: string
   ): Promise<DataResult<PublicInfoResponse>> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     try {
       // 1. Obtener informacion de la organizacion
@@ -388,7 +392,7 @@ export const whatsappDataService = {
     organizationId: string,
     childId: string
   ): Promise<DataResult<{ status: string; check_in_time: string | null; check_out_time: string | null }>> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
     const today = formatDate(new Date())
 
     try {
@@ -423,7 +427,7 @@ export const whatsappDataService = {
     organizationId: string,
     childId: string
   ): Promise<DataResult<Array<{ id: string; type: string; severity: string; description: string }>>> {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     try {
       const { data: incidents } = await supabase

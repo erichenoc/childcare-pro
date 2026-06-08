@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { provisionOrganizationForUser } from '@/shared/lib/onboarding'
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
@@ -31,43 +32,49 @@ export async function GET(request: Request) {
     const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && session?.user) {
-      // Check if profile exists
+      const user = session.user
+      const metadata = (user.user_metadata || {}) as Record<string, string>
+
+      // Does the user already belong to an organization?
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('id', session.user.id)
-        .single()
+        .select('id, organization_id')
+        .eq('id', user.id)
+        .maybeSingle()
 
-      // Create profile if it doesn't exist (OAuth users)
-      if (!profile) {
-        const user = session.user
-        const metadata = user.user_metadata || {}
+      if (!profile?.organization_id) {
+        const firstName =
+          metadata.first_name ||
+          metadata.full_name?.split(' ')[0] ||
+          metadata.name?.split(' ')[0] ||
+          'Owner'
+        const lastName =
+          metadata.last_name ||
+          metadata.full_name?.split(' ').slice(1).join(' ') ||
+          metadata.name?.split(' ').slice(1).join(' ') ||
+          ''
 
-        // Get the default organization (first one or from env)
-        const defaultOrgId = process.env.DEFAULT_ORGANIZATION_ID
-        let organizationId = defaultOrgId
+        // Each new user gets their OWN organization (tenant). We NEVER drop a new
+        // user into an existing organization — that would be a cross-tenant breach.
+        // Email/password signups carry the daycare name in metadata; OAuth users get
+        // an auto-named org they can rename in Settings.
+        const orgName =
+          metadata.pending_org_name ||
+          `${firstName}${lastName ? ' ' + lastName : ''}`.trim() ||
+          (user.email ? user.email.split('@')[0] : 'Mi Guardería')
 
-        if (!organizationId) {
-          // Fallback: get first organization from database
-          const { data: org } = await supabase
-            .from('organizations')
-            .select('id')
-            .limit(1)
-            .single()
-          organizationId = org?.id
-        }
-
-        if (organizationId) {
-          await supabase.from('profiles').insert({
-            id: user.id,
-            email: user.email!,
-            first_name: metadata.full_name?.split(' ')[0] || metadata.name?.split(' ')[0] || 'Usuario',
-            last_name: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.name?.split(' ').slice(1).join(' ') || '',
-            avatar_url: metadata.avatar_url || metadata.picture || null,
-            organization_id: organizationId,
-            role: 'teacher',
-            status: 'active',
+        try {
+          await provisionOrganizationForUser({
+            userId: user.id,
+            email: user.email || '',
+            firstName,
+            lastName,
+            orgName,
+            orgEmail: user.email,
+            orgPhone: metadata.pending_org_phone ?? null,
           })
+        } catch (provisionError) {
+          console.error('[auth/callback] org provisioning failed:', provisionError)
         }
       }
     }

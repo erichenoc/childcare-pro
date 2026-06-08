@@ -6,7 +6,11 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { generateText, tool, stepCountIs } from 'ai'
-import { createClient } from '@/shared/lib/supabase/server'
+// Server-to-server n8n route (no user session) → service-role client, scoped by
+// the server-resolved organizationId. TODO(H13): re-derive organizationId from the
+// verified whatsapp instance/session instead of trusting request input.
+import { createServiceClient } from '@/shared/lib/supabase/service'
+import { verifyN8nSecret } from '@/shared/lib/n8n-auth'
 import { openrouter } from '@/shared/lib/openrouter'
 import { z } from 'zod'
 
@@ -208,11 +212,8 @@ function isWithinBusinessHours(): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    // Validate API key
-    const authHeader = request.headers.get('authorization')
-    const apiKey = process.env.N8N_WEBHOOK_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY
-
-    if (!authHeader || !authHeader.includes(apiKey || '')) {
+    // Validate API key (constant-time compare; dedicated secret, no service-role fallback)
+    if (!verifyN8nSecret(request)) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -231,7 +232,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = validation.data
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     // Build conversation history
     const conversationMessages = data.conversationHistory?.slice(-10) || []
@@ -247,7 +248,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Get verified children from session context
-    let verifiedChildIds: string[] = data.verifiedChildren || []
+    const verifiedChildIds: string[] = data.verifiedChildren || []
 
     // Define tools for the AI agent
     const tools = {

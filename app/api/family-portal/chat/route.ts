@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       message,
       guardianId,
       organizationId,
-      childIds,
+      // childIds intentionally NOT trusted from the body — see authorizedChildIds below.
       verifiedChildren = [],
       conversationHistory = [],
     } = body
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     // Verify guardian access
     const { data: guardian } = await supabase
       .from('guardians')
-      .select('id, portal_user_id')
+      .select('id, portal_user_id, family_id, organization_id')
       .eq('id', guardianId)
       .eq('portal_user_id', user.id)
       .single()
@@ -111,7 +111,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    let updatedVerifiedChildren = [...verifiedChildren]
+    // SECURITY: derive the authorized child set SERVER-SIDE from the verified
+    // guardian's family. Never trust childIds / organizationId / verifiedChildren
+    // from the request body (that was the IDOR — finding C4). Every tool below is
+    // scoped to authorizedChildIds only.
+    const { data: familyChildren } = await supabase
+      .from('children')
+      .select('id')
+      .eq('family_id', guardian.family_id)
+      .eq('organization_id', guardian.organization_id)
+    const authorizedChildIds: string[] = (familyChildren || []).map((c) => c.id)
+
+    // Verification state may only ever contain the guardian's own children.
+    const updatedVerifiedChildren: string[] = (Array.isArray(verifiedChildren) ? verifiedChildren : [])
+      .filter((id: string) => authorizedChildIds.includes(id))
 
     // Define tools
     const verifyChildNameSchema = z.object({
@@ -136,7 +149,7 @@ export async function POST(req: NextRequest) {
           const { data: children } = await supabase
             .from('children')
             .select('id, first_name, last_name')
-            .in('id', childIds)
+            .in('id', authorizedChildIds)
 
           if (!children || children.length === 0) {
             return { verified: false, message: 'No se encontraron ninos registrados' }
@@ -210,7 +223,7 @@ export async function POST(req: NextRequest) {
           const { data: invoices } = await supabase
             .from('invoices')
             .select('invoice_number, total_amount, due_date, status, child:children(first_name)')
-            .in('child_id', childIds)
+            .in('child_id', authorizedChildIds)
             .in('status', ['pending', 'overdue'])
             .order('due_date', { ascending: true })
             .limit(5)
@@ -236,7 +249,9 @@ export async function POST(req: NextRequest) {
         description: 'Obtiene fotos recientes de los ninos (requiere verificacion)',
         inputSchema: getPhotosSchema,
         execute: async ({ childId }): Promise<Record<string, unknown>> => {
-          const targetIds = childId ? [childId] : updatedVerifiedChildren
+          // Only ever query children this guardian is authorized for.
+          const targetIds = (childId ? [childId] : updatedVerifiedChildren)
+            .filter((id: string) => authorizedChildIds.includes(id))
 
           if (targetIds.length === 0) {
             return { error: 'Primero verifica el nombre del nino para ver sus fotos.' }
