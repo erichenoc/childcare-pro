@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 // Public (unauthenticated) widget → no user session. sales_leads is RLS admin-only,
-// so lead capture goes through the service-role client.
-// TODO(H3): stop trusting client-supplied leadId for updates — track the lead id in
-// a signed server cookie and only update the lead created for this session.
+// so lead capture goes through the service-role client. The session's lead id is
+// tracked in an httpOnly cookie (see POST handler), never trusted from the body.
 import { createServiceClient } from '@/shared/lib/supabase/service'
 import { checkRateLimit, RateLimits } from '@/shared/lib/rate-limiter'
 
@@ -292,7 +291,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { messages, leadId, sessionId } = await request.json()
+    const { messages } = await request.json()
+
+    // H3: the lead id is tracked in an httpOnly server cookie, NOT taken from the
+    // request body. This stops an unauthenticated caller from overwriting any lead
+    // by guessing its UUID — they can only update the lead created for THIS session.
+    const cookieLeadId = request.cookies.get('sales_lead_id')?.value || null
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -352,7 +356,7 @@ export async function POST(request: NextRequest) {
     const conversationAnalysis = analyzeConversation(messages)
 
     // Guardar o actualizar el lead si tenemos información
-    let currentLeadId = leadId
+    let currentLeadId = cookieLeadId
     const hasContactInfo = contactInfo.email || contactInfo.phone || contactInfo.name
 
     if (hasContactInfo || messages.length >= 3) {
@@ -430,11 +434,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       message: aiMessage,
-      leadId: currentLeadId,
       extractedInfo: contactInfo,
     })
+    // Persist the session's lead id in an httpOnly cookie (server-trusted).
+    if (currentLeadId) {
+      res.cookies.set('sales_lead_id', currentLeadId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7,
+      })
+    }
+    return res
   } catch (error) {
     console.error('Sales chat error:', error)
 
